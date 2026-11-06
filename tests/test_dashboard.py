@@ -103,3 +103,14 @@ def test_write_datasets(tmp_path, datasets):
     assert {p.name for p in paths} == {"summary.json", "squad.json", "chips.json",
                                        "ft_history.json"}
     assert len(json.loads((tmp_path / "squad.json").read_text())) == 15
+
+
+def test_manifest_lists_datasets_and_removals(tmp_path, datasets):
+    write_datasets(datasets, tmp_path)
+    m = json.loads((tmp_path / "manifest.json").read_text())
+    assert {d["id"] for d in m["datasets"]} == set(datasets)
+    assert all(d["title"] and d["file"].endswith(".json") for d in m["datasets"])
+    assert m["remove"] == []
+    gated = {**datasets, "assumptions": [{"gate": "failed: x"}]}
+    write_datasets(gated, tmp_path / "g")
+    assert "decision" in json.loads((tmp_path / "g" / "manifest.json").read_text())["remove"]

@@ -106,3 +106,15 @@ def test_triple_captain(R):
 def test_forced_first_gw_count(R):
     pl, xp = toy([cand(100, xp=10.0)])
     assert run(pl, xp, rules=R, first_gw_transfers=0).gws[0].buys == []
+
+
+def test_hit_hurdle_prefers_free_option():
+    from fpl.engine import Option, recommend
+
+    class P:  # minimal plan stand-in
+        objective = 0.0
+    free = Option("1 transfer", [1], [2], 0, P(), delta_vs_roll=2.09)
+    hit = Option("2 transfers, -4", [1, 3], [2, 4], 1, P(), delta_vs_roll=2.16)
+    big = Option("2 transfers, -4", [1, 5], [2, 6], 1, P(), delta_vs_roll=3.5)
+    assert recommend([free, hit]) is free
+    assert recommend([free, hit, big]) is big

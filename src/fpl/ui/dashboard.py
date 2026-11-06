@@ -158,11 +158,57 @@ def build_datasets(
     return {"summary": summary, "squad": squad, "chips": chips, "ft_history": ft_history}
 
 
+SOURCE_NOTE = "From the public FPL API, computed by the fpl-tool engine (entry 1020085)."
+DATASET_META = {
+    "summary": ("Team summary", "Rank, bank, free transfers, team value and hits."),
+    "squad": ("Squad and prices", "Your 15 players with purchase, current and selling prices, "
+              "availability, FPL price status and next five fixtures."),
+    "chips": ("Chips", "Each chip in each half of the season, its window, and whether it is used."),
+    "ft_history": ("Free transfers by gameweek", "Free transfers available, transfers made and "
+                   "hit points per gameweek, replayed from your history."),
+    "decision": ("Transfer options", "Each transfer option for the next gameweek with its "
+                 "expected-points difference against rolling the transfer, over the planning "
+                 "horizon, with ownership flags."),
+    "captaincy": ("Captaincy simulation", "Simulated points this gameweek for the leading "
+                  "captain options: average, 10th and 90th percentiles, chance of 10+, and "
+                  "top-10k effective ownership."),
+    "lineup": ("Line-up and bench", "Recommended starting eleven, captain, vice-captain and "
+               "bench order, with expected points and start chance."),
+    "plan": ("Transfer plan", "The recommended transfer path for each gameweek of the horizon."),
+    "chip_gain": ("Chip gains", "Expected gain from each remaining first-half chip in each "
+                  "gameweek up to GW19, versus not playing it."),
+    "players": ("Player forecasts", "Expected points for the next six gameweeks for your players "
+                "and the leading options per position, with start chance, price and top-10k "
+                "ownership."),
+    "fixtures_strength": ("Fixture ratings", "Our own expected goals for and against and "
+                          "clean-sheet chance for each team's next fixtures, from xG-based "
+                          "team ratings."),
+    "model_health": ("Model health", "Backtest of each model on past gameweeks it had not seen, "
+                     "against simple baselines."),
+    "calibration": ("Calibration", "Predicted against actual values, grouped, for expected points "
+                    "and start probability."),
+    "assumptions": ("Assumptions", "Model version, horizon, decay, hit hurdle, ownership "
+                    "source and whether the backtest gate passed."),
+}
+MODEL_DATASETS = ("decision", "captaincy", "lineup", "plan", "chip_gain", "players",
+                  "fixtures_strength")
+
+
 def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path) -> list[Path]:
+    """Write one JSON file per dataset plus ``manifest.json`` for the refresh routine:
+    ``datasets`` (id, file, title, description) and ``remove`` (model datasets withheld
+    because the backtest gate failed, so stale recommendations are taken down)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    paths = []
+    paths, entries = [], []
     for name, rows in datasets.items():
         p = out_dir / f"{name}.json"
         p.write_text(json.dumps(rows, indent=1, ensure_ascii=False))
         paths.append(p)
+        title, desc = DATASET_META.get(name, (name, ""))
+        entries.append({"id": name, "file": p.name, "title": title,
+                        "description": f"{desc} {SOURCE_NOTE}".strip()})
+    gate_failed = "assumptions" in datasets and "decision" not in datasets
+    manifest = {"datasets": entries,
+                "remove": list(MODEL_DATASETS) if gate_failed else []}
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1))
     return paths

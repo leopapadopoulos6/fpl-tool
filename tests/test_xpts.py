@@ -13,7 +13,7 @@ def test_floor_div_mean_matches_simulation():
 
 def test_nb_tail_monotone_in_mean():
     t = _nb_tail(np.array([4.0, 8.0, 12.0]), np.array([10, 10, 10]), 6.0)
-    assert t[0] < t[1] < t[2] and 0 < t[0] and t[2] < 1
+    assert t[0] < t[1] < t[2] and t[0] > 0 and t[2] < 1
 
 
 def test_simulation_mean_close_to_expectation(rules):

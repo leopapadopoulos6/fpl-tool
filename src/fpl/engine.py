@@ -15,10 +15,18 @@ import pandas as pd
 from fpl.api.models import Bootstrap, Fixture
 from fpl.data.priors import team_prior
 from fpl.models.xpts import simulate
-from fpl.optimize.milp import OptInput, OptSettings, Plan, alternatives, candidate_pool, solve
+from fpl.optimize.milp import OptInput, OptSettings, Plan, alternatives, candidate_pool
 from fpl.pipeline import Forecast, forecast, xpts_matrix
 from fpl.rules import GameRules
 from fpl.state import ManagerState
+
+HIT_HURDLE = 1.0  # extra xPts a hit must add over the cheaper option (model uncertainty)
+
+
+def recommend(options: list[Option], hit_hurdle: float = HIT_HURDLE) -> Option:
+    """Highest Δ after charging ``hit_hurdle`` per hit: a hit must clearly beat the
+    best hit-free option, not just edge it."""
+    return max(options, key=lambda o: o.delta_vs_roll - hit_hurdle * o.hits)
 
 
 @dataclass
@@ -61,7 +69,8 @@ def players_frame(b: Bootstrap, state: ManagerState, rules: GameRules) -> pd.Dat
 
 def run(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFrame,
         state: ManagerState, rules: GameRules, data_dir: Path, horizon: int = 6,
-        settings: OptSettings | None = None, max_first_gw_transfers: int = 2) -> EngineResult:
+        settings: OptSettings | None = None, max_first_gw_transfers: int = 2,
+        hit_hurdle: float = HIT_HURDLE) -> EngineResult:
     settings = settings or OptSettings()
     fc = forecast(b, fixtures, pm, tm, rules, team_prior(b, data_dir), horizon=horizon,
                   start_gw=state.next_gw)
@@ -80,7 +89,8 @@ def run(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFram
             f"{n} transfer{'s' if n > 1 else ''}" + (f", -{4 * g.hits}" if g.hits else ""))
         options.append(Option(label, g.buys, g.sells, g.hits, plan,
                               delta_vs_roll=plan.objective - roll.objective))
-    best = max((o.plan for o in options), key=lambda p: p.objective)
+    rec = recommend(options, hit_hurdle)
+    best = rec.plan
     cap = captaincy(fc, best.gws[0].lineup, rules)
     return EngineResult(fc, players, options, best, cap, settings, fc.gws)
 
