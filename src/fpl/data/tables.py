@@ -40,6 +40,10 @@ def player_matches_frame(
     rows = []
     for h in histories:
         f = fx.get(h.fixture)
+        # FPL lists a GW's fixtures in every player's history from the deadline on, with
+        # 0 minutes until they are played: keep only matches that are over
+        if f is None or not (f.finished or getattr(f, "finished_provisional", False)):
+            continue
         d = h.model_dump()
         d["team"] = (f.team_h if h.was_home else f.team_a) if f else None
         d["kickoff_time"] = d.get("kickoff_time")
@@ -57,7 +61,7 @@ def team_matches_frame(player_matches: pd.DataFrame, fixtures: list[Fixture]) ->
     xg_map = {(r.fixture, r.team): r.expected_goals for r in xg.itertuples()}
     rows = []
     for f in fixtures:
-        if not f.finished or f.event is None:
+        if f.event is None or not (f.finished or getattr(f, "finished_provisional", False)):
             continue
         for team, opp, home, gf, ga in (
             (f.team_h, f.team_a, True, f.team_h_score, f.team_a_score),

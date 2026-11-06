@@ -34,3 +34,14 @@ def test_unfinished_fixtures_excluded(bootstrap):
     fx = [Fixture(id=2, event=10, kickoff_time=None, team_h=1, team_a=2, finished=False)]
     pm = player_matches_frame([], fx, bootstrap)
     assert team_matches_frame(pm, fx).empty
+
+
+def test_unplayed_fixture_rows_are_dropped(bootstrap):
+    a = bootstrap.elements[0]
+    fx = [Fixture(id=1, event=9, kickoff_time=None, team_h=a.team, team_a=99, finished=True,
+                  team_h_score=1, team_a_score=0),
+          Fixture(id=2, event=10, kickoff_time=None, team_h=a.team, team_a=98, finished=False,
+                  finished_provisional=False)]
+    pm = player_matches_frame([_h(a.id, 1, True, 0.4), _h(a.id, 2, True, 0.0, mins=0)],
+                              fx, bootstrap)
+    assert list(pm["fixture"]) == [1]
