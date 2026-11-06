@@ -107,21 +107,35 @@ Build pages alongside the models they display. No placeholder-number UI. Model h
 - **URL:** https://claude.ai/artifact/JU1PKMicRTv6Hbn9yng1PP ("HaramBall FPL"). It is private to the user's account. Open it in the Claude app or a signed-in browser, and pin it in the claude.ai sidebar.
 - **Type:** it is built on the claude.ai **Dashboard** artifact type. The page lives in the dashboard's store as `files/index.html`; the repo copy is `src/fpl/ui/dashboard_page.html`. Every figure comes from a dataset, and the page has no hardcoded numbers.
 - **Sections, in page order:**
-  - **Model sections:** This gameweek (decision + Δ vs roll + flags, captaincy simulation, line-up/bench order), Planner, First-half chips, Players, Fixtures. These are marked `data-model-section` and hidden if `decision` is missing.
+  - **Model sections:** This gameweek (decision + Δ vs roll + flags, captaincy simulation, line-up/bench order), Planner, First-half chips (joint plan sentence, `chip_plan` table, marginal-gain bars), Players, Fixtures. These are marked `data-model-section` and hidden if `decision` is missing.
   - **Model health:** always shown.
+  - **Track record:** marked `data-review-section`; hidden until the first GW is graded.
   - **Your team now:** summary tiles, price watch, squad, chips status, FT history.
   - **About:** a `<details>` block with the assumptions.
 - **Datasets:**
   - State datasets: `summary`, `squad`, `chips`, `ft_history` (`src/fpl/ui/dashboard.py`).
-  - Model datasets: `decision`, `captaincy`, `lineup`, `plan`, `chip_gain`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions` (`src/fpl/report/build.py`).
+  - Model datasets: `decision`, `captaincy`, `lineup`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions` (`src/fpl/report/build.py`).
+  - Track record: `review`, `review_summary` (CLI `_reviews` from the ledger).
   - `uv run fpl dashboard-data --out DIR` writes them all, plus `manifest.json` (ids, titles, descriptions, and a `remove` list when the gate fails).
 - **Gate:** model datasets are produced only if the xPts backtest beats both baselines on MAE and rank correlation, and P(start) beats its baselines (`report/build.py: model_health`). On failure the manifest asks the routine to delete the model datasets, so stale advice disappears.
 - **Refresh:** a GitHub Action cannot publish a claude.ai page, so a **Claude routine** does it ("FPL dashboard refresh", `trig_017HWLLYxFxVKABs973LRLWN`, daily 03:23 UK). It:
-  1. runs `fpl dashboard-data` (~5–8 min: tables, EO sample, gate, forecast, optimizer, chips);
-  2. uploads every file in the manifest;
-  3. updates or creates each `datasets/<id>` (pinned with `if_version`);
-  4. deletes the old assets and processes `remove`;
-  5. if the next deadline is 3–27 h away, schedules a one-shot "pre-deadline refresh" 3 h before it.
+  1. restores the store's `ledger/*` documents to `data/ledger/`;
+  2. runs `fpl dashboard-data` (~6–10 min: tables, EO sample, gate, forecast, optimizer, joint chips, grading);
+  3. uploads every file in the manifest;
+  4. updates or creates each `datasets/<id>` (pinned with `if_version`);
+  5. deletes the old assets and processes `remove`;
+  6. saves the manifest's `ledger` file to the store as `ledger/gwNN` (the upcoming GW only);
+  7. if the next deadline is 3–27 h away, schedules a one-shot "pre-deadline refresh" 3 h before it.
+
+## Forward-test ledger (the honest track record)
+- Every `dashboard-data` run writes `data/ledger/gwNN.json` for the upcoming GW (`report/ledger.py: make_entry`). It holds the recommendation and all options with Δ, captain, vice, template captain (highest top-10k EO in the XI), XI and bench, and every relevant player's xPts and P(start).
+- The routine keeps entries in the dashboard store (collection `ledger`). The last run before a deadline overwrites the entry, so that is what gets graded.
+- When a GW is `finished` and `data_checked`, the next run grades it (`ledger.review`, or `fpl review --gw N`):
+  - forecast MAE and Spearman vs the same baselines as the backtest;
+  - the recommended move's points in its own GW, and whether you followed it;
+  - our captain vs the template captain and the best captain in the XI;
+  - your score vs the average.
+- `ledger/gw10` was reconstructed after the deadline with `build_state(next_gw=10)` from the GW9 state, the pre-deadline GW1–9 tables and the GW9 EO sample. It reproduces the advice sent at 18:09 UTC.
 - **Changing the page:** edit `src/fpl/ui/dashboard_page.html`, then write it to `files/index.html` (read it first: the user may have edited it). Follow the type's rules (one-writer): fixed text lives in the HTML; numbers go in `data-draw` elements marked with `data-source`/`data-field`. After a write, read `data/users/me` doc `check`.
 
 ## Data persistence
@@ -158,7 +172,10 @@ src/fpl/
   pipeline.py        live forecast: per-fixture and per-GW xPts over the horizon
   optimize/milp.py   HiGHS multi-GW MILP: squad/XI/captain/transfers, selling prices, bank,
                      FT banking (cap 5), hits, 3/club, formation, WC/FH/BB/TC; alternatives
-  chips/planner.py   force each remaining chip in each GW, re-solve, gain vs no-chip plan
+  chips/planner.py   single-chip scan (superseded on the dashboard by chips/joint.py)
+  chips/joint.py     WC/BB/TC timed together: coordinate search over fixed-chip solves,
+                     horizon GW19 + 4; marginal gain per chip per GW; next-best plan
+  report/ledger.py   forward-test ledger + grading of finished GWs
   engine.py          state + forecast -> options (Δ vs roll), hit hurdle, captaincy sims
   backtest/          team_strength.py, minutes.py, xpts.py (rolling origin vs baselines)
   report/build.py    gate + every dashboard dataset (decisions, flags, plan, chips, health)
@@ -182,6 +199,7 @@ uv run fpl fetch [--full] [--pre-deadline-hours 3]   # snapshot time-sensitive s
 uv run fpl build-tables          # all element-summaries -> data/processed/{player,team}_matches.parquet
 uv run fpl backtest-teams        # tune GW2-6, score held-out GW7-9 -> data/processed/reports/
 uv run fpl plan [--horizon 6] [--refresh-tables]     # terminal decision report
+uv run fpl review --gw N         # grade a finished GW against its ledger entry
 uv run fpl dashboard-data --out DIR [--no-refresh-tables] [--eo-sample 0] [--no-chips]
 uv run fpl ui                    # local Streamlit what-if app
 uv run fpl --help
@@ -257,7 +275,7 @@ Backtests on held-out GW4–9 (2,550 player-fixtures; refit before every round, 
 **Known limitations / next:**
 1. Cup and European fixtures are not in the FPL API, so rotation in congested weeks is understated.
 2. Injury return dates are unknown: flags fade 50% per GW ahead (an assumption).
-3. Chips are searched one at a time. Interactions (WC then BB) are not jointly optimised, and WC value late in the GW19 horizon is understated.
+3. Chips are timed jointly by coordinate search, which can stop at a local optimum (it starts from each chip's best single-chip GW). The exact joint MILP (`OptInput.chip_search`) is correct on toys but its relaxation is too weak at real size: 13% gap after 300 s over 13 GWs. Free Hit is not searched.
 4. Price changes inside the horizon are ignored.
 5. Player priors from last season (per-player rates) are not used yet; only team priors are. This would mostly help early next season.
 6. Merge to `main` so the snapshot workflow runs; then backtests can use true as-of-deadline flags.
