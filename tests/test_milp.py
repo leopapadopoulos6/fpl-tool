@@ -118,3 +118,26 @@ def test_hit_hurdle_prefers_free_option():
     big = Option("2 transfers, -4", [1, 5], [2, 6], 1, P(), delta_vs_roll=3.5)
     assert recommend([free, hit]) is free
     assert recommend([free, hit, big]) is big
+
+
+def test_captain_hurdle_keeps_template_captain():
+    from types import SimpleNamespace
+
+    import pandas as pd
+
+    from fpl.engine import apply_captain_hurdle
+    from fpl.optimize.milp import GWPlan
+
+    g = GWPlan(gw=10, chip=None, buys=[], sells=[], hits=0, free_transfers=1,
+               lineup=[1, 2, 3], bench=[], captain=2, vice=1, xpts=20.0, bank_after=0)
+    by_gw = pd.DataFrame({"element": [1, 2, 3], "event": [10] * 3, "xpts": [5.2, 5.7, 3.0]})
+    res = SimpleNamespace(best=SimpleNamespace(gws=[g]), forecast=SimpleNamespace(by_gw=by_gw),
+                          captaincy=pd.DataFrame({"element": [2, 1], "mean": [5.7, 5.2]}))
+    eo = {1: 186.0, 2: 12.0}
+    assert apply_captain_hurdle(res, eo) is not None
+    assert (g.captain, g.vice) == (1, 2) and abs(g.xpts - 19.5) < 1e-9
+    # a large edge keeps the model's captain
+    g2 = GWPlan(10, None, [], [], 0, 1, [1, 2, 3], [], 2, 1, 20.0, 0)
+    res.best.gws = [g2]
+    res.captaincy = pd.DataFrame({"element": [2, 1], "mean": [7.0, 5.2]})
+    assert apply_captain_hurdle(res, eo) is None and g2.captain == 2

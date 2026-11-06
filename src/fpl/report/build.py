@@ -22,7 +22,7 @@ from fpl.backtest import xpts as bt_xpts
 from fpl.chips.planner import CHIP_LABEL, plan_chips
 from fpl.data.features import build_player_features
 from fpl.data.priors import team_prior
-from fpl.engine import HIT_HURDLE, EngineResult, run
+from fpl.engine import CAPTAIN_HURDLE, HIT_HURDLE, EngineResult, apply_captain_hurdle, run
 from fpl.models.team_strength import TeamStrengthParams
 from fpl.optimize.milp import OptInput, OptSettings, candidate_pool
 from fpl.pipeline import MODEL_VERSION, forecast, xpts_matrix
@@ -112,7 +112,7 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     out["assumptions"] = [{
         "model_version": MODEL_VERSION, "horizon_gws": horizon, "decay": settings.decay,
         "bench_weight": settings.bench_weight, "ft_value_end": settings.ft_value,
-        "hit_hurdle": HIT_HURDLE,
+        "hit_hurdle": HIT_HURDLE, "captain_hurdle": CAPTAIN_HURDLE,
         "gate": "passed" if gate.passed else "failed: " + "; ".join(gate.reasons),
         "eo_source": (f"top {eo_meta['top_k']:,} overall, {eo_meta['sampled']} sampled, "
                       f"GW{eo_meta['gw']} picks") if eo_meta else "not sampled",
@@ -124,6 +124,9 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     res = run(b, fixtures, pm, tm, state, rules, data_dir, horizon=horizon, settings=settings)
     names = res.players["name"].to_dict()
     eo_map = eo.set_index("element")["eo_pct"].to_dict() if eo is not None else {}
+    cap_note = apply_captain_hurdle(res, eo_map)
+    if cap_note:
+        out["assumptions"][0]["captain_note"] = cap_note
     own_map = eo.set_index("element")["owned_pct"].to_dict() if eo is not None else {}
     out.update(_decisions(res, names, eo_map))
     out.update(_lineup(res, names, eo_map, own_map, b))

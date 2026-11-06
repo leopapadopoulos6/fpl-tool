@@ -21,6 +21,27 @@ from fpl.rules import GameRules
 from fpl.state import ManagerState
 
 HIT_HURDLE = 1.0  # extra xPts a hit must add over the cheaper option (model uncertainty)
+CAPTAIN_HURDLE = 1.0  # xPts edge needed to captain against the top-10k majority captain
+TEMPLATE_CAPTAIN_EO = 100.0  # top-10k EO at/above which most of them captain the player
+
+
+def apply_captain_hurdle(res: EngineResult, eo: dict[int, float],
+                         hurdle: float = CAPTAIN_HURDLE) -> str | None:
+    """Keep the top-10k majority captain unless the model's pick beats him by ``hurdle``
+    simulated points. Returns a note when the captain was changed back."""
+    g = res.best.gws[0]
+    template = max((p for p in g.lineup if eo.get(p, 0) >= TEMPLATE_CAPTAIN_EO),
+                   key=lambda p: eo.get(p, 0), default=None)
+    if template is None or template == g.captain:
+        return None
+    mean = res.captaincy.set_index("element")["mean"]
+    edge = float(mean.get(g.captain, 0) - mean.get(template, 0))
+    if edge >= hurdle:
+        return None
+    xp = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")["xpts"]
+    g.xpts += float(xp.get(template, 0) - xp.get(g.captain, 0))
+    g.vice, g.captain = g.captain, template
+    return f"model captain edge {edge:.2f} < hurdle {hurdle}: kept template captain"
 
 
 def recommend(options: list[Option], hit_hurdle: float = HIT_HURDLE) -> Option:

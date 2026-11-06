@@ -251,6 +251,7 @@ Backtests on held-out GW4–9 (2,550 player-fixtures; refit before every round, 
 - **Optimizer:**
   - 6-GW solve ≈ 2 s; chip grid to GW19 ≈ 2 min.
   - Hit hurdle is 1 xPt per hit: on GW10 the −4 option beat the free transfer by only 0.07, so it was not recommended.
+  - Captain hurdle is 1 xPt: the model's captain must beat the top-10k majority captain (top-10k EO ≥ 100%) by at least that, or the template captain is kept and the model's pick becomes vice. On GW10 Gabriel's edge over Haaland was 0.52, so Haaland stays (`engine.apply_captain_hurdle`).
 - **Top-10k EO** (500 sampled, GW9 picks): Haaland 186%, N.Jackson 92%. Moves selling template players are flagged.
 
 **Known limitations / next:**
