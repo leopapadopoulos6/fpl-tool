@@ -55,6 +55,7 @@ class FPLClient:
         self.backoff = backoff
         self._memo: dict[str, Any] = {}
         self._last_request = 0.0
+        self.written: list[Path] = []  # snapshot files written by this client
         headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
         if self.settings.auth_token:
             headers["X-Api-Authorization"] = f"Bearer {self.settings.auth_token}"
@@ -123,6 +124,7 @@ class FPLClient:
         out.parent.mkdir(parents=True, exist_ok=True)
         with gzip.open(out, "wt", encoding="utf-8") as fh:
             json.dump(data, fh)
+        self.written.append(out)
         return out
 
     def _read_latest_snapshot(self, key: str) -> Any:

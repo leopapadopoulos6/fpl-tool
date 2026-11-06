@@ -1,0 +1,72 @@
+name: FPL snapshots
+
+# The FPL API only serves current state (prices, flags, ownership, price predictions).
+# This workflow keeps the as-of record on the `data` branch:
+#   raw/<UTC date>/...   daily, after the midnight-UK price changes
+#   deadlines/gwNN/...   last capture inside the 3h before each GW deadline
+# Note: scheduled workflows only run from the default branch.
+
+on:
+  schedule:
+    - cron: "37 1 * * *" # daily snapshot
+    - cron: "7 * * * *" # hourly: pre-deadline capture only
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Also fetch every live GW, all picks and all element summaries"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fpl-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - run: uv sync --frozen
+
+      - name: Check out data branch into ./data
+        run: |
+          if git fetch --depth=1 origin data; then
+            git worktree add -B data data FETCH_HEAD
+          else
+            git worktree add --orphan -b data data
+          fi
+
+      - name: Fetch
+        env:
+          HOURLY: ${{ github.event.schedule == '7 * * * *' }}
+          FULL: ${{ inputs.full && '--full' || '' }}
+        run: |
+          if [ "$HOURLY" = "true" ]; then
+            # Hourly runs keep nothing except a pre-deadline copy.
+            export FPL_DATA_DIR="$RUNNER_TEMP/snap"
+            uv run fpl fetch --pre-deadline-hours 3
+            if [ -d "$FPL_DATA_DIR/deadlines" ]; then
+              cp -r "$FPL_DATA_DIR/deadlines" data/
+            fi
+          else
+            FPL_DATA_DIR="$PWD/data" uv run fpl fetch --pre-deadline-hours 3 $FULL
+          fi
+
+      - name: Commit to data branch
+        working-directory: data
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git -c user.name="fpl-snapshot-bot" -c user.email="actions@users.noreply.github.com" \
+            commit -q -m "snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin data

@@ -86,6 +86,33 @@ Quirks:
 - The API only serves *current* state. Prices, flags, news and ownership as of a past deadline are lost unless we snapshotted them, so **run `fpl fetch` before every deadline**.
 - Past seasons' per-GW data, for priors, can be taken from the `vaastav/Fantasy-Premier-League` GitHub mirror (reachable from this environment).
 
+## User interface (decided 2026-11-06: hybrid GUI)
+The user interacts through a GUI, not the CLI. The CLI is plumbing for automation and development.
+
+- **Read-only dashboard (phone):** a static HTML page rebuilt automatically before each deadline and published as a private claude.ai page. It shows precomputed decisions, top-N alternative plans with Δ xPts, the chip-gain table, fixture grid, player table and model health. No server.
+- **Streamlit app (local, `uv run fpl ui`):** live what-ifs. Lock or ban players, force a hit or roll, change horizon and decay, and re-solve the MILP. It imports the engine directly.
+
+Planned pages, shared by both:
+- **This GW:** decision, Δ xPts, captain/vice, XI and bench, confidence.
+- **Planner:** multi-GW transfer timeline.
+- **Chips:** expected gain per chip per GW, with the GW19 deadline marked.
+- **Fixtures:** our attack and defence ratings by GW, highlighting blanks and doubles.
+- **Players:** xPts by GW, P(start), price prediction, EO and differential flags, affordable only.
+- **Model health:** backtest calibration.
+
+Build pages alongside the models they display. No placeholder-number UI. Model health comes first.
+
+## Data persistence
+The container is ephemeral and `data/` is gitignored on code branches. Snapshots live on the **`data` branch**, written by `.github/workflows/snapshot.yml`:
+- `raw/<UTC date>/` is written daily at 01:37 UTC, after the midnight-UK price changes.
+- `deadlines/gwNN/` is the last hourly capture inside the 3 h before each deadline. This is the as-of-deadline record. GitHub cron can lag, so check `captured_at.txt`.
+- Scheduled workflows only run from the **default branch**. The workflow must be on `main` to fire.
+
+To use the snapshots locally:
+```bash
+git fetch origin data && git worktree add data data   # FPL_DATA_DIR then defaults to ./data
+```
+
 ## Architecture
 ```
 src/fpl/
@@ -103,7 +130,8 @@ src/fpl/
                      - bank
                      - FT replay with per-GW self-check against recorded hit costs
                      - chips remaining
-  cli.py             `fpl doctor | fetch | state`
+  cli.py             `fpl doctor | fetch | state` (later: `plan | whatif | chips | ui`)
+  ui/                Streamlit app + static dashboard builder           (not started)
   models/            team_strength.py, minutes.py, xpts.py         (design docstrings only)
   optimize/milp.py   HiGHS multi-GW MILP                            (design docstring only)
   chips/planner.py   per-chip, per-GW forced-chip re-solves          (design docstring only)
@@ -128,7 +156,9 @@ uv sync                          # install
 uv run fpl doctor                # hit every endpoint; non-zero exit on any failure
 uv run fpl state                 # squad, purchase/selling prices, bank, FTs, chips, FT self-check
 uv run fpl state --offline       # same, from latest snapshots only
-uv run fpl fetch [--summaries]   # snapshot everything (run before every deadline)
+uv run fpl fetch [--full] [--pre-deadline-hours 3]
+                                 # snapshot time-sensitive state; --full adds all live GWs,
+                                 # all picks and every element-summary (~670 requests)
 uv run fpl --help
 ```
 
@@ -153,6 +183,11 @@ uv run ruff check .      # lint (ruff format for formatting)
 
 ## Status
 Session 1 (2026-11-06): rules and endpoints researched, architecture fixed, scaffold built. Verified `doctor` (all endpoints 200), `state` (1 FT for GW10, bank £3.8m, chips WC1/BB1/TC1 plus all of set 2), and offline and live tests.
+
+Session 2 (2026-11-06):
+- Hybrid GUI decided.
+- `data` branch seeded with the 2026-11-06 daily snapshot and the GW10 pre-deadline capture (taken 1.95 h before the deadline).
+- Snapshot workflow added. It needs merging to `main` to run.
 
 **Next:**
 1. Feature tables from element-summary/live.

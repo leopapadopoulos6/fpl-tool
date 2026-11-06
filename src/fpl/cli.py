@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import shutil
 import time
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -11,6 +14,7 @@ from rich.table import Table
 
 from fpl.api import endpoints as ep
 from fpl.api.client import FPLAPIError, FPLClient
+from fpl.api.models import Event
 from fpl.config import get_settings
 from fpl.rules import GameRules
 from fpl.state import ManagerState, build_state
@@ -82,31 +86,74 @@ def doctor(entry: EntryOpt = None) -> None:
     raise typer.Exit(code=1 if failures else 0)
 
 
+def deadline_dir(data_dir: Path, gw: int) -> Path:
+    return data_dir / "deadlines" / f"gw{gw:02d}"
+
+
 @app.command()
 def fetch(
     entry: EntryOpt = None,
-    summaries: Annotated[bool, typer.Option(help="Also fetch element-summary for every player")]
-    = False,
+    full: Annotated[
+        bool, typer.Option(help="Also every finished GW's live data, all picks, all summaries")
+    ] = False,
+    pre_deadline_hours: Annotated[
+        float,
+        typer.Option(help="If the next deadline is within N hours, also file a tagged copy "
+                          "under data/deadlines/gwNN/ (the as-of-deadline record)"),
+    ] = 0.0,
 ) -> None:
-    """Snapshot bootstrap, fixtures, all finished GW live data, and the entry's endpoints."""
+    """Snapshot the time-sensitive state: prices, flags, ownership, price predictions, fixtures,
+    the latest GW's live data and the entry's endpoints. Cheap enough to run several times a day."""
     settings = get_settings()
     eid = entry or settings.entry_id
     with FPLClient(settings) as c:
         b = ep.bootstrap_static(c)
         ep.fixtures(c)
+        ep.event_status(c)
         finished = [e.id for e in b.events if e.finished]
-        for gw in finished:
+        for gw in finished if full else finished[-1:]:
             ep.event_live(c, gw)
         ep.entry(c, eid)
         h = ep.entry_history(c, eid)
-        for row in h.current:
+        for row in h.current if full else h.current[-1:]:
             ep.entry_picks(c, eid, row.event)
         ep.entry_transfers(c, eid)
-        if summaries:
+        if full:
             with console.status("element summaries..."):
                 for el in b.elements:
                     ep.element_summary(c, el.id)
-    console.print(f"[green]snapshotted[/] {len(finished)} live GWs -> {settings.raw_dir}")
+        written = list(c.written)
+    console.print(f"[green]snapshotted[/] {len(written)} files -> {settings.raw_dir}")
+
+    nxt = b.next_event()
+    if pre_deadline_hours and nxt:
+        dest = file_pre_deadline_copy(
+            written, settings.data_dir, nxt, datetime.now(UTC), pre_deadline_hours
+        )
+        hours_left = (nxt.deadline_time - datetime.now(UTC)).total_seconds() / 3600
+        console.print(
+            f"[green]pre-deadline copy[/] {nxt.name} -> {dest}" if dest
+            else f"next deadline in {hours_left:.1f}h: no pre-deadline copy"
+        )
+
+
+def file_pre_deadline_copy(
+    written: list[Path], data_dir: Path, next_event: Event, now: datetime, window_hours: float
+) -> Path | None:
+    """Copy this run's snapshot files to data/deadlines/gwNN/ if the deadline is within the
+    window. Later runs inside the window overwrite, so the copy is the last one pre-deadline."""
+    hours_left = (next_event.deadline_time - now).total_seconds() / 3600
+    if not 0 < hours_left <= window_hours:
+        return None
+    dest = deadline_dir(data_dir, next_event.id)
+    dest.mkdir(parents=True, exist_ok=True)
+    for f in written:
+        shutil.copy2(f, dest / f.name)
+    (dest / "captured_at.txt").write_text(
+        f"{now.isoformat()} ({hours_left:.2f}h before {next_event.name} deadline "
+        f"{next_event.deadline_time.isoformat()})\n"
+    )
+    return dest
 
 
 def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
