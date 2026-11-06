@@ -28,6 +28,12 @@ def load(horizon: int):
     s = get_settings()
     ctx = load_context(s.entry_id)
     proc = s.data_dir / "processed"
+    if not (proc / "player_matches.parquet").exists():
+        from fpl.api.client import FPLClient
+        from fpl.data.tables import build_tables
+
+        with FPLClient(s) as c:
+            build_tables(c, proc)
     pm = pd.read_parquet(proc / "player_matches.parquet")
     tm = pd.read_parquet(proc / "team_matches.parquet")
     fc = forecast(ctx.bootstrap, ctx.fixtures, pm, tm, ctx.rules,
