@@ -82,6 +82,8 @@ class Element(_M):
     penalties_order: int | None = None
     price_change_percent: float | None = None
     price_change_projections: list[PriceProjection] = []
+    price_change_locked_until: datetime | None = None
+    price_change_calibrating: bool = False
     can_transact: bool = True
 
 

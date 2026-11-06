@@ -1,0 +1,291 @@
+<meta name="dash-one-writer">
+<style>
+  .hb { display: grid; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .hb h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .hb h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .hb p { margin: 0; }
+  .hb-head { display: grid; gap: var(--cds-gap-xs); }
+  .hb-lede { color: var(--color-fg); max-width: 65ch; }
+  .hb-lede b, .hb-tile b { font-weight: var(--cds-font-weight-medium); }
+  .hb-asof { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); }
+  .hb-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-xs); align-content: start; }
+  .hb-tile .hb-label { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tile .hb-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; }
+  .hb-tile .hb-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+  .hb-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 70ch; }
+  .hb-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+  .hb-scroll { overflow-x: auto; min-width: 0; }
+  .hb table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-body); }
+  .hb th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .hb td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .hb tbody tr:last-child td { border-bottom: 0; }
+  .hb .num { text-align: right; white-space: nowrap; }
+  .hb .nowrap { white-space: nowrap; }
+  .hb .muted { color: var(--color-fg-muted); }
+  .hb .fixtures { min-width: 16rem; color: var(--color-fg-muted); }
+  .hb tr.hb-bench td { background: color-mix(in srgb, var(--color-border-line) 25%, transparent); }
+  .hb .ok { color: var(--color-ok); }
+  .hb .warn { color: var(--color-warn); }
+  .hb .bad { color: var(--color-bad); }
+  .hb .up::before { content: "▲ "; }
+  .hb .down::before { content: "▼ "; }
+  .hb .pos { color: var(--color-ok); }
+  .hb details { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb summary { cursor: pointer; color: var(--color-fg); font-size: var(--cds-font-size-body); }
+  .hb dl { display: grid; gap: var(--cds-gap-xs); margin: var(--cds-pad-sm) 0 0; max-width: 70ch; }
+  .hb dt { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .hb dd { margin: 0 0 var(--cds-gap-xs); }
+  .hb [data-dash-source-state=empty] { color: transparent; }
+  .hb [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  @media (max-width: 40rem) {
+    .hb .wide-only { display: none; }
+  }
+</style>
+
+<div class="hb">
+  <header class="hb-head" id="top">
+    <h1>HaramBall</h1>
+    <p class="hb-lede">
+      Gameweek <b data-draw="next-gw" data-source="summary" data-field="next_gw" data-row="0">—</b>
+      deadline <b data-draw="deadline" data-source="summary" data-field="deadline_utc" data-row="0">—</b>.
+      Free transfers: <b data-draw="ft" data-source="summary" data-field="free_transfers" data-row="0">—</b>.
+      Money in the bank: £<b data-draw="bank-lede" data-source="summary" data-field="bank_m" data-row="0">—</b>m.
+    </p>
+    <p class="hb-asof">Updated <span data-draw="as-of" data-source="summary" data-field="as_of_utc" data-row="0">—</span>. No predictions yet: this page shows your real team state only.</p>
+  </header>
+
+  <section class="hb-tiles" id="figures" aria-label="Key figures">
+    <div class="hb-tile">
+      <span class="hb-label">Overall rank</span>
+      <span class="hb-big" data-draw="rank" data-source="summary" data-field="overall_rank" data-row="0">—</span>
+      <span class="hb-sub">After gameweek <span data-draw="last-gw" data-source="summary" data-field="last_gw" data-row="0">—</span></span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Free transfers</span>
+      <span class="hb-big" data-draw="ft-tile" data-source="summary" data-field="free_transfers" data-row="0">—</span>
+      <span class="hb-sub">Already made this gameweek: <span data-draw="made" data-source="summary" data-field="transfers_made_next_gw" data-row="0">—</span></span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">In the bank</span>
+      <span class="hb-big">£<span data-draw="bank" data-source="summary" data-field="bank_m" data-row="0">—</span>m</span>
+      <span class="hb-sub">Spendable on top of selling prices</span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Team value if sold</span>
+      <span class="hb-big">£<span data-draw="sell-value" data-source="summary" data-field="selling_value_m" data-row="0">—</span>m</span>
+      <span class="hb-sub">Market value £<span data-draw="market-value" data-source="summary" data-field="market_value_m" data-row="0">—</span>m</span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Points spent on hits</span>
+      <span class="hb-big" data-draw="hit-points" data-source="summary" data-field="hit_points_season" data-row="0">—</span>
+      <span class="hb-sub">Hits taken this season: <span data-draw="hits" data-source="summary" data-field="hits_taken" data-row="0">—</span></span>
+    </div>
+  </section>
+
+  <section class="hb-card" id="price-watch">
+    <h2>Price watch</h2>
+    <p class="hb-note">Your players FPL expects to change price at the next overnight update. A rise adds to your selling price only every second £0.1m; a drop comes off it in full.</p>
+    <p class="hb-note hb-pw-none" hidden>None of your players is expected to change price at the next update.</p>
+    <div class="hb-scroll">
+      <table data-source="squad" data-row-key="element" aria-label="Players expected to change price">
+        <thead><tr>
+          <th data-field="player">Player</th>
+          <th data-field="price_status">FPL price status</th>
+          <th data-field="price_progress_pct" class="num">Progress %</th>
+          <th data-field="sell_m" class="num">Sell £m</th>
+          <th data-field="owned_by_pct" class="num wide-only">Owned %</th>
+        </tr></thead>
+        <tbody data-draw="price-watch"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="hb-card" id="squad">
+    <h2>Squad</h2>
+    <p class="hb-note">Starting eleven, then the bench in auto-sub order. Selling price is what you get back if you sell today.</p>
+    <div class="hb-scroll">
+      <table data-source="squad" data-row-key="element" aria-label="Squad">
+        <thead><tr>
+          <th data-field="role">Role</th>
+          <th data-field="player">Player</th>
+          <th data-field="pos">Pos</th>
+          <th data-field="team" class="wide-only">Team</th>
+          <th data-field="sell_m" class="num">Sell £m</th>
+          <th data-field="bought_m" class="num wide-only">Bought £m</th>
+          <th data-field="now_m" class="num wide-only">Now £m</th>
+          <th data-field="locked_gain_m" class="num">Gain £m</th>
+          <th data-field="availability">Availability</th>
+          <th data-field="price_status" class="wide-only">FPL price status</th>
+          <th data-field="next_fixtures">Next five gameweeks</th>
+        </tr></thead>
+        <tbody data-draw="squad"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="hb-grid">
+    <section class="hb-card" id="chips">
+      <h2>Chips</h2>
+      <p class="hb-note">First-half chips cannot be carried over: anything unused is lost at the gameweek 19 deadline.</p>
+      <div class="hb-scroll">
+        <table data-source="chips" data-row-key="chip,set" aria-label="Chips">
+          <thead><tr>
+            <th data-field="chip">Chip</th>
+            <th data-field="window">Window</th>
+            <th data-field="status">Status</th>
+            <th data-field="use_by_utc">Use by</th>
+          </tr></thead>
+          <tbody data-draw="chips"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="hb-card" id="transfers">
+      <h2>Free transfers by gameweek</h2>
+      <p class="hb-note">Free transfers you had going into each gameweek, how many you made, and points paid for extras.</p>
+      <div class="hb-scroll">
+        <table data-source="ft_history" data-row-key="gw" aria-label="Free transfers by gameweek">
+          <thead><tr>
+            <th data-field="gw" class="num">GW</th>
+            <th data-field="ft_available" class="num">Free</th>
+            <th data-field="transfers" class="num">Made</th>
+            <th data-field="hit_points" class="num">Points lost</th>
+            <th data-field="chip">Chip</th>
+          </tr></thead>
+          <tbody data-draw="ft-history"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <details id="about">
+    <summary>About this page</summary>
+    <dl>
+      <dt>Where the numbers come from</dt>
+      <dd>The public FPL API, read by your fpl-tool engine and refreshed once a day after the overnight price changes.</dd>
+      <dt>Selling price</dt>
+      <dd>Purchase price plus half of any rise, rounded down to £0.1m. A fall is taken in full. Free Hit transfers are ignored because the squad reverts.</dd>
+      <dt>FPL price status</dt>
+      <dd>FPL's own prediction for the next overnight update. Progress shows how far the player is toward a change; past 100 a change is due.</dd>
+      <dt>Free transfers</dt>
+      <dd>Worked out from your transfer history, and checked against every hit FPL recorded.</dd>
+      <dt>Not here yet</dt>
+      <dd>Expected points, transfer plans, captaincy and chip timing. Each is added once its model has been tested against past gameweeks.</dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+  const fmtDateTime = (iso) => new Intl.DateTimeFormat(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  }).format(new Date(iso));
+  const fmtDate = (iso) => new Intl.DateTimeFormat(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short'
+  }).format(new Date(iso));
+  const money = d3.format('.1f');
+  const pct = d3.format('.1f');
+  const comma = d3.format(',');
+
+  const priceClass = (s) => s.includes('rise') ? 'up ok' : s.includes('drop') ? 'down bad' : 'muted';
+  const availClass = (s) => s.startsWith('Available') ? '' : s.startsWith('Doubtful') ? 'warn' : 'bad';
+
+  const summaryField = (field, fmt) => (el) => {
+    const s = dash.data('summary');
+    const row = s.status === 'ok' ? s.data[0] : null;
+    el.textContent = row && row[field] != null ? (fmt ? fmt(row[field]) : String(row[field])) : '—';
+  };
+  dash.draw('next-gw', summaryField('next_gw'));
+  dash.draw('deadline', summaryField('deadline_utc', fmtDateTime));
+  dash.draw('ft', summaryField('free_transfers'));
+  dash.draw('bank-lede', summaryField('bank_m', money));
+  dash.draw('as-of', summaryField('as_of_utc', fmtDateTime));
+  dash.draw('rank', summaryField('overall_rank', comma));
+  dash.draw('last-gw', summaryField('last_gw'));
+  dash.draw('ft-tile', summaryField('free_transfers'));
+  dash.draw('made', summaryField('transfers_made_next_gw'));
+  dash.draw('bank', summaryField('bank_m', money));
+  dash.draw('sell-value', summaryField('selling_value_m', money));
+  dash.draw('market-value', summaryField('market_value_m', money));
+  dash.draw('hit-points', summaryField('hit_points_season'));
+  dash.draw('hits', summaryField('hits_taken'));
+
+  const cell = (tr, text, cls) => {
+    const td = tr.insertCell();
+    td.textContent = text;
+    if (cls) td.className = cls;
+    return td;
+  };
+
+  dash.draw('squad', (tbody) => {
+    const s = dash.data('squad');
+    const rows = s.status === 'ok' ? s.data : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      if (r.role !== 'Starting') tr.className = 'hb-bench';
+      cell(tr, r.role, 'nowrap muted');
+      cell(tr, r.player, 'nowrap');
+      cell(tr, r.pos);
+      cell(tr, r.team, 'wide-only');
+      cell(tr, money(r.sell_m), 'num');
+      cell(tr, money(r.bought_m), 'num wide-only');
+      cell(tr, money(r.now_m), 'num wide-only');
+      cell(tr, money(r.locked_gain_m), r.locked_gain_m > 0 ? 'num pos' : 'num muted');
+      const a = cell(tr, r.availability, availClass(r.availability));
+      if (r.news) a.title = r.news;
+      cell(tr, r.price_status, 'nowrap wide-only ' + priceClass(r.price_status));
+      cell(tr, r.next_fixtures, 'fixtures');
+    }
+  });
+
+  dash.draw('price-watch', (tbody) => {
+    const s = dash.data('squad');
+    const rows = s.status === 'ok'
+      ? s.data.filter((r) => r.price_status.includes('rise') || r.price_status.includes('drop'))
+      : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      cell(tr, r.player, 'nowrap');
+      cell(tr, r.price_status, 'nowrap ' + priceClass(r.price_status));
+      cell(tr, r.price_progress_pct == null ? '' : pct(r.price_progress_pct), 'num');
+      cell(tr, money(r.sell_m), 'num');
+      cell(tr, pct(r.owned_by_pct), 'num wide-only');
+    }
+    const none = s.status === 'ok' && rows.length === 0;
+    document.querySelectorAll('.hb-pw-none').forEach((n) => { n.hidden = !none; });
+  });
+
+  dash.draw('chips', (tbody) => {
+    const s = dash.data('chips');
+    const rows = s.status === 'ok' ? s.data : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = encodeURIComponent(r.chip) + ',' + encodeURIComponent(r.set);
+      cell(tr, r.chip, 'nowrap');
+      cell(tr, r.window, 'nowrap muted');
+      cell(tr, r.status, 'nowrap ' + (r.status === 'Available' ? 'ok' : r.status.startsWith('Used') ? 'muted' : ''));
+      cell(tr, r.use_by_utc ? fmtDate(r.use_by_utc) : '', 'nowrap');
+    }
+  });
+
+  dash.draw('ft-history', (tbody) => {
+    const s = dash.data('ft_history');
+    const rows = s.status === 'ok' ? [...s.data].sort((a, b) => b.gw - a.gw) : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.gw);
+      cell(tr, String(r.gw), 'num');
+      cell(tr, String(r.ft_available), 'num');
+      cell(tr, String(r.transfers), 'num');
+      cell(tr, String(r.hit_points), r.hit_points ? 'num bad' : 'num muted');
+      cell(tr, r.chip);
+    }
+  });
+</script>

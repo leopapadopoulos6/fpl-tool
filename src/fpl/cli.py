@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import time
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -14,10 +15,11 @@ from rich.table import Table
 
 from fpl.api import endpoints as ep
 from fpl.api.client import FPLAPIError, FPLClient
-from fpl.api.models import Event
+from fpl.api.models import Bootstrap, Entry, EntryHistory, Event, Fixture
 from fpl.config import get_settings
 from fpl.rules import GameRules
 from fpl.state import ManagerState, build_state
+from fpl.ui.dashboard import build_datasets, write_datasets
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 console = Console()
@@ -156,7 +158,17 @@ def file_pre_deadline_copy(
     return dest
 
 
-def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
+@dataclass
+class Context:
+    state: ManagerState
+    rules: GameRules
+    bootstrap: Bootstrap
+    fixtures: list[Fixture]
+    entry: Entry
+    history: EntryHistory
+
+
+def load_context(eid: int, offline: bool = False) -> Context:
     with FPLClient(offline=offline) as c:
         b = ep.bootstrap_static(c)
         e = ep.entry(c, eid)
@@ -164,6 +176,7 @@ def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules
         latest = max(r.event for r in h.current)
         picks = ep.entry_picks(c, eid, latest)
         tr = ep.entry_transfers(c, eid)
+        fx = ep.fixtures(c)
         rules = GameRules.from_bootstrap(b)
 
         def initial_price(element: int, gw: int) -> int:
@@ -174,7 +187,32 @@ def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules
             bootstrap=b, entry=e, history=h, picks=picks, transfers=tr, rules=rules,
             initial_price_lookup=initial_price,
         )
-    return st, rules
+    return Context(st, rules, b, fx, e, h)
+
+
+def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
+    ctx = load_context(eid, offline)
+    return ctx.state, ctx.rules
+
+
+@app.command("dashboard-data")
+def dashboard_data(
+    out: Annotated[Path, typer.Option("--out", help="Directory for the dataset JSON files")],
+    entry: EntryOpt = None,
+    offline: OfflineOpt = False,
+) -> None:
+    """Write the phone dashboard's datasets (summary, squad, chips, ft_history) as JSON."""
+    eid = entry or get_settings().entry_id
+    ctx = load_context(eid, offline)
+    last = max(ctx.history.current, key=lambda r: r.event)
+    data = build_datasets(
+        ctx.bootstrap, ctx.state, ctx.fixtures, datetime.now(UTC),
+        last_gw_points=last.points, total_points=last.total_points,
+    )
+    for p in write_datasets(data, out):
+        console.print(f"wrote {p} ({len(data[p.stem])} rows)")
+    for w in ctx.state.warnings:
+        console.print(f"[yellow]warning:[/] {w}")
 
 
 @app.command()

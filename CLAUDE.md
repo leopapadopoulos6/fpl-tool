@@ -89,7 +89,7 @@ Quirks:
 ## User interface (decided 2026-11-06: hybrid GUI)
 The user interacts through a GUI, not the CLI. The CLI is plumbing for automation and development.
 
-- **Read-only dashboard (phone):** a static HTML page rebuilt automatically before each deadline and published as a private claude.ai page. It shows precomputed decisions, top-N alternative plans with Δ xPts, the chip-gain table, fixture grid, player table and model health. No server.
+- **Read-only dashboard (phone):** a private claude.ai Dashboard page, eventually showing precomputed decisions, top-N alternative plans with Δ xPts, the chip-gain table, fixture grid, player table and model health. No server. See "Phone dashboard" below.
 - **Streamlit app (local, `uv run fpl ui`):** live what-ifs. Lock or ban players, force a hit or roll, change horizon and decay, and re-solve the MILP. It imports the engine directly.
 
 Planned pages, shared by both:
@@ -101,6 +101,17 @@ Planned pages, shared by both:
 - **Model health:** backtest calibration.
 
 Build pages alongside the models they display. No placeholder-number UI. Model health comes first.
+
+## Phone dashboard (v0 live since 2026-11-06)
+- **URL:** https://claude.ai/artifact/JU1PKMicRTv6Hbn9yng1PP ("HaramBall FPL"). It is private to the user's account. Open it in the Claude app or a signed-in browser, and pin it in the claude.ai sidebar.
+- **Type:** it is built on the claude.ai **Dashboard** artifact type. The page lives in the dashboard's store as `files/index.html`; the repo copy is `src/fpl/ui/dashboard_page.html`. Every figure comes from a dataset, and the page has no hardcoded numbers.
+- **Datasets:** `summary`, `squad`, `chips`, `ft_history`. They are JSON files built by `src/fpl/ui/dashboard.py` and written with `uv run fpl dashboard-data --out DIR`. v0 is real current state only; no model output appears until that model passes its backtest.
+- **Refresh:** a GitHub Action cannot publish a claude.ai page, so a **Claude routine** does it ("FPL dashboard refresh", daily at about 03:23 UK). For each dataset it:
+  1. runs `fpl dashboard-data`;
+  2. uploads the file as an asset;
+  3. reads `datasets/<id>`, then updates `url`, `name`, `updated` and `edit` (pinned with `if_version`);
+  4. deletes the old asset.
+- **Changing the page:** edit `src/fpl/ui/dashboard_page.html`, then write it to `files/index.html` (read it first: the user may have edited it). Follow the type's rules: fixed text lives in the HTML; numbers go in `data-draw` elements marked with `data-source`/`data-field`.
 
 ## Data persistence
 The container is ephemeral and `data/` is gitignored on code branches. Snapshots live on the **`data` branch**, written by `.github/workflows/snapshot.yml`:
@@ -130,8 +141,10 @@ src/fpl/
                      - bank
                      - FT replay with per-GW self-check against recorded hit costs
                      - chips remaining
-  cli.py             `fpl doctor | fetch | state` (later: `plan | whatif | chips | ui`)
-  ui/                Streamlit app + static dashboard builder           (not started)
+  cli.py             `fpl doctor | fetch | state | dashboard-data` (later: `plan | whatif | chips | ui`)
+  ui/dashboard.py    phone dashboard datasets (summary, squad, chips, ft_history)
+  ui/dashboard_page.html  the dashboard page (copy of the store's files/index.html)
+  ui/ (later)        Streamlit app for live what-ifs
   models/            team_strength.py, minutes.py, xpts.py         (design docstrings only)
   optimize/milp.py   HiGHS multi-GW MILP                            (design docstring only)
   chips/planner.py   per-chip, per-GW forced-chip re-solves          (design docstring only)
@@ -188,6 +201,7 @@ Session 2 (2026-11-06):
 - Hybrid GUI decided.
 - `data` branch seeded with the 2026-11-06 daily snapshot and the GW10 pre-deadline capture (taken 1.95 h before the deadline).
 - Snapshot workflow added. It needs merging to `main` to run.
+- Phone dashboard v0 published (real state only), with a daily refresh routine.
 
 **Next:**
 1. Feature tables from element-summary/live.
