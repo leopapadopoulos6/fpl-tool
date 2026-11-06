@@ -47,7 +47,8 @@ def _cum_rate(df: pd.DataFrame, flag: pd.Series) -> pd.Series:
     return (num / den).where(den > 0)
 
 
-def team_congestion(team_matches: pd.DataFrame, fixtures: pd.DataFrame | None = None) -> pd.DataFrame:
+def team_congestion(team_matches: pd.DataFrame,
+                    fixtures: pd.DataFrame | None = None) -> pd.DataFrame:
     """Rest days before each team match (league fixtures only; cup/European games are not in
     the FPL API, so congestion is understated in weeks with midweek cup ties)."""
     tm = team_matches.copy()
