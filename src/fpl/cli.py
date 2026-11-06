@@ -203,6 +203,46 @@ def build_tables_cmd(offline: OfflineOpt = False) -> None:
         console.print(f"{name}: {len(df):,} rows -> {out / (name + '.parquet')}")
 
 
+@app.command("backtest-teams")
+def backtest_teams(
+    tune: Annotated[str, typer.Option(help="Rounds to tune on, e.g. 2-6")] = "2-6",
+    test: Annotated[str, typer.Option(help="Held-out rounds to score, e.g. 7-9")] = "7-9",
+) -> None:
+    """Tune and backtest the team-strength model vs naive baselines; write a JSON report."""
+    import json
+
+    import pandas as pd
+
+    from fpl.backtest.team_strength import grid_search, predictions, score
+    from fpl.data.priors import team_prior
+    from fpl.models.team_strength import TeamStrengthParams as P
+
+    def rng(s: str) -> list[int]:
+        a, b = (int(x) for x in s.split("-"))
+        return list(range(a, b + 1))
+
+    settings = get_settings()
+    tm = pd.read_parquet(settings.data_dir / "processed" / "team_matches.parquet")
+    with FPLClient(settings) as c:
+        prior = team_prior(ep.bootstrap_static(c), settings.data_dir)
+    grid = [P(r, h, g) for r in (3.0, 10.0, 30.0, 100.0) for h in (None, 45.0)
+            for g in (0.0, 0.3)]
+    gs = grid_search(tm, rng(tune), grid, prior)
+    b = gs.iloc[0]
+    best = P(float(b.ridge), None if pd.isna(b.half_life_days) else float(b.half_life_days),
+             float(b.goal_weight))
+    held = score(predictions(tm, best, rng(test), prior))
+    console.print(f"chosen on GW{tune}: {best}")
+    console.print(held.round(4).to_string(index=False))
+    out = settings.data_dir / "processed" / "reports"
+    out.mkdir(parents=True, exist_ok=True)
+    report = {"model": "team_strength", "tune_rounds": tune, "test_rounds": test,
+              "params": best.__dict__, "holdout": held.to_dict("records"),
+              "created_utc": datetime.now(UTC).isoformat()}
+    (out / "team_strength.json").write_text(json.dumps(report, indent=1))
+    console.print(f"report -> {out / 'team_strength.json'}")
+
+
 def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
     ctx = load_context(eid, offline)
     return ctx.state, ctx.rules

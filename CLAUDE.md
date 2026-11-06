@@ -148,7 +148,12 @@ src/fpl/
   ui/ (later)        Streamlit app for live what-ifs
   data/tables.py     player_matches (per player per fixture, team derived from fixture side)
                      + team_matches (xG for/against per team per finished fixture)
-  models/            team_strength.py, minutes.py, xpts.py         (design docstrings only)
+  data/features.py   as-of (prior-only) player form features: starts/minutes last 1/3/5, rates, per-90s
+  data/priors.py     last-season (2025/26) team ratings from the vaastav mirror, keyed by team `code`;
+                     promoted teams = mean of last season's 3 weakest
+  models/team_strength.py  Poisson on team xG, home adv, ridge toward last-season prior
+  backtest/team_strength.py  rolling-origin backtest vs `league` and `naive` (season averages)
+  models/            minutes.py, xpts.py                            (design docstrings only)
   optimize/milp.py   HiGHS multi-GW MILP                            (design docstring only)
   chips/planner.py   per-chip, per-GW forced-chip re-solves          (design docstring only)
   backtest/xpts.py   rolling-origin calibration report + gate        (design docstring only)
@@ -176,6 +181,7 @@ uv run fpl fetch [--full] [--pre-deadline-hours 3]
                                  # snapshot time-sensitive state; --full adds all live GWs,
                                  # all picks and every element-summary (~670 requests)
 uv run fpl build-tables          # all element-summaries -> data/processed/{player,team}_matches.parquet
+uv run fpl backtest-teams        # tune GW2-6, score held-out GW7-9 vs baselines -> data/processed/reports/
 uv run fpl --help
 ```
 
@@ -211,10 +217,23 @@ Session 3 (2026-11-06): M1 started.
 - `fpl build-tables` written and run: 5,890 player-match rows and 180 team-match rows (GW1–9).
 - DefCon field semantics verified.
 
+Session 4 (2026-11-06): M1 done, team strength built and backtested.
+
+Team strength backtest. Tuned on GW2–6 (chosen: ridge 100, no decay, xG-only target); scored on held-out GW7–9 (n=60 team-matches):
+
+| Predictor | Goal NLL | CS Brier | xG MAE |
+|---|---|---|---|
+| Model | 1.399 | 0.235 | 0.636 |
+| Naive season averages | 1.393 | 0.236 | 0.635 |
+| League average | 1.426 | 0.244 | 0.675 |
+
+- The model beats league average clearly. It **ties** naive season averages: the 90% bootstrap CIs on the differences include 0.
+- In GW2–3 it is far better than naive (xG MAE 0.69 vs 0.93), because last season's priors carry early-season information.
+- Without priors it lost to naive. Lesson: shrink toward last season, not toward league average.
+- Status: accepted as the team-strength input (as good as naive late, far better early, calibrated λ and P(CS)). It is **not** an edge on its own. Revisit once more GWs exist.
+
 **Next:**
-1. Finish M1: minutes/rotation features and fixture-congestion features.
-2. Team strength.
-3. Minutes model.
+1. Minutes model (P(start), P(60+)) with backtest; Model health + Fixtures dashboard sections.
 4. xPts.
 5. Backtest report.
 6. MILP.
