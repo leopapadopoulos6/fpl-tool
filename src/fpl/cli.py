@@ -243,6 +243,16 @@ def backtest_teams(
     console.print(f"report -> {out / 'team_strength.json'}")
 
 
+@app.command()
+def ui() -> None:
+    """Open the local what-if app (Streamlit) in your browser."""
+    import subprocess
+    import sys
+
+    app_path = Path(__file__).parent / "ui" / "app.py"
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)], check=False)
+
+
 def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
     ctx = load_context(eid, offline)
     return ctx.state, ctx.rules
