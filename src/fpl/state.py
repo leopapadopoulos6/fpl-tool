@@ -123,6 +123,7 @@ def build_state(
     transfers: list[Transfer],
     rules: GameRules | None = None,
     initial_price_lookup: Callable[[int, int], int] | None = None,
+    next_gw: int | None = None,
 ) -> ManagerState:
     """``initial_price_lookup(element, gw)`` is only needed if the manager joined after GW1."""
     rules = rules or GameRules.from_bootstrap(bootstrap)
@@ -131,8 +132,9 @@ def build_state(
     warnings: list[str] = []
 
     latest_gw = picks.entry_history.event
-    nxt = bootstrap.next_event()
-    next_gw = nxt.id if nxt else latest_gw + 1
+    if next_gw is None:
+        nxt = bootstrap.next_event()
+        next_gw = nxt.id if nxt else latest_gw + 1
 
     fh_events = {c.event for c in history.chips if c.name == "freehit"}
     permanent = sorted(

@@ -44,6 +44,10 @@ class OptInput:
     chips: dict[int, str] = field(default_factory=dict)  # gw -> wildcard|freehit|bboost|3xc
     first_gw_transfers: int | None = None                 # force n transfers in first GW
     exclude_first_gw_buys: list[frozenset[int]] = field(default_factory=list)
+    # joint chip search: chip -> GWs where the solver may play it (wildcard, bboost, 3xc)
+    chip_search: dict[str, list[int]] = field(default_factory=dict)
+    # no-good cuts on chip assignments: each dict {chip: gw} may not be repeated exactly
+    chip_forbid: list[dict[str, int]] = field(default_factory=list)
     banned: set[int] = field(default_factory=set)
     locked: set[int] = field(default_factory=set)
     settings: OptSettings = field(default_factory=OptSettings)
@@ -70,6 +74,7 @@ class Plan:
     status: str
     objective: float
     gws: list[GWPlan]
+    gap: float = 0.0  # relative MIP gap at termination (0 = proven optimal)
 
     @property
     def total_xpts(self) -> float:
@@ -100,6 +105,22 @@ def solve(inp: OptInput) -> Plan:
     paid = {t: h.addIntegral(lb=0, ub=s.max_hits_per_gw, name=f"paid_{t}") for t in T}
     bank = {t: h.addVariable(lb=0, ub=10_000, name=f"bank_{t}") for t in T}
     h.addConstr(ft[0] == inp.free_transfers)
+
+    if "freehit" in inp.chip_search:
+        raise ValueError("Free Hit is not supported in the joint chip search")
+    u = {(ch, t): b(f"chip_{ch}_{t}") for ch, gws in inp.chip_search.items()
+         for t in gws if t in T}
+    for ch in inp.chip_search:
+        h.addConstr(h.qsum(v for (c_, _), v in u.items() if c_ == ch) <= 1)
+    for t in T:
+        here = [v for (_, t_), v in u.items() if t_ == t]
+        if here:
+            h.addConstr(h.qsum(here) <= (0 if inp.chips.get(t) else 1))
+    for assign in inp.chip_forbid:
+        keys = [(ch, gw) for ch, gw in assign.items()]
+        if all(k in u for k in keys):
+            h.addConstr(h.qsum(u[k] for k in keys) <= len(keys) - 1)
+    big_m = r.squad_size
 
     fh_gw = next((g for g, ch in inp.chips.items() if ch == "freehit"), None)
     if fh_gw is not None:
@@ -151,6 +172,13 @@ def solve(inp: OptInput) -> Plan:
             h.addConstr(ft[i + 1] <= ft[i])
             if chip == "freehit":
                 h.addConstr(n == 0)
+        elif ("wildcard", t) in u:
+            wc = u["wildcard", t]
+            h.addConstr(paid[t] >= n - ft[i] - big_m * wc)
+            h.addConstr(paid[t] <= n)
+            h.addConstr(paid[t] <= s.max_hits_per_gw * (1 - wc))
+            h.addConstr(ft[i + 1] <= ft[i] - (n - paid[t]) + 1 + big_m * wc)
+            h.addConstr(ft[i + 1] <= ft[i] + 1 - wc)
         else:
             h.addConstr(paid[t] >= n - ft[i])
             h.addConstr(paid[t] <= n)
@@ -174,6 +202,21 @@ def solve(inp: OptInput) -> Plan:
             gw_obj = gw_obj + h.qsum(
                 xpt[p] * (s.gk_bench_weight if pos[p] == "GKP" else s.bench_weight)
                 * (sqd[p] - lu[p]) for p in P)
+        if ("bboost", t) in u:
+            ub = u["bboost", t]
+            for p in P:
+                v = b(f"bb_{p}_{t}")
+                h.addConstr(v <= x[p, t] - y[p, t])
+                h.addConstr(v <= ub)
+                bw = s.gk_bench_weight if pos[p] == "GKP" else s.bench_weight
+                gw_obj = gw_obj + xpt[p] * (1 - bw) * v
+        if ("3xc", t) in u:
+            ut = u["3xc", t]
+            for p in P:
+                v = b(f"tc_{p}_{t}")
+                h.addConstr(v <= c[p, t])
+                h.addConstr(v <= ut)
+                gw_obj = gw_obj + xpt[p] * v
         obj = obj + w * gw_obj - HIT_COST * paid[t]
 
     first = T[0]
@@ -186,9 +229,10 @@ def solve(inp: OptInput) -> Plan:
         return Plan(status, float("nan"), [])
     val = lambda v: h.val(v)  # noqa: E731
 
+    chosen = {t: ch for (ch, t), v in u.items() if val(v) > 0.5}
     plans = []
     for i, t in enumerate(T):
-        chip = inp.chips.get(t)
+        chip = inp.chips.get(t) or chosen.get(t)
         if chip == "freehit":
             sq_ids = [p for p in P if val(xf[p]) > 0.5]
             lu_ids = [p for p in P if val(yf[p]) > 0.5]
@@ -214,7 +258,8 @@ def solve(inp: OptInput) -> Plan:
             bench=bench_gk + bench_out, captain=cap, vice=vice, xpts=pts,
             bank_after=int(round(val(bank[t]))),
         ))
-    return Plan(status, float(h.getInfo().objective_function_value), plans)
+    info = h.getInfo()
+    return Plan(status, float(info.objective_function_value), plans, float(info.mip_gap))
 
 
 def candidate_pool(players: pd.DataFrame, xp: pd.DataFrame,

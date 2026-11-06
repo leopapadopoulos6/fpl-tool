@@ -162,7 +162,25 @@
 
   <section class="hb-card" id="chip-gain" data-model-section>
     <h2>First-half chips</h2>
-    <p class="hb-note">Expected gain from playing each chip in each gameweek, against not playing it, re-planning transfers around it. All first-half chips are lost after the gameweek 19 deadline. Future doubles and blanks are not known yet, so late gameweeks will move.</p>
+    <p class="hb-lede">Planned together, your Wildcard, Bench Boost and Triple Captain are worth
+      <b data-draw="chips-value" data-source="chip_summary" data-field="chips_value" data-row="0">—</b> expected points over
+      <span data-draw="chips-horizon" data-source="chip_summary" data-field="horizon" data-row="0">—</span>.
+      Next-best plan: <span data-draw="chips-runner" data-source="chip_summary" data-field="runner_up" data-row="0">—</span>
+      (<span data-draw="chips-runner-cost" data-source="chip_summary" data-field="runner_up_cost" data-row="0">—</span>).</p>
+    <p class="hb-note">All first-half chips are lost after the gameweek 19 deadline. The plan looks four gameweeks past it so a late Wildcard keeps its value. Doubles and blanks are not announced yet, so late gameweeks will move.</p>
+    <div class="hb-scroll">
+      <table data-source="chip_plan" data-row-key="chip" aria-label="Chip plan">
+        <thead><tr>
+          <th data-field="chip">Chip</th>
+          <th data-field="best_gw" class="num">Best GW</th>
+          <th data-field="gain" class="num">Worth</th>
+          <th data-field="next_best_gw" class="num">Next best GW</th>
+          <th data-field="cost_of_next_best" class="num">Cost of waiting/moving</th>
+        </tr></thead>
+        <tbody data-draw="chip-plan"></tbody>
+      </table>
+    </div>
+    <p class="hb-note">Bars: what each chip adds if played in that gameweek, with the other chips at their best gameweeks.</p>
     <div class="hb-chips" data-draw="chip-chart" data-source="chip_gain"></div>
   </section>
 
@@ -224,6 +242,33 @@
     <div class="hb-grid">
       <div class="hb-calib" data-draw="calib-xpts" data-source="calibration"></div>
       <div class="hb-calib" data-draw="calib-start" data-source="calibration"></div>
+    </div>
+  </section>
+
+  <section class="hb-card" id="track-record" data-review-section>
+    <h2>Track record</h2>
+    <p class="hb-lede">Gameweeks graded: <b data-draw="tr-n" data-source="review_summary" data-field="gws_reviewed" data-row="0">—</b>.
+      Forecast error <b data-draw="tr-mae" data-source="review_summary" data-field="model_mae" data-row="0">—</b> points per player against
+      <b data-draw="tr-base" data-source="review_summary" data-field="baseline_mae" data-row="0">—</b> for the best simple baseline.
+      Recommended moves have netted <b data-draw="tr-net" data-source="review_summary" data-field="recommended_moves_net_points" data-row="0">—</b> points in their own gameweek.</p>
+    <p class="hb-note">Each gameweek is graded against what this page published before its deadline, after FPL finalises the points. A move's points count only its first gameweek, so a good long-term move can show a loss here.</p>
+    <div class="hb-scroll">
+      <table data-source="review" data-row-key="gw" aria-label="Track record">
+        <thead><tr>
+          <th data-field="gw" class="num">GW</th>
+          <th data-field="model_mae" class="num">Error</th>
+          <th data-field="baseline_mae" class="num">Baseline</th>
+          <th data-field="recommended">Advice</th>
+          <th data-field="recommended_move_points" class="num">Move pts</th>
+          <th data-field="followed">Followed</th>
+          <th data-field="captain">Captain</th>
+          <th data-field="captain_points" class="num">Pts</th>
+          <th data-field="best_captain" class="wide-only">Best in XI</th>
+          <th data-field="your_points" class="num">You</th>
+          <th data-field="average_points" class="num wide-only">Average</th>
+        </tr></thead>
+        <tbody data-draw="track"></tbody>
+      </table>
     </div>
   </section>
 
@@ -477,6 +522,8 @@
     const d = dash.data('decision');
     const missing = d.status === 'missing';
     document.querySelectorAll('[data-model-section]').forEach((s) => { s.hidden = missing; });
+    const r = dash.data('review');
+    document.querySelectorAll('[data-review-section]').forEach((s) => { s.hidden = r.status === 'missing'; });
   });
 
   const fieldWhere = (id, key, val, field, fmt) => (el) => {
@@ -577,6 +624,52 @@
       td(tr, f1(r.eo_top10k), 'num');
       td(tr, r.owned);
       td(tr, r.affordable, 'wide-only ' + (r.affordable === 'No' ? 'muted' : ''));
+    }
+  });
+
+  const firstField = (id, f, fmt) => (el) => {
+    const r = rowsOf(id)[0];
+    el.textContent = r && r[f] != null && r[f] !== '' ? (fmt ? fmt(r[f]) : String(r[f])) : '—';
+  };
+  dash.draw('chips-value', firstField('chip_summary', 'chips_value', f1));
+  dash.draw('chips-horizon', firstField('chip_summary', 'horizon'));
+  dash.draw('chips-runner', firstField('chip_summary', 'runner_up'));
+  dash.draw('chips-runner-cost', firstField('chip_summary', 'runner_up_cost', f1));
+  dash.draw('tr-n', firstField('review_summary', 'gws_reviewed'));
+  dash.draw('tr-mae', firstField('review_summary', 'model_mae', f2));
+  dash.draw('tr-base', firstField('review_summary', 'baseline_mae', f2));
+  dash.draw('tr-net', firstField('review_summary', 'recommended_moves_net_points', f1));
+
+  dash.draw('chip-plan', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('chip_plan')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = r.chip;
+      if (r.now === 'Yes') tr.className = 'hb-rec';
+      td(tr, r.chip, 'nowrap');
+      td(tr, String(r.best_gw), 'num');
+      td(tr, f1(r.gain), 'num');
+      td(tr, r.next_best_gw == null ? '' : String(r.next_best_gw), 'num muted');
+      td(tr, r.cost_of_next_best == null ? '' : f1(r.cost_of_next_best), 'num muted');
+    }
+  });
+
+  dash.draw('track', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of [...rowsOf('review')].sort((a, b) => b.gw - a.gw)) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.gw);
+      td(tr, String(r.gw), 'num');
+      td(tr, f2(r.model_mae), 'num ' + (r.model_mae < r.baseline_mae ? 'ok' : 'bad'));
+      td(tr, f2(r.baseline_mae), 'num muted');
+      td(tr, r.recommended);
+      td(tr, f1(r.recommended_move_points), 'num ' + (r.recommended_move_points > 0 ? 'ok' : r.recommended_move_points < 0 ? 'bad' : 'muted'));
+      td(tr, r.followed, r.followed === 'Yes' ? '' : 'muted');
+      td(tr, r.captain, 'nowrap');
+      td(tr, String(r.captain_points), 'num');
+      td(tr, r.best_captain, 'nowrap wide-only muted');
+      td(tr, r.your_points == null ? '' : String(r.your_points), 'num');
+      td(tr, r.average_points == null ? '' : String(r.average_points), 'num wide-only muted');
     }
   });
 

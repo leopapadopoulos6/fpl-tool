@@ -325,10 +325,57 @@ def dashboard_data(
                               get_settings().data_dir, eo, meta, chips=chips))
         gate = data["assumptions"][0]["gate"]
         console.print(f"backtest gate: {gate}")
-    for p in write_datasets(data, out):
+        reviews = _reviews(ctx, pm, offline)
+        if reviews:
+            from fpl.report.ledger import summarise
+
+            data["review"] = reviews
+            data["review_summary"] = [summarise(reviews)]
+            console.print(f"graded GWs: {[r['gw'] for r in reviews]}")
+    ledger_file = get_settings().data_dir / "ledger" / f"gw{ctx.state.next_gw:02d}.json"
+    for p in write_datasets(data, out, ledger_file if ledger_file.exists() else None):
         console.print(f"wrote {p} ({len(data[p.stem])} rows)")
     for w in ctx.state.warnings:
         console.print(f"[yellow]warning:[/] {w}")
+
+
+def _reviews(ctx: Context, pm, offline: bool) -> list[dict]:
+    """Grade every finished, data-checked GW that has a ledger entry."""
+    from fpl.report.ledger import load_all, review
+
+    entries = load_all(get_settings().data_dir / "ledger")
+    events = {e.id: e for e in ctx.bootstrap.events}
+    hist = {h.event: h for h in ctx.history.current}
+    fh = {c.event for c in ctx.history.chips if c.name == "freehit"}
+    rows = []
+    with FPLClient(offline=offline) as c:
+        transfers = ep.entry_transfers(c, ctx.entry.id)
+        for gw, entry in sorted(entries.items()):
+            ev = events.get(gw)
+            if ev is None or not (ev.finished and ev.data_checked):
+                continue
+            moves = [(t.element_in, t.element_out) for t in transfers
+                     if t.event == gw and gw not in fh]
+            rows.append(review(entry, ep.event_live(c, gw), pm,
+                               hist[gw].points if gw in hist else None,
+                               getattr(ev, "average_entry_score", None), moves))
+    return rows
+
+
+@app.command()
+def review(gw: Annotated[int, typer.Option(help="Gameweek to grade")]) -> None:
+    """Grade one finished GW's published forecast and advice (needs data/ledger/gwNN.json)."""
+    import json
+
+    import pandas as pd
+
+    ctx = load_context(get_settings().entry_id)
+    pm = pd.read_parquet(get_settings().data_dir / "processed" / "player_matches.parquet")
+    rows = [r for r in _reviews(ctx, pm, False) if r["gw"] == gw]
+    if not rows:
+        console.print(f"GW{gw}: no ledger entry, or the gameweek is not finished and checked")
+        raise typer.Exit(1)
+    console.print_json(json.dumps(rows[0]))
 
 
 @app.command()

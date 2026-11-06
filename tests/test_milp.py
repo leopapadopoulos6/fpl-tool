@@ -141,3 +141,33 @@ def test_captain_hurdle_keeps_template_captain():
     res.best.gws = [g2]
     res.captaincy = pd.DataFrame({"element": [2, 1], "mean": [7.0, 5.2]})
     assert apply_captain_hurdle(res, eo) is None and g2.captain == 2
+
+
+def test_joint_chip_search_places_each_chip_once(R):
+    # GW3 has one standout captain, so Triple Captain must go there and Bench Boost elsewhere
+    pl, xp = toy([], gws=(1, 2, 3))
+    xp.loc[13, 3] = 15.0
+    plan = run(pl, xp, gws=(1, 2, 3), rules=R,
+               chip_search={"bboost": [1, 2, 3], "3xc": [1, 2, 3]})
+    chips = {g.gw: g.chip for g in plan.gws if g.chip}
+    assert sorted(chips.values()) == ["3xc", "bboost"]
+    assert len(chips) == 2  # never two chips in one GW
+    assert chips[3] == "3xc"
+
+
+def test_joint_wildcard_makes_transfers_free(R):
+    pl, xp = toy([cand(100 + i, xp=6.0, team=9 + i % 3) for i in range(4)], gws=(1, 2))
+    plan = run(pl, xp, gws=(1, 2), rules=R, chip_search={"wildcard": [1, 2]})
+    g = next(g for g in plan.gws if g.chip == "wildcard")
+    assert g.hits == 0 and len(g.buys) >= 3
+
+
+def test_chip_forbid_gives_next_best_assignment(R):
+    pl, xp = toy([], gws=(1, 2))
+    xp.loc[13, 2] = 15.0
+    best = run(pl, xp, gws=(1, 2), rules=R, chip_search={"3xc": [1, 2]})
+    assert next(g.gw for g in best.gws if g.chip == "3xc") == 2
+    nxt = run(pl, xp, gws=(1, 2), rules=R, chip_search={"3xc": [1, 2]},
+              chip_forbid=[{"3xc": 2}])
+    assert all(g.chip != "3xc" or g.gw == 1 for g in nxt.gws)
+    assert nxt.objective < best.objective

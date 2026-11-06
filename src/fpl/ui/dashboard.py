@@ -187,14 +187,22 @@ DATASET_META = {
                      "against simple baselines."),
     "calibration": ("Calibration", "Predicted against actual values, grouped, for expected points "
                     "and start probability."),
+    "chip_plan": ("Chip plan", "Best gameweek for each remaining first-half chip when the chips "
+                  "are planned together, with the value of the next-best gameweek."),
+    "chip_summary": ("Chip plan summary", "Total value of the chip plan, the next-best plan and "
+                     "the planning horizon."),
+    "review": ("Track record", "Each finished gameweek graded against the forecast and advice "
+               "published before its deadline."),
+    "review_summary": ("Track record summary", "Totals across all graded gameweeks."),
     "assumptions": ("Assumptions", "Model version, horizon, decay, hit hurdle, ownership "
                     "source and whether the backtest gate passed."),
 }
-MODEL_DATASETS = ("decision", "captaincy", "lineup", "plan", "chip_gain", "players",
-                  "fixtures_strength")
+MODEL_DATASETS = ("decision", "captaincy", "lineup", "plan", "chip_gain", "chip_plan",
+                  "chip_summary", "players", "fixtures_strength")
 
 
-def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path) -> list[Path]:
+def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path,
+                   ledger_file: Path | None = None) -> list[Path]:
     """Write one JSON file per dataset plus ``manifest.json`` for the refresh routine:
     ``datasets`` (id, file, title, description) and ``remove`` (model datasets withheld
     because the backtest gate failed, so stale recommendations are taken down)."""
@@ -208,7 +216,12 @@ def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path) -> 
         entries.append({"id": name, "file": p.name, "title": title,
                         "description": f"{desc} {SOURCE_NOTE}".strip()})
     gate_failed = "assumptions" in datasets and "decision" not in datasets
-    manifest = {"datasets": entries,
-                "remove": list(MODEL_DATASETS) if gate_failed else []}
+    manifest: dict[str, Any] = {"datasets": entries,
+                                "remove": list(MODEL_DATASETS) if gate_failed else []}
+    if ledger_file is not None:
+        dest = out_dir / f"ledger_{ledger_file.stem}.json"
+        dest.write_text(ledger_file.read_text())
+        manifest["ledger"] = {"collection": "ledger", "doc_id": ledger_file.stem,
+                              "file": dest.name}
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1))
     return paths

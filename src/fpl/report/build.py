@@ -8,7 +8,7 @@ selling prices + bank (the optimizer enforces it; the players table marks it).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -19,13 +19,15 @@ from fpl.api.models import Bootstrap, Fixture
 from fpl.backtest import minutes as bt_min
 from fpl.backtest import team_strength as bt_team
 from fpl.backtest import xpts as bt_xpts
-from fpl.chips.planner import CHIP_LABEL, plan_chips
+from fpl.chips.joint import plan_joint
+from fpl.chips.planner import CHIP_LABEL
 from fpl.data.features import build_player_features
 from fpl.data.priors import team_prior
 from fpl.engine import CAPTAIN_HURDLE, HIT_HURDLE, EngineResult, apply_captain_hurdle, run
 from fpl.models.team_strength import TeamStrengthParams
 from fpl.optimize.milp import OptInput, OptSettings, candidate_pool
 from fpl.pipeline import MODEL_VERSION, forecast, xpts_matrix
+from fpl.report import ledger
 from fpl.rules import GameRules
 from fpl.state import ManagerState
 
@@ -127,6 +129,7 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     cap_note = apply_captain_hurdle(res, eo_map)
     if cap_note:
         out["assumptions"][0]["captain_note"] = cap_note
+    ledger.save(ledger.make_entry(res, eo_map, names), data_dir / "ledger")
     own_map = eo.set_index("element")["owned_pct"].to_dict() if eo is not None else {}
     out.update(_decisions(res, names, eo_map))
     out.update(_lineup(res, names, eo_map, own_map, b))
@@ -134,7 +137,7 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     out["players"] = _players(res, state, eo_map, b)
     out["fixtures_strength"] = _fixtures(res, b)
     if chips:
-        out["chip_gain"] = _chips(b, fixtures, pm, tm, state, rules, prior, settings)
+        out.update(_chips(b, fixtures, pm, tm, state, rules, prior, settings))
     return out
 
 
@@ -241,21 +244,47 @@ def _fixtures(res: EngineResult, b: Bootstrap) -> list[dict]:
             for r in fx.sort_values(["team", "event", "fixture"]).itertuples()]
 
 
-def _chips(b, fixtures, pm, tm, state, rules, prior, settings) -> list[dict]:
+CHIP_TAIL_GWS = 4  # plan this many GWs past the chips' deadline (squad value after it)
+
+
+def _chips(b, fixtures, pm, tm, state, rules, prior, settings) -> dict[str, list[dict]]:
+    """Joint timing of the remaining first-half chips (Wildcard, Bench Boost, Triple
+    Captain), planned to GW19 + CHIP_TAIL_GWS so a late Wildcard keeps its value."""
     first_half = [w for w in state.chips_available if w.stop_event <= 19]
     if not first_half:
-        return []
-    last = max(w.stop_event for w in first_half)
-    fc = forecast(b, fixtures, pm, tm, rules, prior, horizon=last - state.next_gw + 1,
+        return {}
+    end = min(38, max(w.stop_event for w in first_half) + CHIP_TAIL_GWS)
+    fc = forecast(b, fixtures, pm, tm, rules, prior, horizon=end - state.next_gw + 1,
                   start_gw=state.next_gw)
     from fpl.engine import players_frame
     players = players_frame(b, state, rules)
     xp = xpts_matrix(fc)
-    pool = candidate_pool(players, xp, {"GKP": 8, "DEF": 30, "MID": 30, "FWD": 18})
+    pool = candidate_pool(players, xp, {"GKP": 6, "DEF": 20, "MID": 20, "FWD": 12})
     inp = OptInput(players=players.loc[pool], xp=xp.loc[xp.index.intersection(pool)],
                    gws=fc.gws, bank=state.bank, free_transfers=state.free_transfers,
-                   rules=rules, settings=settings)
-    df, _ = plan_chips(inp, first_half)
-    return [{"chip": CHIP_LABEL.get(r.chip, r.chip), "gw": int(r.gw),
-             "gain": round(float(r.gain), 2), "gw_xpts": round(float(r.gw_xpts), 1)}
-            for r in df.itertuples()]
+                   rules=rules, settings=replace(settings, mip_gap=0.005))
+    res = plan_joint(inp, first_half)
+    gain = [{"chip": CHIP_LABEL.get(r["chip"], r["chip"]), "gw": int(r["gw"]),
+             "gain": round(float(r["gain"]), 2), "gw_xpts": round(float(r["gw_xpts"]), 1)}
+            for r in res.by_gw]
+    plan_rows = []
+    for chip, gw in sorted(res.assignment.items(), key=lambda kv: kv[1]):
+        rows = [r for r in res.by_gw if r["chip"] == chip]
+        best = next(r for r in rows if r["gw"] == gw)
+        alt = max((r for r in rows if r["gw"] != gw), key=lambda r: r["gain"], default=None)
+        plan_rows.append({
+            "chip": CHIP_LABEL.get(chip, chip), "best_gw": gw,
+            "gain": round(best["gain"], 2),
+            "next_best_gw": alt["gw"] if alt else None,
+            "cost_of_next_best": round(alt["gain"] - best["gain"], 2) if alt else None,
+            "now": "Yes" if gw == fc.gws[0] else "",
+        })
+    summary = [{"chips_value": round(res.chips_value, 2),
+                "horizon": f"GW{fc.gws[0]}–{fc.gws[-1]}",
+                "runner_up": ", ".join(f"{CHIP_LABEL.get(c, c)} GW{g}" for c, g in
+                                       sorted(res.runner_up[0].items(), key=lambda kv: kv[1]))
+                if res.runner_up else "",
+                "runner_up_cost": round(res.runner_up[1] - res.best.objective, 2)
+                if res.runner_up else None,
+                "solves": res.solves}]
+    return {"chip_gain": gain, "chip_plan": plan_rows, "chip_summary": summary}
