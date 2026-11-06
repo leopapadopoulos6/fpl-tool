@@ -61,6 +61,7 @@ Article sites such as premierleague.com and ffscout are blocked by this environm
   - DEF: CBIT ≥ 10 (clearances, blocks, interceptions, tackles)
   - MID/FWD: CBIRT ≥ 12 (CBIT plus recoveries)
   - GKP: not eligible
+  - **API field semantics (verified):** `defensive_contribution` in element-summary history and in `event/{gw}/live` stats is the **raw action count** (equal to CBIT for DEF and CBIRT for MID/FWD), not points. Points come from the `explain` block. Applying the thresholds to the count reproduced every GW9 award (33 of 33).
 - **BPS changes in 26/27:** CBI gives 1 BPS per 3 (was per 2). A big-chance save gives +1 BPS. The outside-box save metric is removed. The "tackled" penalty was reportedly dropped (single source).
 - **Score finalisation:** GW scores lock at 09:00 UK the day after the GW's last match. Bonus is provisional until `event-status` shows `bonus_added`.
 - **Auto-subs:** processed at GW end in bench order, keeping a valid formation. A DGW player who plays in either match is not subbed.
@@ -145,6 +146,8 @@ src/fpl/
   ui/dashboard.py    phone dashboard datasets (summary, squad, chips, ft_history)
   ui/dashboard_page.html  the dashboard page (copy of the store's files/index.html)
   ui/ (later)        Streamlit app for live what-ifs
+  data/tables.py     player_matches (per player per fixture, team derived from fixture side)
+                     + team_matches (xG for/against per team per finished fixture)
   models/            team_strength.py, minutes.py, xpts.py         (design docstrings only)
   optimize/milp.py   HiGHS multi-GW MILP                            (design docstring only)
   chips/planner.py   per-chip, per-GW forced-chip re-solves          (design docstring only)
@@ -172,6 +175,7 @@ uv run fpl state --offline       # same, from latest snapshots only
 uv run fpl fetch [--full] [--pre-deadline-hours 3]
                                  # snapshot time-sensitive state; --full adds all live GWs,
                                  # all picks and every element-summary (~670 requests)
+uv run fpl build-tables          # all element-summaries -> data/processed/{player,team}_matches.parquet
 uv run fpl --help
 ```
 
@@ -203,8 +207,12 @@ Session 2 (2026-11-06):
 - Snapshot workflow added. It needs merging to `main` to run.
 - Phone dashboard v0 published (real state only), with a daily refresh routine.
 
+Session 3 (2026-11-06): M1 started.
+- `fpl build-tables` written and run: 5,890 player-match rows and 180 team-match rows (GW1–9).
+- DefCon field semantics verified.
+
 **Next:**
-1. Feature tables from element-summary/live.
+1. Finish M1: minutes/rotation features and fixture-congestion features.
 2. Team strength.
 3. Minutes model.
 4. xPts.

@@ -190,6 +190,19 @@ def load_context(eid: int, offline: bool = False) -> Context:
     return Context(st, rules, b, fx, e, h)
 
 
+@app.command("build-tables")
+def build_tables_cmd(offline: OfflineOpt = False) -> None:
+    """Fetch every player's match history and write player/team match tables (parquet)."""
+    from fpl.data.tables import build_tables
+
+    settings = get_settings()
+    out = settings.data_dir / "processed"
+    with FPLClient(settings, offline=offline) as c, console.status("element summaries..."):
+        tables = build_tables(c, out)
+    for name, df in tables.items():
+        console.print(f"{name}: {len(df):,} rows -> {out / (name + '.parquet')}")
+
+
 def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
     ctx = load_context(eid, offline)
     return ctx.state, ctx.rules
