@@ -8,6 +8,6 @@ dist/
 build/
 
 # Raw API snapshots and derived data (large, regenerable, time-stamped)
-data/
+/data/
 
 .env
