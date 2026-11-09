@@ -61,6 +61,87 @@
   .hb-rel { position: relative; }
   .hb .chart-label { fill: var(--color-fg-muted); font-size: 11px; }
   .hb .chart-strong { fill: var(--color-fg); font-size: 11px; font-weight: 500; }
+  .hb [hidden] { display: none !important; }
+  /* section nav */
+  .hb { --hb-nav-h: 2.75rem; }
+  .hb-nav { position: sticky; top: 0; z-index: 5; display: flex; gap: var(--cds-gap-xs); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; background: var(--color-bg); padding: var(--cds-pad-xs) 1.5rem var(--cds-pad-xs) 0; margin-bottom: calc(-1 * var(--cds-gap-sm)); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); }
+  .hb-nav::-webkit-scrollbar { display: none; }
+  .hb-nav a { flex: none; white-space: nowrap; text-decoration: none; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1; padding: .5rem .75rem; border: 1px solid var(--color-border-line); border-radius: 999px; background: var(--color-panel); }
+  .hb-nav a:hover { color: var(--color-fg); }
+  .hb-nav a:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .hb-nav a.is-active { color: var(--color-bg); background: var(--color-fg); border-color: var(--color-fg); }
+  .hb [id] { scroll-margin-top: calc(var(--hb-nav-h) + var(--cds-gap-md)); }
+  /* squad: shared controls */
+  .hb-squad-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .hb-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); }
+  .hb-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+  .hb-seg button { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); background: transparent; border: 0; padding: .4rem .7rem; cursor: pointer; }
+  .hb-seg button + button { border-left: 1px solid var(--color-border-line); }
+  .hb-seg button[aria-pressed=true] { color: var(--color-bg); background: var(--color-fg); }
+  .hb-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .hb-diffbox { border-left: 3px solid var(--color-warn); padding: var(--cds-pad-xs) var(--cds-pad-sm); display: grid; gap: var(--cds-gap-xs); }
+  .hb-diffbox p { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .hb-diff-list { margin: 0; padding-left: 1.1rem; font-size: var(--cds-font-size-body); }
+  .hb-diff-list li + li { margin-top: 2px; }
+  /* pitch */
+  .hb-pitch { position: relative; display: grid; gap: var(--cds-gap-md); padding: var(--cds-pad-md) var(--cds-pad-xs); border-radius: var(--cds-radius); background: color-mix(in srgb, var(--color-ok) 9%, var(--color-panel)); border: 1px solid color-mix(in srgb, var(--color-ok) 30%, var(--color-border-line)); min-height: 18rem; overflow: hidden; }
+  .hb-pitch::before { content: ""; position: absolute; left: 30%; right: 30%; top: -1px; height: 2.6rem; border: 1px solid color-mix(in srgb, var(--color-ok) 35%, transparent); border-top: 0; pointer-events: none; }
+  .hb-pitch::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid color-mix(in srgb, var(--color-ok) 35%, transparent); pointer-events: none; }
+  .hb-prow { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 7.5rem)); justify-content: center; gap: var(--cds-gap-xs); }
+  .hb-benchrow { display: grid; grid-template-columns: repeat(4, minmax(0, 7.5rem)); justify-content: center; gap: var(--cds-gap-xs); padding: var(--cds-pad-sm) var(--cds-pad-xs); border-radius: var(--cds-radius); background: color-mix(in srgb, var(--color-border-line) 30%, transparent); min-height: 6rem; }
+  .hb-pcard { position: relative; min-width: 0; display: grid; gap: 2px; justify-items: center; text-align: center; font: inherit; color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: .45rem .25rem .35rem; cursor: pointer; }
+  .hb-pcard:hover { border-color: var(--color-fg-muted); }
+  .hb-pcard:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .hb-pcard.is-diff { border: 2px dashed var(--color-warn); padding: calc(.45rem - 1px) calc(.25rem - 1px) calc(.35rem - 1px); }
+  .hb-pcard.is-out { opacity: .72; }
+  .hb-pcard.is-sel { box-shadow: 0 0 0 2px var(--color-fg); }
+  .hb-pc-name { display: flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); }
+  .hb-pc-name span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hb-dot { flex: none; width: .7rem; height: .7rem; border-radius: 50%; background: linear-gradient(135deg, var(--c1, #888) 50%, var(--c2, #ccc) 50%); box-shadow: 0 0 0 1px var(--color-border-line); }
+  .hb-pc-team { font-size: 10px; color: var(--color-fg-muted); letter-spacing: .02em; }
+  .hb-pc-fx { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; font-size: 10px; color: var(--color-fg-muted); max-width: 100%; }
+  .hb-pc-fx > span { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+  .hb-pip { display: inline-grid; place-items: center; min-width: 1rem; height: 1rem; padding: 0 2px; border-radius: 3px; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); background: color-mix(in srgb, var(--pip) 28%, transparent); box-shadow: inset 0 -2px 0 var(--pip); }
+  .hb-pip[data-r="1"] { --pip: var(--color-ok); }
+  .hb-pip[data-r="2"] { --pip: color-mix(in srgb, var(--color-ok) 55%, var(--color-warn)); }
+  .hb-pip[data-r="3"] { --pip: var(--color-warn); }
+  .hb-pip[data-r="4"] { --pip: color-mix(in srgb, var(--color-warn) 45%, var(--color-bad)); }
+  .hb-pip[data-r="5"] { --pip: var(--color-bad); }
+  .hb-ha { font-size: 9px; opacity: .8; }
+  .hb-pc-xp { font-family: var(--font-anthropic-serif); font-size: 1.15rem; line-height: 1.1; }
+  .hb-pc-tag { font-size: 10px; line-height: 1.2; color: var(--color-warn); font-weight: var(--cds-font-weight-medium); }
+  .hb-pc-badge { position: absolute; top: -6px; right: -4px; min-width: 1.1rem; height: 1.1rem; display: grid; place-items: center; border-radius: 50%; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-bg); background: var(--color-fg); }
+  .hb-pc-flag { position: absolute; top: -6px; left: -4px; min-width: 1.1rem; height: 1.1rem; padding: 0 3px; display: grid; place-items: center; border-radius: 999px; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-bg); background: var(--color-warn); }
+  .hb-pc-flag.bad { background: var(--color-bad); }
+  .hb-pc-order { position: absolute; top: 2px; left: 4px; font-size: 9px; color: var(--color-fg-muted); }
+  .hb-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-xs) var(--cds-gap-sm); }
+  .hb tr.hb-tap { cursor: pointer; }
+  .hb tr.hb-tap:hover td, .hb tr.is-sel td { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+  .hb tr.hb-tap:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  /* player detail */
+  .hb-detail { border: 1px solid var(--color-fg-muted); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); }
+  .hb-detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .hb-detail-head h3 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .hb-btn { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: transparent; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: .35rem .7rem; cursor: pointer; }
+  .hb .hb-dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-xs) var(--cds-gap-lg); margin: 0; max-width: none; }
+  .hb-dgrid > div { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); border-bottom: 1px solid var(--color-border-line); padding: 3px 0; min-width: 0; }
+  .hb-dgrid dt { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); flex: none; }
+  .hb-dgrid dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .hb-dgrid .hb-wide { grid-column: 1 / -1; }
+  @media (max-width: 30rem) {
+    .hb #squad { padding: var(--cds-pad-md) var(--cds-pad-sm); }
+    .hb-pitch { padding: var(--cds-pad-md) 6px; gap: var(--cds-gap-sm); }
+    .hb-benchrow { padding: var(--cds-pad-sm) 6px; }
+    .hb-prow, .hb-benchrow { gap: 3px; }
+    .hb-pcard { padding: .45rem 2px .3rem; }
+    .hb-ha { font-size: 9px; opacity: .8; }
+  .hb-pc-xp { font-size: 1rem; }
+    .hb-pc-name { gap: 3px; }
+    .hb-dot { width: .55rem; height: .55rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hb-nav a, .hb-seg button { transition: background-color var(--cds-dur-slow) var(--cds-ease-out), color var(--cds-dur-slow) var(--cds-ease-out); }
+  }
 </style>
 
 <div class="hb">
@@ -75,7 +156,23 @@
     <p class="hb-asof">Updated <span data-draw="as-of" data-source="summary" data-field="as_of_utc" data-row="0">—</span>. Recommendations come from models that are re-tested every day; see Model health.</p>
   </header>
 
-  <section class="hb-card hb-lead" id="this-gw" data-model-section>
+  <nav class="hb-nav" id="nav" aria-label="Dashboard sections">
+    <a href="#transfers">This GW</a>
+    <a href="#planner">Planner</a>
+    <a href="#chips">Chips</a>
+    <a href="#players">Players</a>
+    <a href="#fixtures">Fixtures</a>
+    <a href="#model-health">Health</a>
+    <a href="#track-record">Record</a>
+    <a href="#team">Team</a>
+    <a href="#price-watch">Prices</a>
+    <a href="#squad">Squad</a>
+    <a href="#chip-status">Chip status</a>
+    <a href="#ft-history">Transfers</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <section class="hb-card hb-lead" id="transfers" data-model-section>
     <h2>This gameweek</h2>
     <p class="hb-lede">
       Recommended: <b data-draw="rec-label" data-source="decision" data-field="label" data-where="recommended=Yes">—</b>
@@ -160,7 +257,7 @@
     </div>
   </section>
 
-  <section class="hb-card" id="chip-gain" data-model-section>
+  <section class="hb-card" id="chips" data-model-section>
     <h2>First-half chips</h2>
     <p class="hb-lede">Planned together, your Wildcard, Bench Boost and Triple Captain are worth
       <b data-draw="chips-value" data-source="chip_summary" data-field="chips_value" data-row="0">—</b> expected points over
@@ -272,7 +369,7 @@
     </div>
   </section>
 
-  <h2 class="hb-section-head" id="team-now">Your team now</h2>
+  <h2 class="hb-section-head" id="team">Your team now</h2>
 
   <section class="hb-tiles" id="figures" aria-label="Key figures">
     <div class="hb-tile">
@@ -321,30 +418,90 @@
   </section>
 
   <section class="hb-card" id="squad">
-    <h2>Squad</h2>
-    <p class="hb-note">Starting eleven, then the bench in auto-sub order. Selling price is what you get back if you sell today.</p>
-    <div class="hb-scroll">
-      <table data-source="squad" data-row-key="element" aria-label="Squad">
-        <thead><tr>
-          <th data-field="role">Role</th>
-          <th data-field="player">Player</th>
-          <th data-field="pos">Pos</th>
-          <th data-field="team" class="wide-only">Team</th>
-          <th data-field="sell_m" class="num">Sell £m</th>
-          <th data-field="bought_m" class="num wide-only">Bought £m</th>
-          <th data-field="now_m" class="num wide-only">Now £m</th>
-          <th data-field="locked_gain_m" class="num">Gain £m</th>
-          <th data-field="availability">Availability</th>
-          <th data-field="price_status" class="wide-only">FPL price status</th>
-          <th data-field="next_fixtures">Next five gameweeks</th>
-        </tr></thead>
-        <tbody data-draw="squad"></tbody>
-      </table>
+    <div class="hb-squad-head">
+      <h2>Squad</h2>
+      <div class="hb-controls">
+        <div class="hb-seg" role="group" aria-label="Squad view">
+          <button type="button" data-squad-view="formation" aria-pressed="true">Formation</button>
+          <button type="button" data-squad-view="list" aria-pressed="false">List</button>
+        </div>
+        <div class="hb-seg" role="group" aria-label="Whose line-up" data-engine-only>
+          <button type="button" data-squad-pick="mine" aria-pressed="true">Your team</button>
+          <button type="button" data-squad-pick="engine" aria-pressed="false">Engine's pick</button>
+        </div>
+      </div>
+    </div>
+    <p class="hb-note">Your team as picked for gameweek <span data-draw="squad-last-gw" data-source="summary" data-field="last_gw" data-row="0">—</span>, plus transfers you have already made for gameweek <span data-draw="squad-next-gw" data-source="summary" data-field="next_gw" data-row="0">—</span>. FPL shows changes made in its app (line-up, captain) only after the deadline. Tap a player for details.</p>
+    <div class="hb-diffbox" id="engine-diff" hidden>
+      <p>Where the engine's pick for the coming gameweek differs from yours:</p>
+      <ul class="hb-diff-list" data-draw="team-diff" data-source="squad lineup"></ul>
+    </div>
+    <div class="hb-sub-card" id="squad-pane-formation" data-squad-pane="formation">
+      <h3>Starting eleven <span data-draw="formation-shape">—</span></h3>
+      <div class="hb-pitch" data-draw="formation" data-source="squad lineup" role="group" aria-label="Starting eleven by position">—</div>
+      <h3>Bench, in auto-sub order</h3>
+      <div class="hb-benchrow" data-draw="bench" data-source="squad lineup" role="group" aria-label="Bench in auto-sub order">—</div>
+      <div class="hb-note hb-legend">
+        <span>Big number: expected points next gameweek.</span>
+        <span>Fixture rating from our own model, <span class="hb-pip" data-r="1">1</span> easiest to <span class="hb-pip" data-r="5">5</span> hardest: clean-sheet chance for goalkeepers and defenders, expected goals for midfielders and forwards.</span>
+        <span>H home, A away.</span>
+        <span>C captain, V vice-captain; ! doubtful, ✕ unavailable. A dashed outline marks a player the engine would use differently.</span>
+      </div>
+    </div>
+    <div class="hb-sub-card" id="squad-pane-list" data-squad-pane="list" hidden>
+      <p class="hb-note">Starting eleven, then the bench in auto-sub order. Selling price is what you get back if you sell today.</p>
+      <div class="hb-scroll">
+        <table data-source="squad" data-row-key="element" aria-label="Squad">
+          <thead><tr>
+            <th data-field="role">Role</th>
+            <th data-field="player">Player</th>
+            <th data-field="armband">C/V</th>
+            <th data-field="pos">Pos</th>
+            <th data-field="team" class="wide-only">Team</th>
+            <th data-field="xpts_next" class="num">Next GW xPts</th>
+            <th data-field="sell_m" class="num">Sell £m</th>
+            <th data-field="bought_m" class="num wide-only">Bought £m</th>
+            <th data-field="now_m" class="num wide-only">Now £m</th>
+            <th data-field="locked_gain_m" class="num">Gain £m</th>
+            <th data-field="availability">Availability</th>
+            <th data-field="rec_role" class="wide-only">Engine</th>
+            <th data-field="price_status" class="wide-only">FPL price status</th>
+            <th data-field="next_fixtures">Next five gameweeks</th>
+          </tr></thead>
+          <tbody data-draw="squad"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="hb-detail" id="player-detail" hidden>
+      <div class="hb-detail-head">
+        <h3 data-draw="detail-name">—</h3>
+        <button type="button" class="hb-btn" data-detail-close>Close</button>
+      </div>
+      <dl class="hb-dgrid">
+        <div><dt>Team</dt><dd data-draw="detail" data-detail="team" data-field="team">—</dd></div>
+        <div><dt>Position</dt><dd data-draw="detail" data-detail="pos" data-field="pos">—</dd></div>
+        <div><dt>Your role</dt><dd data-draw="detail" data-detail="role" data-field="role">—</dd></div>
+        <div><dt>Armband</dt><dd data-draw="detail" data-detail="armband" data-field="armband">—</dd></div>
+        <div><dt>Engine's role</dt><dd data-draw="detail" data-detail="rec_role" data-field="rec_role">—</dd></div>
+        <div><dt>Availability</dt><dd data-draw="detail" data-detail="availability" data-field="availability">—</dd></div>
+        <div><dt>Expected points next gameweek</dt><dd data-draw="detail" data-detail="xpts_next" data-field="xpts_next">—</dd></div>
+        <div><dt>Start chance</dt><dd data-draw="detail" data-detail="p_start" data-field="p_start">—</dd></div>
+        <div><dt>Top-10k EO %</dt><dd data-draw="detail" data-detail="eo_top10k" data-field="eo_top10k">—</dd></div>
+        <div><dt>Sell £m</dt><dd data-draw="detail" data-detail="sell_m" data-field="sell_m">—</dd></div>
+        <div><dt>Bought £m</dt><dd data-draw="detail" data-detail="bought_m" data-field="bought_m">—</dd></div>
+        <div><dt>Now £m</dt><dd data-draw="detail" data-detail="now_m" data-field="now_m">—</dd></div>
+        <div><dt>Gain locked in £m</dt><dd data-draw="detail" data-detail="locked_gain_m" data-field="locked_gain_m">—</dd></div>
+        <div><dt>FPL price status</dt><dd data-draw="detail" data-detail="price_status" data-field="price_status">—</dd></div>
+        <div><dt>Owned overall %</dt><dd data-draw="detail" data-detail="owned_by_pct" data-field="owned_by_pct">—</dd></div>
+        <div class="hb-wide"><dt>Next five gameweeks</dt><dd data-draw="detail" data-detail="next_fixtures" data-field="next_fixtures">—</dd></div>
+        <div class="hb-wide"><dt>Our fixture ratings, same gameweeks</dt><dd data-draw="detail" data-detail="next5_diff" data-field="next5_diff">—</dd></div>
+        <div class="hb-wide"><dt>News</dt><dd data-draw="detail" data-detail="news" data-field="news">—</dd></div>
+      </dl>
     </div>
   </section>
 
   <div class="hb-grid">
-    <section class="hb-card" id="chips">
+    <section class="hb-card" id="chip-status">
       <h2>Chips</h2>
       <p class="hb-note">First-half chips cannot be carried over: anything unused is lost at the gameweek 19 deadline.</p>
       <div class="hb-scroll">
@@ -360,7 +517,7 @@
       </div>
     </section>
 
-    <section class="hb-card" id="transfers">
+    <section class="hb-card" id="ft-history">
       <h2>Free transfers by gameweek</h2>
       <p class="hb-note">Free transfers you had going into each gameweek, how many you made, and points paid for extras.</p>
       <div class="hb-scroll">
@@ -447,17 +604,21 @@
     for (const r of rows) {
       const tr = tbody.insertRow();
       tr.dataset.key = String(r.element);
-      if (r.role !== 'Starting') tr.className = 'hb-bench';
-      cell(tr, r.role, 'nowrap muted');
+      tr.className = 'hb-tap' + (r.role !== 'Starting' ? ' hb-bench' : '') + (String(r.element) === String(window.hbSel) ? ' is-sel' : '');
+      tr.tabIndex = 0;
+      cell(tr, r.role + (r.is_new === 'Yes' ? ' (new)' : ''), 'nowrap muted');
       cell(tr, r.player, 'nowrap');
+      cell(tr, r.armband === 'Captain' ? 'C' : r.armband === 'Vice-captain' ? 'V' : '');
       cell(tr, r.pos);
       cell(tr, r.team, 'wide-only');
+      cell(tr, r.xpts_next == null ? '—' : d3.format('.1f')(r.xpts_next), 'num');
       cell(tr, money(r.sell_m), 'num');
       cell(tr, money(r.bought_m), 'num wide-only');
       cell(tr, money(r.now_m), 'num wide-only');
       cell(tr, money(r.locked_gain_m), r.locked_gain_m > 0 ? 'num pos' : 'num muted');
       const a = cell(tr, r.availability, availClass(r.availability));
       if (r.news) a.title = r.news;
+      cell(tr, r.rec_role == null ? '—' : r.rec_role + (r.rec_swap ? ' for ' + r.rec_swap : ''), 'nowrap wide-only' + (r.rec_role && r.rec_role !== r.role && !(r.role === 'Starting' && ['Captain', 'Vice-captain'].includes(r.rec_role)) ? ' warn' : ' muted'));
       cell(tr, r.price_status, 'nowrap wide-only ' + priceClass(r.price_status));
       cell(tr, r.next_fixtures, 'fixtures');
     }
@@ -812,4 +973,354 @@
   };
   dash.draw('calib-xpts', calib('xPts', 'Points: predicted (across) vs actual (up)', d3.format('.1f')));
   dash.draw('calib-start', calib('Start probability', 'Starts: predicted (across) vs actual (up)', d3.format('.0%')));
+</script>
+
+<script>
+  // Section nav, squad views (formation / list), engine differences and player detail.
+  // Both squad views read the same `squad` rows; "Engine's pick" reads `lineup` rows with the
+  // same field names. No browser storage: the view choice is the `squad_view` page param.
+  const sqRows = () => { const d = dash.data('squad'); return d.status === 'ok' ? d.data : []; };
+  const luRows = () => { const d = dash.data('lineup'); return d.status === 'ok' ? d.data : []; };
+  const isStart = (role) => !!role && !String(role).startsWith('Bench') && role !== 'New';
+  const POS_ORDER = ['GKP', 'DEF', 'MID', 'FWD'];
+  const hexColor = (c) => (/^#[0-9a-fA-F]{6}$/.test(c || '') ? c : null);
+  const n1 = d3.format('.1f'), n2 = d3.format('.2f'), p0 = d3.format('.0%');
+  const smooth = () => (window.matchMedia('(prefers-reduced-motion: no-preference)').matches ? 'smooth' : 'auto');
+  const key = (v) => String(v);
+  window.hbSel = null;
+  window.hbPick = 'mine';
+  window.hbView = 'formation';
+  window.hbForceView = null;
+
+  // ---- engine differences
+  const engineTag = (r) => {
+    const rec = r.rec_role;
+    if (rec == null) return '';
+    if (rec === 'Sell') return 'Engine: sell' + (r.rec_swap ? ' for ' + r.rec_swap : '');
+    const mine = isStart(r.role), eng = isStart(rec);
+    if (mine && !eng) return 'Engine: bench';
+    if (!mine && eng) return 'Engine: start';
+    if (rec === 'Captain' && r.armband !== 'Captain') return 'Engine: captain';
+    if (rec === 'Vice-captain' && r.armband !== 'Vice-captain') return 'Engine: vice';
+    return '';
+  };
+  const yoursTag = (r, mine) => {
+    if (r.is_new === 'Yes') return 'In' + (r.replaces ? ' for ' + r.replaces : '');
+    const m = mine.get(key(r.element));
+    if (!m) return '';
+    const you = isStart(m.role), eng = isStart(r.role);
+    if (eng && !you) return 'You: bench';
+    if (!eng && you) return 'You: start';
+    if (r.armband === 'Captain' && m.armband !== 'Captain') return 'New captain';
+    if (r.armband === 'Vice-captain' && m.armband !== 'Vice-captain') return 'New vice';
+    return '';
+  };
+  const diffItems = () => {
+    const sq = sqRows(), lu = luRows();
+    if (!sq.length || !lu.length) return [];
+    const mine = new Map(sq.map((r) => [key(r.element), r]));
+    const eng = new Map(lu.map((r) => [key(r.element), r]));
+    const out = [];
+    for (const [band, label] of [['Captain', 'Captain'], ['Vice-captain', 'Vice-captain']]) {
+      const y = sq.find((r) => r.armband === band), e = lu.find((r) => r.armband === band);
+      if (e && (!y || key(y.element) !== key(e.element))) out.push(`${label}: ${e.player} (yours: ${y ? y.player : 'none'})`);
+    }
+    for (const r of lu.filter((x) => x.is_new === 'Yes')) out.push(`Transfer: ${r.replaces || 'a player'} out, ${r.player} in`);
+    const start = lu.filter((r) => isStart(r.role) && mine.has(key(r.element)) && !isStart(mine.get(key(r.element)).role)).map((r) => r.player);
+    const bench = sq.filter((r) => isStart(r.role) && eng.has(key(r.element)) && !isStart(eng.get(key(r.element)).role)).map((r) => r.player);
+    if (start.length) out.push(`Start ${start.join(', ')}`);
+    if (bench.length) out.push(`Bench ${bench.join(', ')}`);
+    const myBench = sq.filter((r) => !isStart(r.role) && eng.has(key(r.element))).sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99)).map((r) => r.player);
+    const enBench = lu.filter((r) => !isStart(r.role)).map((r) => r.player);
+    if (!start.length && !bench.length && myBench.length === enBench.length && myBench.join() !== enBench.join()) out.push(`Bench order: ${enBench.join(', ')}`);
+    return out;
+  };
+
+  // ---- cards
+  const cardsFor = (pick) => {
+    const sq = sqRows(), lu = luRows();
+    if (pick === 'engine' && lu.length) {
+      const mine = new Map(sq.map((r) => [key(r.element), r]));
+      return lu.map((r) => ({ row: r, src: 'lineup', start: isStart(r.role), xField: 'xpts', tag: yoursTag(r, mine) }));
+    }
+    return [...sq].sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
+      .map((r) => ({ row: r, src: 'squad', start: isStart(r.role), xField: 'xpts_next', tag: engineTag(r) }));
+  };
+  const span = (cls, text) => { const e = document.createElement('span'); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const card = (c, order) => {
+    const r = c.row, where = 'element=' + r.element;
+    const mark = (e, field) => { e.dataset.source = c.src; e.dataset.field = field; e.dataset.where = where; return e; };
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hb-pcard';
+    b.dataset.player = key(r.element);
+    const av = String(r.availability || '');
+    const doubt = av.startsWith('Doubtful'), out = !!av && !av.startsWith('Available') && !doubt;
+    if (c.tag) b.classList.add('is-diff');
+    if (out) b.classList.add('is-out');
+    if (key(r.element) === key(window.hbSel)) b.classList.add('is-sel');
+    if (doubt || out) {
+      const pct = /\((\d+)%\)/.exec(av);
+      const f = mark(span('hb-pc-flag' + (out ? ' bad' : ''), out ? '✕' : (pct ? pct[1] + '%' : '!')), 'availability');
+      b.append(f);
+    }
+    if (r.armband === 'Captain' || r.armband === 'Vice-captain') b.append(mark(span('hb-pc-badge', r.armband === 'Captain' ? 'C' : 'V'), 'armband'));
+    if (order) b.append(span('hb-pc-order', order));
+    const dot = span('hb-dot');
+    if (hexColor(r.team_color)) dot.style.setProperty('--c1', r.team_color);
+    if (hexColor(r.team_color2)) dot.style.setProperty('--c2', r.team_color2);
+    const name = span('hb-pc-name');
+    name.append(dot, mark(span(null, r.player), 'player'));
+    b.append(name, mark(span('hb-pc-team', r.team || ''), 'team'));
+    const fx = mark(span('hb-pc-fx'), 'next_opp');
+    const opps = String(r.next_opp || '').split(' + ').filter(Boolean);
+    const diffs = String(r.next_diff ?? '').split('+');
+    if (!opps.length || opps[0] === 'Blank') fx.textContent = 'Blank';
+    opps.filter((o) => o !== 'Blank').forEach((o, i) => {
+      const w = span();
+      if (/^[1-5]$/.test(diffs[i] || '')) { const pip = span('hb-pip', diffs[i]); pip.dataset.r = diffs[i]; w.append(pip); }
+      const m = /^(\S+) \((H|A)\)$/.exec(o);
+      if (m) w.append(span(null, m[1]), span('hb-ha', m[2]));
+      else w.append(document.createTextNode(o));
+      fx.append(w);
+    });
+    b.append(fx);
+    const x = r[c.xField];
+    b.append(mark(span('hb-pc-xp', x == null ? '—' : n1(x)), c.xField));
+    if (c.tag) b.append(span('hb-pc-tag', c.tag));
+    const parts = [r.player, r.team, r.armband, av && av !== 'Available' ? av : '', opps.join(' and ') + (r.next_diff ? `, rating ${r.next_diff}` : ''), x == null ? '' : `${n1(x)} expected points`, c.tag];
+    b.setAttribute('aria-label', parts.filter(Boolean).join(', '));
+    return b;
+  };
+
+  dash.draw('formation', (el) => {
+    el.replaceChildren();
+    const xi = cardsFor(window.hbPick).filter((c) => c.start);
+    if (!xi.length) { el.textContent = '—'; return; }
+    for (const pos of POS_ORDER) {
+      const row = xi.filter((c) => c.row.pos === pos);
+      if (!row.length) continue;
+      const d = document.createElement('div');
+      d.className = 'hb-prow';
+      d.style.setProperty('--n', String(row.length));
+      row.forEach((c) => d.append(card(c)));
+      el.append(d);
+    }
+  });
+  dash.draw('formation-shape', (el) => {
+    const xi = cardsFor(window.hbPick).filter((c) => c.start);
+    el.textContent = xi.length ? ['DEF', 'MID', 'FWD'].map((p) => xi.filter((c) => c.row.pos === p).length).join('-') : '—';
+  });
+  dash.draw('bench', (el) => {
+    el.replaceChildren();
+    const bench = cardsFor(window.hbPick).filter((c) => !c.start);
+    if (!bench.length) { el.textContent = '—'; return; }
+    let n = 0;
+    bench.forEach((c) => el.append(card(c, c.row.pos === 'GKP' ? 'GK' : String(++n))));
+  });
+  dash.draw('team-diff', (ul) => {
+    ul.replaceChildren(...diffItems().map((t) => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  });
+  dash.draw('squad-last-gw', (el) => { const d = dash.data('summary'); el.textContent = d.status === 'ok' && d.data[0] ? String(d.data[0].last_gw) : '—'; });
+  dash.draw('squad-next-gw', (el) => { const d = dash.data('summary'); el.textContent = d.status === 'ok' && d.data[0] ? String(d.data[0].next_gw) : '—'; });
+
+  // ---- player detail (same panel for a pitch card and a list row)
+  const selected = () => {
+    if (window.hbSel == null) return null;
+    const s = sqRows().find((r) => key(r.element) === key(window.hbSel));
+    if (s) return { row: s, src: 'squad' };
+    const l = luRows().find((r) => key(r.element) === key(window.hbSel));
+    return l ? { row: l, src: 'lineup' } : null;
+  };
+  const DETAIL_FMT = {
+    xpts_next: n2, xpts: n2, p_start: p0, eo_top10k: n1, sell_m: n1, bought_m: n1, now_m: n1,
+    locked_gain_m: n1, owned_by_pct: n1,
+  };
+  const LINEUP_FIELD = { xpts_next: 'xpts', rec_role: 'role' };
+  dash.draw('detail', (dd) => {
+    const s = selected(), f = dd.dataset.detail;
+    if (!s) { dd.textContent = '—'; return; }
+    let field = f;
+    if (s.src === 'lineup') field = LINEUP_FIELD[f] || f;
+    let v = s.row[field];
+    if (s.src === 'lineup' && f === 'role') v = 'Not in your squad: the engine buys him' + (s.row.replaces ? ' for ' + s.row.replaces : '');
+    if (s.src === 'squad' && f === 'role' && s.row.is_new === 'Yes') v = s.row.role + ' (bought for the coming gameweek)';
+    if (s.src === 'squad' && f === 'rec_role' && v === 'Sell' && s.row.rec_swap) v = 'Sell for ' + s.row.rec_swap;
+    const fromRow = v === s.row[field];
+    if (fromRow && field in s.row) { dd.dataset.source = s.src; dd.dataset.field = field; dd.dataset.where = 'element=' + s.row.element; }
+    else { dd.removeAttribute('data-source'); dd.removeAttribute('data-where'); }
+    if (v == null || v === '') { dd.textContent = f === 'armband' || f === 'news' ? 'None' : '—'; return; }
+    dd.textContent = DETAIL_FMT[field] ? DETAIL_FMT[field](v) : String(v);
+  });
+  dash.draw('detail-name', (el) => {
+    const s = selected();
+    el.replaceChildren();
+    if (!s) { el.textContent = '—'; return; }
+    const dot = span('hb-dot');
+    if (hexColor(s.row.team_color)) dot.style.setProperty('--c1', s.row.team_color);
+    if (hexColor(s.row.team_color2)) dot.style.setProperty('--c2', s.row.team_color2);
+    const nm = span(null, s.row.player);
+    nm.dataset.source = s.src; nm.dataset.field = 'player'; nm.dataset.where = 'element=' + s.row.element;
+    el.append(dot, nm);
+  });
+
+  let lastTrigger = null;
+  const redrawSquad = () => ['formation', 'formation-shape', 'bench', 'squad', 'detail', 'detail-name'].forEach((n) => dash.draw(n));
+  const openDetail = (id, trigger) => {
+    window.hbSel = id;
+    lastTrigger = trigger && trigger.matches('tr') ? trigger : null;
+    document.querySelectorAll('#player-detail').forEach((p) => { p.hidden = false; });
+    redrawSquad();
+    requestAnimationFrame(() => document.querySelectorAll('#player-detail').forEach((p) => p.scrollIntoView({ block: 'nearest', behavior: smooth() })));
+  };
+  const closeDetail = () => {
+    const id = window.hbSel;
+    window.hbSel = null;
+    document.querySelectorAll('#player-detail').forEach((p) => { p.hidden = true; });
+    redrawSquad();
+    const back = lastTrigger && lastTrigger.isConnected ? lastTrigger
+      : [...document.querySelectorAll('#squad [data-squad-pane]:not([hidden]) [data-player], #squad [data-squad-pane]:not([hidden]) tr[data-key]')].find((e) => (e.dataset.player || e.dataset.key) === key(id));
+    if (back) back.focus({ preventScroll: false });
+  };
+  document.querySelectorAll('#squad').forEach((sec) => {
+    sec.addEventListener('click', (e) => {
+      if (e.target.closest('[data-detail-close]')) { closeDetail(); return; }
+      const t = e.target.closest('[data-player], tbody tr[data-key]');
+      if (t && sec.contains(t)) openDetail(t.dataset.player || t.dataset.key, t);
+    });
+    sec.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && window.hbSel != null) { closeDetail(); return; }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tbody tr[data-key]')) { e.preventDefault(); openDetail(e.target.dataset.key, e.target); }
+    });
+  });
+
+  // ---- view toggles
+  const applyView = (v) => {
+    window.hbView = v;
+    document.querySelectorAll('[data-squad-pane]').forEach((p) => { p.hidden = p.dataset.squadPane !== v; });
+    document.querySelectorAll('[data-squad-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.squadView === v)));
+  };
+  const applyPick = (v) => {
+    window.hbPick = v;
+    document.querySelectorAll('[data-squad-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.squadPick === v)));
+  };
+  document.querySelectorAll('[data-squad-view]').forEach((b) => b.addEventListener('click', () => {
+    const v = b.dataset.squadView;
+    window.hbForceView = null;
+    applyView(v);
+    try { dash.setParams({ squad_view: v }); } catch (err) { /* params unavailable: the choice lasts this visit */ }
+    redrawSquad();
+    requestAnimationFrame(() => b.scrollIntoView({ block: 'nearest' }));  // the views differ in height
+  }));
+  document.querySelectorAll('[data-squad-pick]').forEach((b) => b.addEventListener('click', () => {
+    applyPick(b.dataset.squadPick);
+    redrawSquad();
+    requestAnimationFrame(() => b.scrollIntoView({ block: 'nearest' }));
+  }));
+
+  // ---- section nav
+  const ALIAS = { 'this-gw': 'transfers', 'chip-gain': 'chips', 'team-now': 'team', 'squad-list': 'squad', 'squad-formation': 'squad' };
+  const navLinks = () => [...document.querySelectorAll('.hb-nav a[href^="#"]')];
+  const targetOf = (a) => document.getElementById(a.getAttribute('href').slice(1));
+  const shown = (t) => !!t && !t.closest('[hidden]');
+  let current = null, lockUntil = 0, userMoved = false;
+  const setActive = (id) => {
+    if (id === current) return;
+    current = id;
+    for (const a of navLinks()) {
+      const on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', on);
+      if (on) {
+        a.setAttribute('aria-current', 'location');
+        const nav = a.closest('.hb-nav');
+        if (nav && (a.offsetLeft < nav.scrollLeft || a.offsetLeft + a.offsetWidth > nav.scrollLeft + nav.clientWidth - 24)) {
+          nav.scrollTo({ left: Math.max(0, a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2), behavior: smooth() });
+        }
+      } else a.removeAttribute('aria-current');
+    }
+    try { dash.setLink(id); } catch (err) { /* links unavailable */ }
+  };
+  const navHeight = () => { const n = document.querySelector('.hb-nav'); return n ? n.getBoundingClientRect().height : 0; };
+  let pinned = null;  // a tapped section stays active while it is in view, even at the page end
+  ['wheel', 'touchmove', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { pinned = null; }, { passive: true }));
+  const compute = () => {
+    if (Date.now() < lockUntil) return;
+    if (pinned) {
+      const t = document.getElementById(pinned);
+      const r = t && t.getBoundingClientRect();
+      if (r && r.top < window.innerHeight && r.bottom > 0) { setActive(pinned); return; }
+      pinned = null;
+    }
+    const line = navHeight() + 32;
+    const vis = navLinks().map(targetOf).filter(shown);
+    if (!vis.length) return;
+    let best = vis[0].id;
+    for (const t of vis) if (t.getBoundingClientRect().top <= line) best = t.id;
+    const se = document.scrollingElement;
+    if (se && se.scrollHeight > se.clientHeight && se.scrollTop + se.clientHeight >= se.scrollHeight - 2) {
+      const last = vis[vis.length - 1];
+      if (last.getBoundingClientRect().top < window.innerHeight) best = last.id;
+    }
+    setActive(best);
+  };
+  let raf = 0;
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; compute(); }); };
+  document.addEventListener('scroll', schedule, { passive: true, capture: true });
+  document.addEventListener('scrollend', (e) => {
+    if (e.target && e.target.closest && e.target.closest('.hb-nav')) return;  // the pill row itself
+    lockUntil = 0;
+    schedule();
+  }, { passive: true, capture: true });
+  window.addEventListener('resize', schedule, { passive: true });
+  ['wheel', 'touchstart', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { userMoved = true; }, { passive: true, once: true }));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(schedule, { root: document, threshold: [0, 1] });
+    navLinks().map(targetOf).filter(Boolean).forEach((t) => io.observe(t));
+  }
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => {
+      const h = Math.ceil(navHeight());
+      document.querySelectorAll('.hb').forEach((root) => root.style.setProperty('--hb-nav-h', h + 'px'));
+    });
+    document.querySelectorAll('.hb-nav').forEach((n) => ro.observe(n));
+  }
+  const go = (raw, instant) => {
+    const id = ALIAS[raw] || raw;
+    if (raw === 'squad-list') { window.hbForceView = 'list'; applyView('list'); redrawSquad(); }
+    const t = document.getElementById(id);
+    if (!shown(t) && !(t && t.tagName === 'DETAILS')) return false;
+    if (t.tagName === 'DETAILS') t.open = true;
+    lockUntil = Date.now() + (instant ? 150 : 1500);
+    pinned = id;
+    setActive(id);
+    t.scrollIntoView({ behavior: instant ? 'auto' : smooth(), block: 'start' });
+    return true;
+  };
+  document.querySelectorAll('.hb-nav').forEach((nav) => nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    e.preventDefault();
+    userMoved = true;
+    go(a.getAttribute('href').slice(1));
+  }));
+
+  // ---- per-update state: views from the page param, hidden pills, engine-only controls, deep link
+  const opened = Date.now();
+  const hash = (() => { try { return decodeURIComponent((location.hash || '').slice(1)); } catch (err) { return ''; } })();
+  if (hash === 'squad-list') window.hbForceView = 'list';
+  window.addEventListener('load', () => { if (hash && !userMoved) go(hash, true); });
+  dash.onData(() => {
+    let p = {};
+    try { p = (dash.params && dash.params()) || {}; } catch (err) { p = {}; }
+    const view = window.hbForceView || (p.squad_view === 'list' ? 'list' : 'formation');
+    if (view !== window.hbView || !document.querySelector('[data-squad-pane]:not([hidden])')) applyView(view);
+    const lu = luRows();
+    document.querySelectorAll('[data-engine-only]').forEach((e) => { e.hidden = !lu.length; });
+    if (!lu.length && window.hbPick !== 'mine') applyPick('mine');
+    const items = diffItems();
+    document.querySelectorAll('#engine-diff').forEach((e) => { e.hidden = !items.length; });
+    navLinks().forEach((a) => { const t = targetOf(a); a.hidden = !(shown(t) || (t && t.tagName === 'DETAILS')); });
+    if (hash && !userMoved && Date.now() - opened < 5000) requestAnimationFrame(() => go(hash, true));
+    schedule();
+  });
 </script>

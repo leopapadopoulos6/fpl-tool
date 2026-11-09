@@ -1,0 +1,14 @@
+[
+ {
+  "model_version": "xpts-v1 (team: xG Poisson+2025/26 prior; minutes: logistic; DefCon NB k=6)",
+  "horizon_gws": 6,
+  "decay": 0.9,
+  "bench_weight": 0.1,
+  "ft_value_end": 1.5,
+  "hit_hurdle": 1.0,
+  "captain_hurdle": 1.0,
+  "gate": "passed",
+  "eo_source": "top 10,000 overall, 500 sampled, GW10 picks",
+  "generated_utc": "2026-11-09T17:55:46.026371Z"
+ }
+]

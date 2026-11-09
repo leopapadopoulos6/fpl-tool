@@ -1,0 +1,68 @@
+[
+ {
+  "element": 411,
+  "player": "Haaland",
+  "mean": 5.65,
+  "p10": 2.9,
+  "p90": 10.9,
+  "p_haul": 0.137,
+  "p_blank": 0.039,
+  "eo_top10k": 172.0,
+  "chosen": "Captain"
+ },
+ {
+  "element": 112,
+  "player": "Van Hecke",
+  "mean": 5.01,
+  "p10": 1.9,
+  "p90": 9.0,
+  "p_haul": 0.077,
+  "p_blank": 0.363,
+  "eo_top10k": 20.6,
+  "chosen": "Vice"
+ },
+ {
+  "element": 68,
+  "player": "Tavernier",
+  "mean": 4.97,
+  "p10": 2.2,
+  "p90": 9.2,
+  "p_haul": 0.097,
+  "p_blank": 0.063,
+  "eo_top10k": 62.6,
+  "chosen": ""
+ },
+ {
+  "element": 4,
+  "player": "Gabriel",
+  "mean": 4.53,
+  "p10": 1.8,
+  "p90": 7.8,
+  "p_haul": 0.04,
+  "p_blank": 0.374,
+  "eo_top10k": 21.8,
+  "chosen": ""
+ },
+ {
+  "element": 115,
+  "player": "De Cuyper",
+  "mean": 4.52,
+  "p10": 0.9,
+  "p90": 8.9,
+  "p_haul": 0.086,
+  "p_blank": 0.504,
+  "eo_top10k": 77.4,
+  "chosen": ""
+ },
+ {
+  "element": 40,
+  "player": "Rogers",
+  "mean": 4.47,
+  "p10": 2.2,
+  "p90": 8.2,
+  "p_haul": 0.068,
+  "p_blank": 0.052,
+  "eo_top10k": 88.8,
+  "chosen": ""
+ }
+]

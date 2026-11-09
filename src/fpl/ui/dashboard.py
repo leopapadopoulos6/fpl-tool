@@ -29,6 +29,37 @@ PRICE_LABELS = {5: "Very likely to rise", 4: "Likely to rise", -4: "Likely to dr
 NO_PRICE_CHANGE = "Unlikely to change"
 NEXT_FIXTURES = 5
 
+# Plain team-colour pairs (primary, secondary) for the squad markers, keyed by the stable FPL
+# team ``code``. Only two colours per club: no crests, kits or other club assets.
+TEAM_COLORS: dict[int, tuple[str, str]] = {
+    3: ("#EF0107", "#FFFFFF"),    # Arsenal
+    7: ("#670E36", "#95BFE5"),    # Aston Villa
+    91: ("#DA291C", "#000000"),   # Bournemouth
+    94: ("#E30613", "#FFFFFF"),   # Brentford
+    36: ("#0057B8", "#FFFFFF"),   # Brighton
+    8: ("#034694", "#FFFFFF"),    # Chelsea
+    9: ("#59CBE8", "#FFFFFF"),    # Coventry City
+    31: ("#1B458F", "#C4122E"),   # Crystal Palace
+    11: ("#003399", "#FFFFFF"),   # Everton
+    54: ("#FFFFFF", "#000000"),   # Fulham
+    88: ("#F5A12D", "#000000"),   # Hull City
+    40: ("#3A64A3", "#FFFFFF"),   # Ipswich Town
+    2: ("#FFFFFF", "#1D428A"),    # Leeds
+    14: ("#C8102E", "#00B2A9"),   # Liverpool
+    43: ("#6CABDD", "#1C2C5B"),   # Man City
+    1: ("#DA291C", "#FBE122"),    # Man Utd
+    4: ("#241F20", "#FFFFFF"),    # Newcastle
+    17: ("#DD0000", "#FFFFFF"),   # Nott'm Forest
+    6: ("#FFFFFF", "#132257"),    # Spurs
+    56: ("#EB172B", "#FFFFFF"),   # Sunderland
+    39: ("#FDB913", "#231F20"),   # Wolves
+    21: ("#7A263A", "#1BB1E7"),   # West Ham
+    90: ("#6C1D45", "#99D6EA"),   # Burnley
+    13: ("#003090", "#FDBE11"),   # Leicester
+    20: ("#D71920", "#FFFFFF"),   # Southampton
+}
+FALLBACK_COLORS = ("#8A8F98", "#D0D3D8")
+
 
 def m(tenths: int) -> float:
     """£0.1m integer -> £m float with one decimal."""
@@ -56,12 +87,13 @@ def availability(el: Element) -> str:
 
 
 def next_fixtures(
-    team_id: int, from_gw: int, fixtures: list[Fixture], short: dict[int, str]
+    team_id: int, from_gw: int, fixtures: list[Fixture], short: dict[int, str],
+    n: int = NEXT_FIXTURES,
 ) -> str:
-    """'CHE (A) · BUR (H) + LIV (A) · Blank · ...' for the next NEXT_FIXTURES GWs."""
+    """'CHE (A) · BUR (H) + LIV (A) · Blank · ...' for the next ``n`` GWs."""
     by_gw: dict[int, list[str]] = defaultdict(list)
     for f in sorted(fixtures, key=lambda f: (f.event or 0, f.kickoff_time or datetime.max)):
-        if f.event is None or not from_gw <= f.event < from_gw + NEXT_FIXTURES:
+        if f.event is None or not from_gw <= f.event < from_gw + n:
             continue
         if f.team_h == team_id:
             by_gw[f.event].append(f"{short[f.team_a]} (H)")
@@ -69,8 +101,19 @@ def next_fixtures(
             by_gw[f.event].append(f"{short[f.team_h]} (A)")
     return " · ".join(
         " + ".join(by_gw[gw]) if by_gw[gw] else "Blank"
-        for gw in range(from_gw, min(from_gw + NEXT_FIXTURES, 39))
+        for gw in range(from_gw, min(from_gw + n, 39))
     )
+
+
+def card_fields(el: Element, bootstrap: Bootstrap, fixtures: list[Fixture],
+                next_gw: int) -> dict[str, Any]:
+    """Fields every player card needs (squad rows and the engine's line-up rows alike)."""
+    teams = {t.id: t for t in bootstrap.teams}
+    short = {t.id: t.short_name for t in bootstrap.teams}
+    c1, c2 = TEAM_COLORS.get(teams[el.team].code, FALLBACK_COLORS)
+    return {"team": short[el.team], "team_color": c1, "team_color2": c2,
+            "availability": availability(el), "news": el.news or "",
+            "next_opp": next_fixtures(el.team, next_gw, fixtures, short, n=1)}
 
 
 def build_datasets(
@@ -110,15 +153,16 @@ def build_datasets(
             "element": p.element,
             "slot": slot,
             "role": "New" if slot is None else ("Starting" if slot <= 11 else f"Bench {slot - 11}"),
+            "is_new": "Yes" if p.pending_in else "",
+            "armband": ("Captain" if p.element == state.captain else
+                        "Vice-captain" if p.element == state.vice else ""),
             "player": p.web_name,
             "pos": p.position,
-            "team": p.team,
+            **card_fields(el, bootstrap, fixtures, state.next_gw),
             "bought_m": m(p.purchase_price),
             "now_m": m(p.now_cost),
             "sell_m": m(p.selling_price),
             "locked_gain_m": m(p.selling_price - p.purchase_price),
-            "availability": availability(el),
-            "news": el.news or "",
             "price_status": price_status(el),
             "price_progress_pct": el.price_change_percent,
             "next_fixtures": next_fixtures(el.team, state.next_gw, fixtures, short),
@@ -161,8 +205,11 @@ def build_datasets(
 SOURCE_NOTE = "From the public FPL API, computed by the fpl-tool engine (entry 1020085)."
 DATASET_META = {
     "summary": ("Team summary", "Rank, bank, free transfers, team value and hits."),
-    "squad": ("Squad and prices", "Your 15 players with purchase, current and selling prices, "
-              "availability, FPL price status and next five fixtures."),
+    "squad": ("Squad and prices", "Your 15 players in pick order (your latest gameweek's team "
+              "plus transfers already made) with captaincy, purchase, current and selling "
+              "prices, availability, FPL price status and next fixtures; when the models pass "
+              "their backtest, also next-gameweek expected points, our fixture ratings and the "
+              "engine's role for each player."),
     "chips": ("Chips", "Each chip in each half of the season, its window, and whether it is used."),
     "ft_history": ("Free transfers by gameweek", "Free transfers available, transfers made and "
                    "hit points per gameweek, replayed from your history."),
@@ -173,7 +220,8 @@ DATASET_META = {
                   "captain options: average, 10th and 90th percentiles, chance of 10+, and "
                   "top-10k effective ownership."),
     "lineup": ("Line-up and bench", "Recommended starting eleven, captain, vice-captain and "
-               "bench order, with expected points and start chance."),
+               "bench order after the recommended transfers, with expected points, start "
+               "chance, next fixture and our fixture rating."),
     "plan": ("Transfer plan", "The recommended transfer path for each gameweek of the horizon."),
     "chip_gain": ("Chip gains", "Expected gain from each remaining first-half chip in each "
                   "gameweek up to GW19, versus not playing it."),

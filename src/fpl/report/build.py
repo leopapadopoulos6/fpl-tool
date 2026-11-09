@@ -30,6 +30,7 @@ from fpl.pipeline import MODEL_VERSION, forecast, xpts_matrix
 from fpl.report import ledger
 from fpl.rules import GameRules
 from fpl.state import ManagerState
+from fpl.ui.dashboard import NEXT_FIXTURES, card_fields
 
 TEMPLATE_EO = 50.0      # top-10k EO at or above this: a template pick
 DIFFERENTIAL_EO = 10.0  # below this: a differential
@@ -104,7 +105,10 @@ def _h(model, metric, value, baseline, lower_better) -> dict:
 def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFrame,
           state: ManagerState, rules: GameRules, data_dir: Path,
           eo: pd.DataFrame | None, eo_meta: dict | None, horizon: int = 6,
-          chips: bool = True) -> dict[str, list[dict[str, Any]]]:
+          chips: bool = True, squad_rows: list[dict[str, Any]] | None = None,
+          ) -> dict[str, list[dict[str, Any]]]:
+    """``squad_rows`` (the state ``squad`` dataset) gain the model fields in place, so the
+    dashboard's list and formation views read one set of rows."""
     prior = team_prior(b, data_dir)
     feats = build_player_features(pm, tm)
     health, calib, gate = model_health(feats, tm, rules, prior)
@@ -132,10 +136,15 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     ledger.save(ledger.make_entry(res, eo_map, names), data_dir / "ledger")
     own_map = eo.set_index("element")["owned_pct"].to_dict() if eo is not None else {}
     out.update(_decisions(res, names, eo_map))
-    out.update(_lineup(res, names, eo_map, own_map, b))
+    ratings = fixture_ratings(res.forecast.by_fixture)
+    out.update(_lineup(res, names, eo_map, own_map, b, fixtures, ratings))
     out["plan"] = _plan(res, names)
     out["players"] = _players(res, state, eo_map, b)
-    out["fixtures_strength"] = _fixtures(res, b)
+    out["fixtures_strength"] = _fixtures(res, b, ratings)
+    if squad_rows is not None:
+        model = squad_model(res, state, eo_map, names, ratings)
+        for row in squad_rows:
+            row.update(model.get(row["element"], {}))
     if chips:
         out.update(_chips(b, fixtures, pm, tm, state, rules, prior, settings))
     return out
@@ -172,19 +181,95 @@ def _decisions(res: EngineResult, names: dict, eo: dict) -> dict:
     return {"decision": rows}
 
 
-def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap) -> dict:
+def fixture_ratings(by_fixture: pd.DataFrame) -> pd.DataFrame:
+    """Our own fixture difficulty, 1 (easiest) to 5 (hardest), for each team fixture in the
+    horizon: quintiles of team expected goals for (``attack_rating``, for MID/FWD) and of
+    clean-sheet chance (``defence_rating``, for GKP/DEF) across every team fixture."""
+    fx = by_fixture.drop_duplicates(["team", "fixture"])[
+        ["team", "fixture", "event", "opponent_team", "was_home", "lambda_for", "p_cs"]].copy()
+    for col, out in (("lambda_for", "attack_rating"), ("p_cs", "defence_rating")):
+        pct = fx[col].rank(pct=True, method="average")
+        fx[out] = ((1 - pct) * 5).apply(lambda v: int(min(5, max(1, -(-v // 1)))))
+    return fx.reset_index(drop=True)
+
+
+def _rating_for(position: str) -> str:
+    return "defence_rating" if position in ("GKP", "DEF") else "attack_rating"
+
+
+def _diffs(ratings: pd.DataFrame, team: int, gw: int, position: str) -> str:
+    r = ratings[(ratings["team"] == team) & (ratings["event"] == gw)].sort_values("fixture")
+    return "+".join(str(v) for v in r[_rating_for(position)])
+
+
+def _gw_roles(g) -> dict[int, str]:
+    roles = {p: ("Captain" if p == g.captain else "Vice-captain" if p == g.vice else "Starting")
+             for p in g.lineup}
+    roles.update({p: f"Bench {i + 1}" for i, p in enumerate(g.bench)})
+    return roles
+
+
+def _sale_pairs(g, pos: dict[int, str]) -> dict[int, int]:
+    """Pair each sale with the purchase of the same position (squad shape forces that)."""
+    buys = list(g.buys)
+    pairs = {}
+    for s in g.sells:
+        b = next((x for x in buys if pos.get(x) == pos.get(s)), None)
+        if b is not None:
+            buys.remove(b)
+            pairs[s] = b
+    return pairs
+
+
+def squad_model(res: EngineResult, state: ManagerState, eo: dict, names: dict,
+                ratings: pd.DataFrame) -> dict[int, dict[str, Any]]:
+    """Model fields per owned player: next-GW xPts, start chance, top-10k EO, our fixture
+    ratings (next GW and the next five, aligned with ``next_fixtures``) and the engine's role
+    (``rec_role``: Captain / Vice-captain / Starting / Bench n / Sell)."""
     g = res.best.gws[0]
     fc = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")
     pos = res.players["position"].to_dict()
+    team = res.players["team"].to_dict()
+    roles, pairs = _gw_roles(g), _sale_pairs(g, pos)
+    span = range(state.next_gw, min(state.next_gw + NEXT_FIXTURES, 39))
+    out = {}
+    for p in state.squad:
+        e = p.element
+        diffs = [_diffs(ratings, team[e], gw, pos[e]) for gw in span]
+        out[e] = {
+            "xpts_next": round(float(fc.at[e, "xpts"]), 2) if e in fc.index else 0.0,
+            "p_start": round(float(fc.at[e, "p_start"]), 2) if e in fc.index else 0.0,
+            "eo_top10k": round(eo.get(e, 0.0), 1),
+            "next_diff": diffs[0] if diffs else "",
+            "next5_diff": " · ".join(d or "—" for d in diffs),
+            "rec_role": roles.get(e, "Sell"),
+            "rec_swap": names[pairs[e]] if e in pairs else "",
+        }
+    return out
+
+
+def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
+            fixtures: list[Fixture], ratings: pd.DataFrame) -> dict:
+    g = res.best.gws[0]
+    fc = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")
+    pos = res.players["position"].to_dict()
+    team = res.players["team"].to_dict()
+    els = b.elements_by_id()
+    roles, pairs = _gw_roles(g), _sale_pairs(g, pos)
+    replaces = {v: k for k, v in pairs.items()}
     rows = []
     for p in g.lineup + g.bench:
-        role = ("Captain" if p == g.captain else "Vice-captain" if p == g.vice
-                else "Starting" if p in g.lineup else f"Bench {g.bench.index(p) + 1}")
+        role = roles[p]
         rows.append({"element": p, "player": names[p], "pos": pos[p], "role": role,
                      "xpts": round(float(fc.at[p, "xpts"]), 2),
                      "p_start": round(float(fc.at[p, "p_start"]), 2),
                      "eo_top10k": round(eo.get(p, 0.0), 1),
-                     "owned_top10k": round(own.get(p, 0.0), 1)})
+                     "owned_top10k": round(own.get(p, 0.0), 1),
+                     **card_fields(els[p], b, fixtures, g.gw),
+                     "next_diff": _diffs(ratings, team[p], g.gw, pos[p]),
+                     "armband": role if role in ("Captain", "Vice-captain") else "",
+                     "is_new": "Yes" if p in g.buys else "",
+                     "replaces": names[replaces[p]] if p in replaces else ""})
     cap = res.captaincy.copy()
     caps = []
     for r in cap.head(6).itertuples():
@@ -234,13 +319,15 @@ def _players(res: EngineResult, state: ManagerState, eo: dict, b: Bootstrap) -> 
     return rows
 
 
-def _fixtures(res: EngineResult, b: Bootstrap) -> list[dict]:
-    fx = res.forecast.by_fixture.drop_duplicates(["team", "fixture"])
+def _fixtures(res: EngineResult, b: Bootstrap, ratings: pd.DataFrame) -> list[dict]:
+    fx = res.forecast.by_fixture.drop_duplicates(["team", "fixture"]).merge(
+        ratings[["team", "fixture", "attack_rating", "defence_rating"]], on=["team", "fixture"])
     short = {t.id: t.short_name for t in b.teams}
     return [{"team": short[r.team], "gw": int(r.event),
              "opponent": f"{short[r.opponent_team]} ({'H' if r.was_home else 'A'})",
              "xg_for": round(r.lambda_for, 2), "xg_against": round(r.lambda_against, 2),
-             "p_clean_sheet": round(r.p_cs, 3)}
+             "p_clean_sheet": round(r.p_cs, 3), "attack_rating": int(r.attack_rating),
+             "defence_rating": int(r.defence_rating)}
             for r in fx.sort_values(["team", "event", "fixture"]).itertuples()]
 
 

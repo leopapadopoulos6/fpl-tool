@@ -382,7 +382,8 @@ def dashboard_data(
         eo, meta = _eo(cur.id if cur else 1, eo_sample, offline)
         with console.status("backtests, forecast, optimizer, chips..."):
             data.update(build(ctx.bootstrap, ctx.fixtures, pm, tm, ctx.state, ctx.rules,
-                              get_settings().data_dir, eo, meta, chips=chips))
+                              get_settings().data_dir, eo, meta, chips=chips,
+                              squad_rows=data["squad"]))
         gate = data["assumptions"][0]["gate"]
         console.print(f"backtest gate: {gate}")
         reviews = _reviews(ctx, pm, offline)

@@ -82,8 +82,9 @@ src/fpl/
   api/                 client.py (retries, throttle, gzip snapshots data/raw/<date>, --offline),
                        endpoints.py, models.py (pydantic, extra="allow")
   rules.py             GameRules + non-API constants (HIT_COST, DEFCON_THRESHOLD, FT retention)
-  state.py             build_state(): squad, purchase/selling prices, bank, FT replay with
-                       self-check, chips; next_gw override for reconstructing a past deadline
+  state.py             build_state(): squad (slots; bought players take the sold player's slot),
+                       captain/vice, purchase/selling prices, bank, FT replay with self-check,
+                       chips; next_gw override for reconstructing a past deadline
   data/tables.py       current-season player_matches/team_matches from element-summaries
   data/features.py     prior-only form features + rest days (no lookahead, tested)
   data/priors.py       2025/26 team ratings from the vaastav mirror (by team code)
@@ -107,16 +108,19 @@ src/fpl/
                        backtests: season_tables(), team_prior_for())
   report/build.py      backtest gate + all dashboard datasets; saves the ledger entry
   report/ledger.py     forward-test ledger (make_entry/save/load_all/review/summarise)
-  ui/dashboard.py      state datasets, DATASET_META, write_datasets() + manifest.json
+  ui/dashboard.py      state datasets, TEAM_COLORS, card_fields(), DATASET_META, write_datasets()
+                       + manifest.json
   ui/dashboard_page.html  dashboard page (copy of the store's files/index.html)
   ui/app.py            Streamlit what-if app
   history/             historical data layer (below)
   cli.py               doctor | fetch | state | build-tables | backtest-teams | plan | review |
                        dashboard-data | ui | history {fetch,build,publish,report}
+scripts/dashboard_preview.py  local harness for the dashboard page (stub dash + d3), used by tests/ui
 scripts/research/      history-prior research: build_events.py (neutral events -> data/research/ev.parquet),
                        tune_baseline.py (rate grid on 2024-25), season_backtest.py (2025-26 full season),
                        current_season_backtest.py (2026-27 GW4-9); outputs stay in gitignored data/research/
-tests/                 offline suite (+ tests/history/), fixtures in tests/fixtures (GW9 state)
+tests/                 offline suite (+ tests/history/), fixtures in tests/fixtures (GW9 state;
+                       dashboard/ = one dashboard-data run); tests/ui = browser checks (-m ui)
 .github/workflows/snapshot.yml   daily + pre-deadline snapshots to the data branch (needs main)
 docs/HANDOFF.md        session handoff: decisions, status, next steps
 ```
@@ -212,13 +216,29 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - The page is `files/index.html` in its store; the repo copy is `src/fpl/ui/dashboard_page.html`.
   - Follow the type's one-writer rules: text in the HTML, values in `data-draw` elements with `data-source`/`data-field`.
   - After writing the page, read the `data/users/me` `check` document.
-- **Sections:**
-  - **Model sections** (`data-model-section`, hidden if `decision` is missing): This gameweek, Planner, First-half chips, Players, Fixtures.
-  - **Model health.**
-  - **Track record** (`data-review-section`).
-  - **Your team now.**
-  - **About.**
+- **Sections and stable anchors** (deep link: `<dashboard url>#<anchor>`; the page reads `location.hash` and calls `dash.setLink` as the reader moves):
+  - a **sticky section nav** (`.hb-nav`): one row of pills that scrolls sideways on phones; the active pill follows the scroll, and pills for hidden sections hide;
+  - **model sections** (`data-model-section`, hidden if `decision` is missing): `#transfers` (This gameweek: options, `#captaincy`, `#lineup`), `#planner`, `#chips` (first-half chip plan), `#players`, `#fixtures`;
+  - `#model-health`; `#track-record` (`data-review-section`);
+  - `#team` (Your team now + key figures), `#price-watch`, `#squad`, `#chip-status` (chips table), `#ft-history` (free transfers by GW), `#about`;
+  - old ids still work as aliases: `#this-gw`, `#chip-gain`, `#team-now`; `#squad-list` opens the squad's list view.
+- **Squad section** (`#squad`):
+  - a **Formation / List** toggle. Formation is the default, and the choice is stored in the page param `squad_view` (`dash/params` default `{"squad_view": "formation"}`), **never browser storage** (the Dashboard type forbids storage, cookies and network);
+  - both views read the **same `squad` rows**; "Engine's pick" (Your team / Engine's pick toggle) redraws the pitch from `lineup` rows, which carry the same card fields;
+  - Formation: GKP/DEF/MID/FWD rows from the actual starters (`formation-shape` shows e.g. 3-4-3), then the bench in auto-sub order;
+  - each card: team-colour dot (`team_color`/`team_color2`, from `TEAM_COLORS` by team `code`; no FPL crests, kits or other assets), name with ellipsis, team, next-GW opponent(s) with our 1–5 fixture rating, next-GW xPts, C/V badge, availability flag; dashed outline plus a tag where the engine differs;
+  - `#engine-diff` lists where the engine's pick differs (captain, vice, transfers, start/bench, bench order);
+  - tapping a card or a list row opens the same `#player-detail` panel;
+  - the "your team" lineup is the **latest GW's picks plus transfers already made** (the API hides pre-deadline line-up or captain changes; `my-team` needs auth).
 - **Datasets:** state (`summary`, `squad`, `chips`, `ft_history`); model (`decision`, `captaincy`, `lineup`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions`); track record (`review`, `review_summary`).
+  - **`squad` state fields:** slot, role, `is_new` (a transfer already made takes the sold player's slot), `armband` (from `ManagerState.captain`/`vice`), `team_color(2)`, `next_opp`, prices, availability, news, price status, `next_fixtures`.
+  - **`squad` model fields** (merged in by `report/build.build(squad_rows=…)` only when the gate passes): `xpts_next`, `p_start`, `eo_top10k`, `next_diff`, `next5_diff`, `rec_role` (Captain / Vice-captain / Starting / Bench n / Sell) and `rec_swap`.
+  - **`lineup`** also carries the card fields plus `is_new` and `replaces`.
+  - **Fixture rating** (`report/build.fixture_ratings`): 1 easiest to 5 hardest, quintiles across all team fixtures in the horizon of team xG for (`attack_rating`, MID/FWD) or clean-sheet chance (`defence_rating`, GKP/DEF). `fixtures_strength` carries both.
+- **Local preview and browser tests:**
+  - `scripts/dashboard_preview.py --data DIR --d3 d3.min.js --out page.html` wraps the page in a stub of the type (`#dash-root`, theme tokens light/dark via `?theme=dark`, a stub `dash`, each script in its own scope, no drawing inside `hidden`);
+  - `tests/ui/check_dashboard.js` (Playwright, Node) checks iPhone 13, 320px, a 400px pane and 1280px desktop, light and dark: no sideways scroll, sticky nav, pill landing and scroll-spy, deep links, formation counts, bench order, ellipsis, toggles plus param, identical detail from card and row, engine diff, and the gate-failed state;
+  - run it with `FPL_D3=… uv run pytest -m ui` (`FPL_UI_SHOTS=DIR` saves screenshots). Fixture datasets: `tests/fixtures/dashboard/`.
 - **Refresh routine** `trig_017HWLLYxFxVKABs973LRLWN` ("FPL dashboard refresh", daily 03:23 Europe/London, a fresh session each time). It:
   1. clones the repo;
   2. restores store `ledger/*` documents to `data/ledger/`;
@@ -267,7 +287,8 @@ uv run fpl history report             # print COVERAGE.md
 
 ## How to test
 ```bash
-uv run pytest            # offline suite (72 tests); live: uv run pytest -m live
+uv run pytest            # offline suite (76 tests); live: uv run pytest -m live
+FPL_D3=path/to/d3.min.js uv run pytest -m ui   # dashboard page in Chromium (Node playwright + d3@7.9.0)
 uv run ruff check .
 ```
 - `tests/fixtures/` is the GW9 state of entry 1020085 (personal fields stripped).

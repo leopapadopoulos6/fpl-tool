@@ -1,0 +1,62 @@
+[
+ {
+  "gw": 11,
+  "free_transfers": 2,
+  "transfers_in": "Van Hecke, E.Le Fée",
+  "transfers_out": "Diop, Belloumi",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 54.7,
+  "bank_m": 2.1
+ },
+ {
+  "gw": 12,
+  "free_transfers": 1,
+  "transfers_in": "Barry",
+  "transfers_out": "N.Jackson",
+  "hits": 0,
+  "captain": "Barry",
+  "xpts": 52.8,
+  "bank_m": 3.3
+ },
+ {
+  "gw": 13,
+  "free_transfers": 1,
+  "transfers_in": "Mbeumo",
+  "transfers_out": "Schade",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 53.8,
+  "bank_m": 1.5
+ },
+ {
+  "gw": 14,
+  "free_transfers": 1,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "Barry",
+  "xpts": 56.5,
+  "bank_m": 1.5
+ },
+ {
+  "gw": 15,
+  "free_transfers": 2,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 54.7,
+  "bank_m": 1.5
+ },
+ {
+  "gw": 16,
+  "free_transfers": 3,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 57.7,
+  "bank_m": 1.5
+ }
+]

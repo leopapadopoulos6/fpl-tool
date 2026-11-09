@@ -29,7 +29,10 @@ class SquadPlayer:
     now_cost: int
     selling_price: int
     purchase_source: str  # "transfer GW<n>" | "initial squad"
-    squad_slot: int | None  # 1-15 pick position at the latest GW (None if bought for next GW)
+    # 1-15 pick position at the latest GW. A player bought for the next GW takes the slot of
+    # the player he replaced (as FPL does) and has pending_in=True.
+    squad_slot: int | None
+    pending_in: bool = False
 
 
 @dataclass(frozen=True)
@@ -61,6 +64,8 @@ class ManagerState:
     ft_replay: list[FTStep]
     overall_rank: int | None
     recorded_value: int | None  # history 'value' for latest GW (squad value + bank)
+    captain: int | None = None  # armband at the latest GW's picks (None if since sold)
+    vice: int | None = None
     warnings: list[str] = field(default_factory=list)
 
     @property
@@ -146,9 +151,14 @@ def build_state(
     squad_ids = [p.element for p in sorted(picks.picks, key=lambda p: p.position)]
     pending = [t for t in permanent if t.event >= next_gw]
     bank = picks.entry_history.bank
+    pending_in: set[int] = set()
     for t in pending:
         if t.element_out in squad_ids:
             squad_ids[squad_ids.index(t.element_out)] = t.element_in
+            if t.element_out in slot:
+                slot[t.element_in] = slot.pop(t.element_out)
+            pending_in.add(t.element_in)
+            pending_in.discard(t.element_out)
             bank += t.element_out_cost - t.element_in_cost
         else:
             warnings.append(f"pending transfer out {t.element_out} not in squad")
@@ -180,6 +190,7 @@ def build_state(
                 selling_price=rules.selling_price(purchase, el.now_cost),
                 purchase_source=src,
                 squad_slot=slot.get(eid),
+                pending_in=eid in pending_in,
             )
         )
 
@@ -209,5 +220,9 @@ def build_state(
         ft_replay=steps,
         overall_rank=picks.entry_history.overall_rank,
         recorded_value=picks.entry_history.value,
+        captain=next((p.element for p in picks.picks if p.is_captain and p.element in squad_ids),
+                     None),
+        vice=next((p.element for p in picks.picks if p.is_vice_captain
+                   and p.element in squad_ids), None),
         warnings=warnings,
     )

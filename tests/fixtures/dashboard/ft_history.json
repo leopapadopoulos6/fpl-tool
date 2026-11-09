@@ -1,0 +1,72 @@
+[
+ {
+  "gw": 1,
+  "ft_available": 0,
+  "transfers": 0,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 2,
+  "ft_available": 1,
+  "transfers": 0,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 3,
+  "ft_available": 2,
+  "transfers": 2,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 4,
+  "ft_available": 1,
+  "transfers": 1,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 5,
+  "ft_available": 1,
+  "transfers": 0,
+  "hit_points": 0,
+  "chip": "Free Hit"
+ },
+ {
+  "gw": 6,
+  "ft_available": 1,
+  "transfers": 1,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 7,
+  "ft_available": 1,
+  "transfers": 0,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 8,
+  "ft_available": 2,
+  "transfers": 1,
+  "hit_points": 0,
+  "chip": ""
+ },
+ {
+  "gw": 9,
+  "ft_available": 2,
+  "transfers": 3,
+  "hit_points": 4,
+  "chip": ""
+ },
+ {
+  "gw": 10,
+  "ft_available": 1,
+  "transfers": 0,
+  "hit_points": 0,
+  "chip": ""
+ }
+]

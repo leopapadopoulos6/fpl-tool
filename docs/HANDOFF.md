@@ -1,6 +1,6 @@
 # HANDOFF: FPL decision engine (entry 1020085)
 
-Last updated 2026-11-09. Read with `CLAUDE.md`, which describes the system; this file covers state, decisions and next steps.
+Last updated 2026-11-09 (dashboard nav + formation view added late that day). Read with `CLAUDE.md`, which describes the system; this file covers state, decisions and next steps.
 
 - Code branch: `claude/fpl-engine-architecture-ldhmeh`. PR: https://github.com/leopapadopoulos6/fpl-tool/pull/1 (open, not merged; `main` lacks everything after the scaffold).
 - Data branch: `data`, one parentless commit (raw/2026-11-06, deadlines/gw10, history/*.parquet).
@@ -39,6 +39,11 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
 | `HIT_HURDLE = 1.0` xPts (`engine.py`) | A −4 must beat rolling by a margin because of model noise. |
 | `CAPTAIN_HURDLE = 1.0`: keep the top-10k majority captain unless another option beats him by ≥ 1 xPt | GW10: the raw model preferred Gabriel over Haaland by a sliver, which is noise against a near-universal Haaland EO. |
 | Joint chips by coordinate search over fixed-chip MILP solves (`chips/joint.py`), not the exact joint MILP | `OptInput.chip_search` is correct on toy cases but had a 13% gap after 300 s at real size (weak relaxation). The coordinate search takes about 6 min, with every solve gap < 0.1%. |
+| Dashboard view choice (Formation/List) kept in the page param `squad_view`, not localStorage | The Dashboard type forbids browser storage, cookies and network in page code. Whether params survive a reload is **unverified**; the fallback is the link `#squad-list` |
+| Both squad views render the same `squad` rows; model fields merged into them by `report/build.build(squad_rows=…)` | The user asked that List and Formation never disagree. "Engine's pick" uses `lineup` rows with the same field names |
+| Fixture difficulty = our own 1–5 quintile rating (`fixture_ratings`): attack = team xG for (MID/FWD), defence = clean-sheet chance (GKP/DEF) | No FPL FDR (CLAUDE.md rule). Quintiles are over all team fixtures in the 6-GW horizon |
+| Team colours: a two-colour dot per club (`TEAM_COLORS` by team `code`) | The user asked for our own styling, with no FPL logos, kits or copied assets |
+| Renamed anchors: `#this-gw`→`#transfers`, `#chip-gain`→`#chips`, `#chips`→`#chip-status`, `#transfers`→`#ft-history`, `#team-now`→`#team` | The user's examples (#transfers, #chips) should land on the decision sections. Old ids are aliased in the hash handler |
 | Ledger stored in the artifact store (`ledger/gwNN`), restored by the routine | The container is ephemeral. The store survives, and `data/ledger/` is gitignored. |
 | GW10 ledger entry reconstructed with `build_state(next_gw=10)` | The ledger started after the GW10 deadline. The reconstruction is the pre-deadline view: Barry for N.Jackson +2.09, C Haaland, VC Gabriel. |
 | Element-summary rows: keep only finished or provisionally finished fixtures | After a deadline FPL lists that GW's fixtures with 0 minutes. This once corrupted minutes and form (fixed in `data/tables.py`, commit 56fac06). |
@@ -90,6 +95,16 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
 - **ID map after the name-score change:** the 0.6 one-token rule is unit-tested, but `fpl history build` hasn't been rerun since, so the published `id_map*.csv` may predate it.
 - **Routine:** it has never run with the history layer; its prompt doesn't fetch `history/`.
 - **History-prior plumbing:** `models/xpts.fit_rates(train, prior=...)` and `backtest/xpts.predictions(..., rate_prior_fn=...)` are wired and run, but `pipeline.forecast` doesn't use them.
+
+### Dashboard nav + formation view (2026-11-09)
+- **Done and verified:**
+  - store page `files/index.html` written (version 6), from the repo copy `src/fpl/ui/dashboard_page.html`; `dash/params` set to `{squad_view: "formation"}`;
+  - `uv run pytest -m ui` passes (Playwright via Node at 390/320/400/1280px, light and dark).
+- **Not yet verified on the live dashboard:**
+  - the type's `check` report: no `data/users/me` `check` document existed right after the write, because nobody had the page open. Read it after the user opens it;
+  - whether `squad_view` survives a reload;
+  - the real shell's scroll container: the sticky nav and scroll-spy were tested only in the local harness.
+- **Live data:** the refresh routine must run once with this branch so `squad`/`lineup` carry the new fields. Until then cards show "—" for xPts, with no ratings, C/V badges or engine tags.
 
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**

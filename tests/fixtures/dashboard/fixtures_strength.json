@@ -1,0 +1,1202 @@
+[
+ {
+  "team": "ARS",
+  "gw": 11,
+  "opponent": "NEW (A)",
+  "xg_for": 1.62,
+  "xg_against": 1.06,
+  "p_clean_sheet": 0.345,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "ARS",
+  "gw": 12,
+  "opponent": "MCI (H)",
+  "xg_for": 1.65,
+  "xg_against": 1.13,
+  "p_clean_sheet": 0.323,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "ARS",
+  "gw": 13,
+  "opponent": "BRE (A)",
+  "xg_for": 1.66,
+  "xg_against": 1.13,
+  "p_clean_sheet": 0.324,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "ARS",
+  "gw": 14,
+  "opponent": "TOT (A)",
+  "xg_for": 1.55,
+  "xg_against": 0.83,
+  "p_clean_sheet": 0.437,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "ARS",
+  "gw": 15,
+  "opponent": "BOU (H)",
+  "xg_for": 1.96,
+  "xg_against": 1.02,
+  "p_clean_sheet": 0.36,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "ARS",
+  "gw": 16,
+  "opponent": "MUN (H)",
+  "xg_for": 1.81,
+  "xg_against": 1.04,
+  "p_clean_sheet": 0.355,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "AVL",
+  "gw": 11,
+  "opponent": "SUN (H)",
+  "xg_for": 1.53,
+  "xg_against": 1.11,
+  "p_clean_sheet": 0.33,
+  "attack_rating": 3,
+  "defence_rating": 1
+ },
+ {
+  "team": "AVL",
+  "gw": 12,
+  "opponent": "IPS (A)",
+  "xg_for": 1.5,
+  "xg_against": 1.21,
+  "p_clean_sheet": 0.297,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "AVL",
+  "gw": 13,
+  "opponent": "EVE (H)",
+  "xg_for": 1.57,
+  "xg_against": 1.26,
+  "p_clean_sheet": 0.283,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "AVL",
+  "gw": 14,
+  "opponent": "CRY (H)",
+  "xg_for": 1.6,
+  "xg_against": 1.5,
+  "p_clean_sheet": 0.223,
+  "attack_rating": 2,
+  "defence_rating": 3
+ },
+ {
+  "team": "AVL",
+  "gw": 15,
+  "opponent": "COV (A)",
+  "xg_for": 1.47,
+  "xg_against": 1.2,
+  "p_clean_sheet": 0.303,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "AVL",
+  "gw": 16,
+  "opponent": "CHE (A)",
+  "xg_for": 1.31,
+  "xg_against": 1.96,
+  "p_clean_sheet": 0.14,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "BOU",
+  "gw": 11,
+  "opponent": "NFO (H)",
+  "xg_for": 1.9,
+  "xg_against": 1.28,
+  "p_clean_sheet": 0.277,
+  "attack_rating": 1,
+  "defence_rating": 2
+ },
+ {
+  "team": "BOU",
+  "gw": 12,
+  "opponent": "FUL (A)",
+  "xg_for": 1.59,
+  "xg_against": 1.53,
+  "p_clean_sheet": 0.216,
+  "attack_rating": 2,
+  "defence_rating": 3
+ },
+ {
+  "team": "BOU",
+  "gw": 13,
+  "opponent": "BHA (H)",
+  "xg_for": 1.75,
+  "xg_against": 1.55,
+  "p_clean_sheet": 0.212,
+  "attack_rating": 2,
+  "defence_rating": 3
+ },
+ {
+  "team": "BOU",
+  "gw": 14,
+  "opponent": "HUL (H)",
+  "xg_for": 2.1,
+  "xg_against": 1.04,
+  "p_clean_sheet": 0.355,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "BOU",
+  "gw": 15,
+  "opponent": "ARS (A)",
+  "xg_for": 1.02,
+  "xg_against": 1.96,
+  "p_clean_sheet": 0.141,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "BOU",
+  "gw": 16,
+  "opponent": "COV (H)",
+  "xg_for": 2.11,
+  "xg_against": 1.04,
+  "p_clean_sheet": 0.354,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "BRE",
+  "gw": 11,
+  "opponent": "EVE (H)",
+  "xg_for": 1.84,
+  "xg_against": 1.26,
+  "p_clean_sheet": 0.284,
+  "attack_rating": 1,
+  "defence_rating": 2
+ },
+ {
+  "team": "BRE",
+  "gw": 12,
+  "opponent": "MUN (A)",
+  "xg_for": 1.45,
+  "xg_against": 1.93,
+  "p_clean_sheet": 0.145,
+  "attack_rating": 3,
+  "defence_rating": 5
+ },
+ {
+  "team": "BRE",
+  "gw": 13,
+  "opponent": "ARS (H)",
+  "xg_for": 1.13,
+  "xg_against": 1.66,
+  "p_clean_sheet": 0.189,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "BRE",
+  "gw": 14,
+  "opponent": "MCI (H)",
+  "xg_for": 1.55,
+  "xg_against": 1.82,
+  "p_clean_sheet": 0.163,
+  "attack_rating": 2,
+  "defence_rating": 5
+ },
+ {
+  "team": "BRE",
+  "gw": 15,
+  "opponent": "FUL (A)",
+  "xg_for": 1.51,
+  "xg_against": 1.51,
+  "p_clean_sheet": 0.22,
+  "attack_rating": 3,
+  "defence_rating": 3
+ },
+ {
+  "team": "BRE",
+  "gw": 16,
+  "opponent": "NEW (H)",
+  "xg_for": 1.76,
+  "xg_against": 1.47,
+  "p_clean_sheet": 0.229,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "BHA",
+  "gw": 11,
+  "opponent": "HUL (A)",
+  "xg_for": 1.69,
+  "xg_against": 1.09,
+  "p_clean_sheet": 0.336,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "BHA",
+  "gw": 12,
+  "opponent": "NEW (H)",
+  "xg_for": 1.73,
+  "xg_against": 1.35,
+  "p_clean_sheet": 0.259,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "BHA",
+  "gw": 13,
+  "opponent": "BOU (A)",
+  "xg_for": 1.55,
+  "xg_against": 1.75,
+  "p_clean_sheet": 0.174,
+  "attack_rating": 2,
+  "defence_rating": 4
+ },
+ {
+  "team": "BHA",
+  "gw": 14,
+  "opponent": "NFO (A)",
+  "xg_for": 1.53,
+  "xg_against": 1.35,
+  "p_clean_sheet": 0.259,
+  "attack_rating": 3,
+  "defence_rating": 3
+ },
+ {
+  "team": "BHA",
+  "gw": 15,
+  "opponent": "EVE (H)",
+  "xg_for": 1.81,
+  "xg_against": 1.16,
+  "p_clean_sheet": 0.315,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "BHA",
+  "gw": 16,
+  "opponent": "IPS (H)",
+  "xg_for": 2.01,
+  "xg_against": 0.96,
+  "p_clean_sheet": 0.384,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "CHE",
+  "gw": 11,
+  "opponent": "LEE (H)",
+  "xg_for": 1.95,
+  "xg_against": 1.39,
+  "p_clean_sheet": 0.248,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "CHE",
+  "gw": 12,
+  "opponent": "NFO (A)",
+  "xg_for": 1.68,
+  "xg_against": 1.45,
+  "p_clean_sheet": 0.236,
+  "attack_rating": 2,
+  "defence_rating": 3
+ },
+ {
+  "team": "CHE",
+  "gw": 13,
+  "opponent": "CRY (H)",
+  "xg_for": 2.02,
+  "xg_against": 1.47,
+  "p_clean_sheet": 0.23,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "CHE",
+  "gw": 14,
+  "opponent": "LIV (H)",
+  "xg_for": 1.76,
+  "xg_against": 1.53,
+  "p_clean_sheet": 0.216,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "CHE",
+  "gw": 15,
+  "opponent": "MCI (A)",
+  "xg_for": 1.44,
+  "xg_against": 2.07,
+  "p_clean_sheet": 0.126,
+  "attack_rating": 3,
+  "defence_rating": 5
+ },
+ {
+  "team": "CHE",
+  "gw": 16,
+  "opponent": "AVL (H)",
+  "xg_for": 1.96,
+  "xg_against": 1.31,
+  "p_clean_sheet": 0.27,
+  "attack_rating": 1,
+  "defence_rating": 2
+ },
+ {
+  "team": "COV",
+  "gw": 11,
+  "opponent": "CRY (H)",
+  "xg_for": 1.23,
+  "xg_against": 1.66,
+  "p_clean_sheet": 0.191,
+  "attack_rating": 4,
+  "defence_rating": 4
+ },
+ {
+  "team": "COV",
+  "gw": 12,
+  "opponent": "LEE (A)",
+  "xg_for": 1.02,
+  "xg_against": 1.82,
+  "p_clean_sheet": 0.162,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "COV",
+  "gw": 13,
+  "opponent": "IPS (H)",
+  "xg_for": 1.34,
+  "xg_against": 1.15,
+  "p_clean_sheet": 0.316,
+  "attack_rating": 3,
+  "defence_rating": 1
+ },
+ {
+  "team": "COV",
+  "gw": 14,
+  "opponent": "MUN (A)",
+  "xg_for": 0.96,
+  "xg_against": 2.13,
+  "p_clean_sheet": 0.118,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "COV",
+  "gw": 15,
+  "opponent": "AVL (H)",
+  "xg_for": 1.2,
+  "xg_against": 1.47,
+  "p_clean_sheet": 0.229,
+  "attack_rating": 4,
+  "defence_rating": 3
+ },
+ {
+  "team": "COV",
+  "gw": 16,
+  "opponent": "BOU (A)",
+  "xg_for": 1.04,
+  "xg_against": 2.11,
+  "p_clean_sheet": 0.122,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "CRY",
+  "gw": 11,
+  "opponent": "COV (A)",
+  "xg_for": 1.66,
+  "xg_against": 1.23,
+  "p_clean_sheet": 0.292,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "CRY",
+  "gw": 12,
+  "opponent": "HUL (H)",
+  "xg_for": 1.92,
+  "xg_against": 1.06,
+  "p_clean_sheet": 0.348,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "CRY",
+  "gw": 13,
+  "opponent": "CHE (A)",
+  "xg_for": 1.47,
+  "xg_against": 2.02,
+  "p_clean_sheet": 0.132,
+  "attack_rating": 3,
+  "defence_rating": 5
+ },
+ {
+  "team": "CRY",
+  "gw": 14,
+  "opponent": "AVL (A)",
+  "xg_for": 1.5,
+  "xg_against": 1.6,
+  "p_clean_sheet": 0.202,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "CRY",
+  "gw": 15,
+  "opponent": "MUN (H)",
+  "xg_for": 1.63,
+  "xg_against": 1.71,
+  "p_clean_sheet": 0.18,
+  "attack_rating": 2,
+  "defence_rating": 4
+ },
+ {
+  "team": "CRY",
+  "gw": 16,
+  "opponent": "SUN (A)",
+  "xg_for": 1.48,
+  "xg_against": 1.32,
+  "p_clean_sheet": 0.266,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "EVE",
+  "gw": 11,
+  "opponent": "BRE (A)",
+  "xg_for": 1.26,
+  "xg_against": 1.84,
+  "p_clean_sheet": 0.16,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "EVE",
+  "gw": 12,
+  "opponent": "LIV (H)",
+  "xg_for": 1.31,
+  "xg_against": 1.58,
+  "p_clean_sheet": 0.205,
+  "attack_rating": 4,
+  "defence_rating": 4
+ },
+ {
+  "team": "EVE",
+  "gw": 13,
+  "opponent": "AVL (A)",
+  "xg_for": 1.26,
+  "xg_against": 1.57,
+  "p_clean_sheet": 0.208,
+  "attack_rating": 4,
+  "defence_rating": 4
+ },
+ {
+  "team": "EVE",
+  "gw": 14,
+  "opponent": "FUL (H)",
+  "xg_for": 1.42,
+  "xg_against": 1.32,
+  "p_clean_sheet": 0.267,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "EVE",
+  "gw": 15,
+  "opponent": "BHA (A)",
+  "xg_for": 1.16,
+  "xg_against": 1.81,
+  "p_clean_sheet": 0.164,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "EVE",
+  "gw": 16,
+  "opponent": "NFO (A)",
+  "xg_for": 1.26,
+  "xg_against": 1.49,
+  "p_clean_sheet": 0.224,
+  "attack_rating": 4,
+  "defence_rating": 3
+ },
+ {
+  "team": "FUL",
+  "gw": 11,
+  "opponent": "MCI (A)",
+  "xg_for": 1.11,
+  "xg_against": 2.04,
+  "p_clean_sheet": 0.13,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "FUL",
+  "gw": 12,
+  "opponent": "BOU (H)",
+  "xg_for": 1.53,
+  "xg_against": 1.59,
+  "p_clean_sheet": 0.204,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "FUL",
+  "gw": 13,
+  "opponent": "TOT (A)",
+  "xg_for": 1.22,
+  "xg_against": 1.29,
+  "p_clean_sheet": 0.276,
+  "attack_rating": 4,
+  "defence_rating": 2
+ },
+ {
+  "team": "FUL",
+  "gw": 14,
+  "opponent": "EVE (A)",
+  "xg_for": 1.32,
+  "xg_against": 1.42,
+  "p_clean_sheet": 0.243,
+  "attack_rating": 4,
+  "defence_rating": 3
+ },
+ {
+  "team": "FUL",
+  "gw": 15,
+  "opponent": "BRE (H)",
+  "xg_for": 1.51,
+  "xg_against": 1.51,
+  "p_clean_sheet": 0.222,
+  "attack_rating": 3,
+  "defence_rating": 3
+ },
+ {
+  "team": "FUL",
+  "gw": 16,
+  "opponent": "LEE (A)",
+  "xg_for": 1.29,
+  "xg_against": 1.6,
+  "p_clean_sheet": 0.203,
+  "attack_rating": 4,
+  "defence_rating": 4
+ },
+ {
+  "team": "HUL",
+  "gw": 11,
+  "opponent": "BHA (H)",
+  "xg_for": 1.09,
+  "xg_against": 1.69,
+  "p_clean_sheet": 0.185,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "HUL",
+  "gw": 12,
+  "opponent": "CRY (A)",
+  "xg_for": 1.06,
+  "xg_against": 1.92,
+  "p_clean_sheet": 0.147,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "HUL",
+  "gw": 13,
+  "opponent": "NFO (H)",
+  "xg_for": 1.19,
+  "xg_against": 1.39,
+  "p_clean_sheet": 0.248,
+  "attack_rating": 4,
+  "defence_rating": 3
+ },
+ {
+  "team": "HUL",
+  "gw": 14,
+  "opponent": "BOU (A)",
+  "xg_for": 1.04,
+  "xg_against": 2.1,
+  "p_clean_sheet": 0.123,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "HUL",
+  "gw": 15,
+  "opponent": "TOT (H)",
+  "xg_for": 1.11,
+  "xg_against": 1.26,
+  "p_clean_sheet": 0.284,
+  "attack_rating": 5,
+  "defence_rating": 2
+ },
+ {
+  "team": "HUL",
+  "gw": 16,
+  "opponent": "MCI (A)",
+  "xg_for": 0.88,
+  "xg_against": 2.32,
+  "p_clean_sheet": 0.098,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "IPS",
+  "gw": 11,
+  "opponent": "TOT (A)",
+  "xg_for": 0.97,
+  "xg_against": 1.5,
+  "p_clean_sheet": 0.224,
+  "attack_rating": 5,
+  "defence_rating": 3
+ },
+ {
+  "team": "IPS",
+  "gw": 12,
+  "opponent": "AVL (H)",
+  "xg_for": 1.21,
+  "xg_against": 1.5,
+  "p_clean_sheet": 0.223,
+  "attack_rating": 4,
+  "defence_rating": 3
+ },
+ {
+  "team": "IPS",
+  "gw": 13,
+  "opponent": "COV (A)",
+  "xg_for": 1.15,
+  "xg_against": 1.34,
+  "p_clean_sheet": 0.261,
+  "attack_rating": 4,
+  "defence_rating": 2
+ },
+ {
+  "team": "IPS",
+  "gw": 14,
+  "opponent": "LEE (A)",
+  "xg_for": 1.04,
+  "xg_against": 1.86,
+  "p_clean_sheet": 0.156,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "IPS",
+  "gw": 15,
+  "opponent": "NEW (H)",
+  "xg_for": 1.18,
+  "xg_against": 1.66,
+  "p_clean_sheet": 0.191,
+  "attack_rating": 4,
+  "defence_rating": 4
+ },
+ {
+  "team": "IPS",
+  "gw": 16,
+  "opponent": "BHA (A)",
+  "xg_for": 0.96,
+  "xg_against": 2.01,
+  "p_clean_sheet": 0.135,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "LEE",
+  "gw": 11,
+  "opponent": "CHE (A)",
+  "xg_for": 1.39,
+  "xg_against": 1.95,
+  "p_clean_sheet": 0.143,
+  "attack_rating": 3,
+  "defence_rating": 5
+ },
+ {
+  "team": "LEE",
+  "gw": 12,
+  "opponent": "COV (H)",
+  "xg_for": 1.82,
+  "xg_against": 1.02,
+  "p_clean_sheet": 0.361,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "LEE",
+  "gw": 13,
+  "opponent": "MCI (A)",
+  "xg_for": 1.21,
+  "xg_against": 2.09,
+  "p_clean_sheet": 0.123,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "LEE",
+  "gw": 14,
+  "opponent": "IPS (H)",
+  "xg_for": 1.86,
+  "xg_against": 1.04,
+  "p_clean_sheet": 0.355,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "LEE",
+  "gw": 15,
+  "opponent": "LIV (A)",
+  "xg_for": 1.27,
+  "xg_against": 1.8,
+  "p_clean_sheet": 0.165,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "LEE",
+  "gw": 16,
+  "opponent": "FUL (H)",
+  "xg_for": 1.6,
+  "xg_against": 1.29,
+  "p_clean_sheet": 0.275,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "LIV",
+  "gw": 11,
+  "opponent": "MUN (H)",
+  "xg_for": 1.69,
+  "xg_against": 1.49,
+  "p_clean_sheet": 0.225,
+  "attack_rating": 2,
+  "defence_rating": 3
+ },
+ {
+  "team": "LIV",
+  "gw": 12,
+  "opponent": "EVE (A)",
+  "xg_for": 1.58,
+  "xg_against": 1.31,
+  "p_clean_sheet": 0.269,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "LIV",
+  "gw": 13,
+  "opponent": "SUN (H)",
+  "xg_for": 1.79,
+  "xg_against": 0.99,
+  "p_clean_sheet": 0.371,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "LIV",
+  "gw": 14,
+  "opponent": "CHE (A)",
+  "xg_for": 1.53,
+  "xg_against": 1.76,
+  "p_clean_sheet": 0.172,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "LIV",
+  "gw": 15,
+  "opponent": "LEE (H)",
+  "xg_for": 1.8,
+  "xg_against": 1.27,
+  "p_clean_sheet": 0.28,
+  "attack_rating": 1,
+  "defence_rating": 2
+ },
+ {
+  "team": "LIV",
+  "gw": 16,
+  "opponent": "TOT (H)",
+  "xg_for": 1.69,
+  "xg_against": 1.03,
+  "p_clean_sheet": 0.359,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "MCI",
+  "gw": 11,
+  "opponent": "FUL (H)",
+  "xg_for": 2.04,
+  "xg_against": 1.11,
+  "p_clean_sheet": 0.328,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "MCI",
+  "gw": 12,
+  "opponent": "ARS (A)",
+  "xg_for": 1.13,
+  "xg_against": 1.65,
+  "p_clean_sheet": 0.191,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "MCI",
+  "gw": 13,
+  "opponent": "LEE (H)",
+  "xg_for": 2.09,
+  "xg_against": 1.21,
+  "p_clean_sheet": 0.297,
+  "attack_rating": 1,
+  "defence_rating": 2
+ },
+ {
+  "team": "MCI",
+  "gw": 14,
+  "opponent": "BRE (A)",
+  "xg_for": 1.82,
+  "xg_against": 1.55,
+  "p_clean_sheet": 0.213,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "MCI",
+  "gw": 15,
+  "opponent": "CHE (H)",
+  "xg_for": 2.07,
+  "xg_against": 1.44,
+  "p_clean_sheet": 0.236,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "MCI",
+  "gw": 16,
+  "opponent": "HUL (H)",
+  "xg_for": 2.32,
+  "xg_against": 0.88,
+  "p_clean_sheet": 0.416,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "MUN",
+  "gw": 11,
+  "opponent": "LIV (A)",
+  "xg_for": 1.49,
+  "xg_against": 1.69,
+  "p_clean_sheet": 0.184,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "MUN",
+  "gw": 12,
+  "opponent": "BRE (H)",
+  "xg_for": 1.93,
+  "xg_against": 1.45,
+  "p_clean_sheet": 0.234,
+  "attack_rating": 1,
+  "defence_rating": 3
+ },
+ {
+  "team": "MUN",
+  "gw": 13,
+  "opponent": "NEW (A)",
+  "xg_for": 1.62,
+  "xg_against": 1.6,
+  "p_clean_sheet": 0.203,
+  "attack_rating": 2,
+  "defence_rating": 4
+ },
+ {
+  "team": "MUN",
+  "gw": 14,
+  "opponent": "COV (H)",
+  "xg_for": 2.13,
+  "xg_against": 0.96,
+  "p_clean_sheet": 0.384,
+  "attack_rating": 1,
+  "defence_rating": 1
+ },
+ {
+  "team": "MUN",
+  "gw": 15,
+  "opponent": "CRY (A)",
+  "xg_for": 1.71,
+  "xg_against": 1.63,
+  "p_clean_sheet": 0.197,
+  "attack_rating": 2,
+  "defence_rating": 4
+ },
+ {
+  "team": "MUN",
+  "gw": 16,
+  "opponent": "ARS (A)",
+  "xg_for": 1.04,
+  "xg_against": 1.81,
+  "p_clean_sheet": 0.164,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "NEW",
+  "gw": 11,
+  "opponent": "ARS (H)",
+  "xg_for": 1.06,
+  "xg_against": 1.62,
+  "p_clean_sheet": 0.198,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "NEW",
+  "gw": 12,
+  "opponent": "BHA (A)",
+  "xg_for": 1.35,
+  "xg_against": 1.73,
+  "p_clean_sheet": 0.177,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "NEW",
+  "gw": 13,
+  "opponent": "MUN (H)",
+  "xg_for": 1.6,
+  "xg_against": 1.62,
+  "p_clean_sheet": 0.198,
+  "attack_rating": 2,
+  "defence_rating": 4
+ },
+ {
+  "team": "NEW",
+  "gw": 14,
+  "opponent": "SUN (H)",
+  "xg_for": 1.69,
+  "xg_against": 1.08,
+  "p_clean_sheet": 0.341,
+  "attack_rating": 2,
+  "defence_rating": 1
+ },
+ {
+  "team": "NEW",
+  "gw": 15,
+  "opponent": "IPS (A)",
+  "xg_for": 1.66,
+  "xg_against": 1.18,
+  "p_clean_sheet": 0.307,
+  "attack_rating": 2,
+  "defence_rating": 2
+ },
+ {
+  "team": "NEW",
+  "gw": 16,
+  "opponent": "BRE (A)",
+  "xg_for": 1.47,
+  "xg_against": 1.76,
+  "p_clean_sheet": 0.172,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "NFO",
+  "gw": 11,
+  "opponent": "BOU (A)",
+  "xg_for": 1.28,
+  "xg_against": 1.9,
+  "p_clean_sheet": 0.149,
+  "attack_rating": 4,
+  "defence_rating": 5
+ },
+ {
+  "team": "NFO",
+  "gw": 12,
+  "opponent": "CHE (H)",
+  "xg_for": 1.45,
+  "xg_against": 1.68,
+  "p_clean_sheet": 0.186,
+  "attack_rating": 3,
+  "defence_rating": 4
+ },
+ {
+  "team": "NFO",
+  "gw": 13,
+  "opponent": "HUL (A)",
+  "xg_for": 1.39,
+  "xg_against": 1.19,
+  "p_clean_sheet": 0.305,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "NFO",
+  "gw": 14,
+  "opponent": "BHA (H)",
+  "xg_for": 1.35,
+  "xg_against": 1.53,
+  "p_clean_sheet": 0.217,
+  "attack_rating": 3,
+  "defence_rating": 3
+ },
+ {
+  "team": "NFO",
+  "gw": 15,
+  "opponent": "SUN (A)",
+  "xg_for": 1.25,
+  "xg_against": 1.28,
+  "p_clean_sheet": 0.278,
+  "attack_rating": 4,
+  "defence_rating": 2
+ },
+ {
+  "team": "NFO",
+  "gw": 16,
+  "opponent": "EVE (H)",
+  "xg_for": 1.49,
+  "xg_against": 1.26,
+  "p_clean_sheet": 0.285,
+  "attack_rating": 3,
+  "defence_rating": 2
+ },
+ {
+  "team": "TOT",
+  "gw": 11,
+  "opponent": "IPS (H)",
+  "xg_for": 1.5,
+  "xg_against": 0.97,
+  "p_clean_sheet": 0.377,
+  "attack_rating": 3,
+  "defence_rating": 1
+ },
+ {
+  "team": "TOT",
+  "gw": 12,
+  "opponent": "SUN (A)",
+  "xg_for": 1.13,
+  "xg_against": 1.2,
+  "p_clean_sheet": 0.301,
+  "attack_rating": 5,
+  "defence_rating": 2
+ },
+ {
+  "team": "TOT",
+  "gw": 13,
+  "opponent": "FUL (H)",
+  "xg_for": 1.29,
+  "xg_against": 1.22,
+  "p_clean_sheet": 0.296,
+  "attack_rating": 4,
+  "defence_rating": 2
+ },
+ {
+  "team": "TOT",
+  "gw": 14,
+  "opponent": "ARS (H)",
+  "xg_for": 0.83,
+  "xg_against": 1.55,
+  "p_clean_sheet": 0.211,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "TOT",
+  "gw": 15,
+  "opponent": "HUL (A)",
+  "xg_for": 1.26,
+  "xg_against": 1.11,
+  "p_clean_sheet": 0.329,
+  "attack_rating": 4,
+  "defence_rating": 1
+ },
+ {
+  "team": "TOT",
+  "gw": 16,
+  "opponent": "LIV (A)",
+  "xg_for": 1.03,
+  "xg_against": 1.69,
+  "p_clean_sheet": 0.184,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "SUN",
+  "gw": 11,
+  "opponent": "AVL (A)",
+  "xg_for": 1.11,
+  "xg_against": 1.53,
+  "p_clean_sheet": 0.217,
+  "attack_rating": 5,
+  "defence_rating": 3
+ },
+ {
+  "team": "SUN",
+  "gw": 12,
+  "opponent": "TOT (H)",
+  "xg_for": 1.2,
+  "xg_against": 1.13,
+  "p_clean_sheet": 0.323,
+  "attack_rating": 4,
+  "defence_rating": 1
+ },
+ {
+  "team": "SUN",
+  "gw": 13,
+  "opponent": "LIV (A)",
+  "xg_for": 0.99,
+  "xg_against": 1.79,
+  "p_clean_sheet": 0.167,
+  "attack_rating": 5,
+  "defence_rating": 5
+ },
+ {
+  "team": "SUN",
+  "gw": 14,
+  "opponent": "NEW (A)",
+  "xg_for": 1.08,
+  "xg_against": 1.69,
+  "p_clean_sheet": 0.185,
+  "attack_rating": 5,
+  "defence_rating": 4
+ },
+ {
+  "team": "SUN",
+  "gw": 15,
+  "opponent": "NFO (H)",
+  "xg_for": 1.28,
+  "xg_against": 1.25,
+  "p_clean_sheet": 0.286,
+  "attack_rating": 4,
+  "defence_rating": 2
+ },
+ {
+  "team": "SUN",
+  "gw": 16,
+  "opponent": "CRY (H)",
+  "xg_for": 1.32,
+  "xg_against": 1.48,
+  "p_clean_sheet": 0.228,
+  "attack_rating": 4,
+  "defence_rating": 3
+ }
+]

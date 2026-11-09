@@ -114,3 +114,44 @@ def test_manifest_lists_datasets_and_removals(tmp_path, datasets):
     gated = {**datasets, "assumptions": [{"gate": "failed: x"}]}
     write_datasets(gated, tmp_path / "g")
     assert "decision" in json.loads((tmp_path / "g" / "manifest.json").read_text())["remove"]
+
+
+def test_squad_card_fields(datasets, bootstrap):
+    from fpl.ui.dashboard import TEAM_COLORS
+
+    squad = datasets["squad"]
+    assert {r["armband"] for r in squad} == {"Captain", "Vice-captain", ""}
+    assert [r["element"] for r in squad if r["armband"] == "Captain"] == [411]
+    assert all(r["team_color"].startswith("#") and r["team_color2"].startswith("#")
+               for r in squad)
+    assert all(r["next_opp"] and " · " not in r["next_opp"] for r in squad)  # next GW only
+    assert {t.code for t in bootstrap.teams} <= set(TEAM_COLORS)
+
+
+def test_fixture_ratings_order():
+    import pandas as pd
+
+    from fpl.report.build import fixture_ratings
+
+    bf = pd.DataFrame({"element": range(10), "team": range(10), "fixture": range(10),
+                       "event": 11, "opponent_team": 0, "was_home": True,
+                       "lambda_for": [0.5 + 0.2 * i for i in range(10)],
+                       "p_cs": [0.5 - 0.04 * i for i in range(10)]})
+    r = fixture_ratings(bf).set_index("team")
+    assert r["attack_rating"].between(1, 5).all() and r["defence_rating"].between(1, 5).all()
+    assert r.at[9, "attack_rating"] == 1 and r.at[0, "attack_rating"] == 5  # most xG = easiest
+    assert r.at[0, "defence_rating"] == 1 and r.at[9, "defence_rating"] == 5
+    assert r["attack_rating"].is_monotonic_decreasing
+
+
+def test_roles_and_sale_pairs():
+    from types import SimpleNamespace
+
+    from fpl.report.build import _gw_roles, _sale_pairs
+
+    g = SimpleNamespace(lineup=[1, 2, 3], bench=[4, 5], captain=2, vice=3,
+                        buys=[9, 8], sells=[5, 1])
+    assert _gw_roles(g) == {1: "Starting", 2: "Captain", 3: "Vice-captain",
+                            4: "Bench 1", 5: "Bench 2"}
+    pos = {1: "MID", 5: "DEF", 8: "MID", 9: "DEF"}
+    assert _sale_pairs(g, pos) == {5: 9, 1: 8}

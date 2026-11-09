@@ -101,3 +101,12 @@ def test_pending_next_gw_transfer_applied(bootstrap, entry, history, picks, tran
     assert out_el not in {p.element for p in st.squad}
     assert st.bank == 38 + 39 - in_el.now_cost
     assert st.free_transfers == 0 and st.next_gw_transfers_made == 1
+    new = next(p for p in st.squad if p.element == in_el.id)
+    assert new.pending_in and new.squad_slot == 15  # takes the sold player's slot
+
+
+def test_captain_and_vice_from_latest_picks(bootstrap, entry, history, picks, transfers, rules):
+    st = _state(bootstrap, entry, history, picks, transfers, rules)
+    assert (st.captain, st.vice) == (411, 166)
+    assert sorted(p.squad_slot for p in st.squad) == list(range(1, 16))
+    assert not any(p.pending_in for p in st.squad)
