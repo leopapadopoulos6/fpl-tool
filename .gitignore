@@ -1,0 +1,4 @@
+external/
+processed/
+ledger/
+__pycache__/
