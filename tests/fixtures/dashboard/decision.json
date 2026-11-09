@@ -1,0 +1,62 @@
+[
+ {
+  "option": 1,
+  "label": "Roll the transfer",
+  "transfers_in": "None",
+  "transfers_out": "None",
+  "hits": 0,
+  "delta_vs_roll": 0.0,
+  "next_gw_xpts": 52.58,
+  "horizon_xpts": 328.8,
+  "recommended": "",
+  "flags": ""
+ },
+ {
+  "option": 2,
+  "label": "1 transfer",
+  "transfers_in": "E.Le Fée",
+  "transfers_out": "Belloumi",
+  "hits": 0,
+  "delta_vs_roll": 1.01,
+  "next_gw_xpts": 53.37,
+  "horizon_xpts": 329.6,
+  "recommended": "",
+  "flags": "Differential in: E.Le Fée"
+ },
+ {
+  "option": 3,
+  "label": "1 transfer",
+  "transfers_in": "Van Hecke",
+  "transfers_out": "Diop",
+  "hits": 0,
+  "delta_vs_roll": 0.92,
+  "next_gw_xpts": 53.98,
+  "horizon_xpts": 329.5,
+  "recommended": "",
+  "flags": ""
+ },
+ {
+  "option": 4,
+  "label": "2 transfers",
+  "transfers_in": "Van Hecke, E.Le Fée",
+  "transfers_out": "Diop, Belloumi",
+  "hits": 0,
+  "delta_vs_roll": 1.87,
+  "next_gw_xpts": 54.73,
+  "horizon_xpts": 330.3,
+  "recommended": "Yes",
+  "flags": "Differential in: E.Le Fée"
+ },
+ {
+  "option": 5,
+  "label": "2 transfers",
+  "transfers_in": "Barry, E.Le Fée",
+  "transfers_out": "N.Jackson, Belloumi",
+  "hits": 0,
+  "delta_vs_roll": 1.85,
+  "next_gw_xpts": 54.21,
+  "horizon_xpts": 330.4,
+  "recommended": "",
+  "flags": "Differential in: E.Le Fée · Selling a top-10k template player: N.Jackson · Template move (top-10k EO ≥ 50%): Barry"
+ }
+]

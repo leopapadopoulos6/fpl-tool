@@ -1,0 +1,66 @@
+[
+ {
+  "chip": "Bench Boost",
+  "set": "First half",
+  "window": "GW1–19",
+  "status": "Available",
+  "available_from_utc": "2026-08-21T17:30:00Z",
+  "use_by_utc": "2027-01-01T18:30:00Z"
+ },
+ {
+  "chip": "Triple Captain",
+  "set": "First half",
+  "window": "GW1–19",
+  "status": "Available",
+  "available_from_utc": "2026-08-21T17:30:00Z",
+  "use_by_utc": "2027-01-01T18:30:00Z"
+ },
+ {
+  "chip": "Wildcard",
+  "set": "First half",
+  "window": "GW2–19",
+  "status": "Available",
+  "available_from_utc": "2026-08-28T17:30:00Z",
+  "use_by_utc": "2027-01-01T18:30:00Z"
+ },
+ {
+  "chip": "Free Hit",
+  "set": "First half",
+  "window": "GW2–19",
+  "status": "Used GW5",
+  "available_from_utc": "2026-08-28T17:30:00Z",
+  "use_by_utc": "2027-01-01T18:30:00Z"
+ },
+ {
+  "chip": "Wildcard",
+  "set": "Second half",
+  "window": "GW20–38",
+  "status": "Not yet available",
+  "available_from_utc": "2027-01-05T18:00:00Z",
+  "use_by_utc": "2027-05-30T13:30:00Z"
+ },
+ {
+  "chip": "Free Hit",
+  "set": "Second half",
+  "window": "GW20–38",
+  "status": "Not yet available",
+  "available_from_utc": "2027-01-05T18:00:00Z",
+  "use_by_utc": "2027-05-30T13:30:00Z"
+ },
+ {
+  "chip": "Bench Boost",
+  "set": "Second half",
+  "window": "GW20–38",
+  "status": "Not yet available",
+  "available_from_utc": "2027-01-05T18:00:00Z",
+  "use_by_utc": "2027-05-30T13:30:00Z"
+ },
+ {
+  "chip": "Triple Captain",
+  "set": "Second half",
+  "window": "GW20–38",
+  "status": "Not yet available",
+  "available_from_utc": "2027-01-05T18:00:00Z",
+  "use_by_utc": "2027-05-30T13:30:00Z"
+ }
+]

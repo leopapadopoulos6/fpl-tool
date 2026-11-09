@@ -1,0 +1,9 @@
+[
+ {
+  "gws_reviewed": 1,
+  "model_mae": 1.665,
+  "baseline_mae": 1.749,
+  "gws_model_beat_baselines": 1,
+  "recommended_moves_net_points": 5.0
+ }
+]

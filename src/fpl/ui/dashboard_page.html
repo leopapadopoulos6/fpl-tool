@@ -1,0 +1,1326 @@
+<meta name="dash-one-writer">
+<style>
+  .hb { display: grid; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .hb h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .hb h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .hb p { margin: 0; }
+  .hb-head { display: grid; gap: var(--cds-gap-xs); }
+  .hb-lede { color: var(--color-fg); max-width: 65ch; }
+  .hb-lede b, .hb-tile b { font-weight: var(--cds-font-weight-medium); }
+  .hb-asof { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); }
+  .hb-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-xs); align-content: start; }
+  .hb-tile .hb-label { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tile .hb-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; }
+  .hb-tile .hb-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+  .hb-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 70ch; }
+  .hb-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+  .hb-scroll { overflow-x: auto; min-width: 0; }
+  .hb table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-body); }
+  .hb th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .hb td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .hb tbody tr:last-child td { border-bottom: 0; }
+  .hb .num { text-align: right; white-space: nowrap; }
+  .hb .nowrap { white-space: nowrap; }
+  .hb .muted { color: var(--color-fg-muted); }
+  .hb .fixtures { min-width: 16rem; color: var(--color-fg-muted); }
+  .hb tr.hb-bench td { background: color-mix(in srgb, var(--color-border-line) 25%, transparent); }
+  .hb .ok { color: var(--color-ok); }
+  .hb .warn { color: var(--color-warn); }
+  .hb .bad { color: var(--color-bad); }
+  .hb .up::before { content: "▲ "; }
+  .hb .down::before { content: "▼ "; }
+  .hb .pos { color: var(--color-ok); }
+  .hb details { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb summary { cursor: pointer; color: var(--color-fg); font-size: var(--cds-font-size-body); }
+  .hb dl { display: grid; gap: var(--cds-gap-xs); margin: var(--cds-pad-sm) 0 0; max-width: 70ch; }
+  .hb dt { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .hb dd { margin: 0 0 var(--cds-gap-xs); }
+  .hb [data-dash-source-state=empty] { color: transparent; }
+  .hb [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  @media (max-width: 40rem) {
+    .hb .wide-only { display: none; }
+  }
+  .hb h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .hb-lead { border-color: var(--color-fg-muted); }
+  .hb-sub-card { display: grid; gap: var(--cds-gap-sm); min-width: 0; align-content: start; }
+  .hb-section-head { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: var(--cds-gap-md) 0 0; }
+  .hb-tall { max-height: 32rem; overflow: auto; }
+  .hb-tall th { position: sticky; top: 0; background: var(--color-panel); }
+  .hb tr.hb-rec td { font-weight: var(--cds-font-weight-medium); }
+  .hb tr.hb-rec td:first-child::before { content: "● "; color: var(--color-ok); }
+  .hb .flag { color: var(--color-warn); font-size: var(--cds-font-size-caption); }
+  .hb-chips { display: grid; gap: var(--cds-gap-md); min-height: 9rem; }
+  .hb-chip-row { display: grid; gap: var(--cds-gap-xs); }
+  .hb-chip-row svg { display: block; }
+  .hb-fx { min-width: 34rem; }
+  .hb-fx svg { display: block; }
+  .hb-calib { min-height: 14rem; min-width: 0; }
+  .hb-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; }
+  .hb-rel { position: relative; }
+  .hb .chart-label { fill: var(--color-fg-muted); font-size: 11px; }
+  .hb .chart-strong { fill: var(--color-fg); font-size: 11px; font-weight: 500; }
+  .hb [hidden] { display: none !important; }
+  /* section nav */
+  .hb { --hb-nav-h: 2.75rem; }
+  .hb-nav { position: sticky; top: 0; z-index: 5; display: flex; gap: var(--cds-gap-xs); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; background: var(--color-bg); padding: var(--cds-pad-xs) 1.5rem var(--cds-pad-xs) 0; margin-bottom: calc(-1 * var(--cds-gap-sm)); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); }
+  .hb-nav::-webkit-scrollbar { display: none; }
+  .hb-nav a { flex: none; white-space: nowrap; text-decoration: none; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1; padding: .5rem .75rem; border: 1px solid var(--color-border-line); border-radius: 999px; background: var(--color-panel); }
+  .hb-nav a:hover { color: var(--color-fg); }
+  .hb-nav a:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .hb-nav a.is-active { color: var(--color-bg); background: var(--color-fg); border-color: var(--color-fg); }
+  .hb [id] { scroll-margin-top: calc(var(--hb-nav-h) + var(--cds-gap-md)); }
+  /* squad: shared controls */
+  .hb-squad-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .hb-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); }
+  .hb-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+  .hb-seg button { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); background: transparent; border: 0; padding: .4rem .7rem; cursor: pointer; }
+  .hb-seg button + button { border-left: 1px solid var(--color-border-line); }
+  .hb-seg button[aria-pressed=true] { color: var(--color-bg); background: var(--color-fg); }
+  .hb-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .hb-diffbox { border-left: 3px solid var(--color-warn); padding: var(--cds-pad-xs) var(--cds-pad-sm); display: grid; gap: var(--cds-gap-xs); }
+  .hb-diffbox p { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .hb-diff-list { margin: 0; padding-left: 1.1rem; font-size: var(--cds-font-size-body); }
+  .hb-diff-list li + li { margin-top: 2px; }
+  /* pitch */
+  .hb-pitch { position: relative; display: grid; gap: var(--cds-gap-md); padding: var(--cds-pad-md) var(--cds-pad-xs); border-radius: var(--cds-radius); background: color-mix(in srgb, var(--color-ok) 9%, var(--color-panel)); border: 1px solid color-mix(in srgb, var(--color-ok) 30%, var(--color-border-line)); min-height: 18rem; overflow: hidden; }
+  .hb-pitch::before { content: ""; position: absolute; left: 30%; right: 30%; top: -1px; height: 2.6rem; border: 1px solid color-mix(in srgb, var(--color-ok) 35%, transparent); border-top: 0; pointer-events: none; }
+  .hb-pitch::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid color-mix(in srgb, var(--color-ok) 35%, transparent); pointer-events: none; }
+  .hb-prow { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 7.5rem)); justify-content: center; gap: var(--cds-gap-xs); }
+  .hb-benchrow { display: grid; grid-template-columns: repeat(4, minmax(0, 7.5rem)); justify-content: center; gap: var(--cds-gap-xs); padding: var(--cds-pad-sm) var(--cds-pad-xs); border-radius: var(--cds-radius); background: color-mix(in srgb, var(--color-border-line) 30%, transparent); min-height: 6rem; }
+  .hb-pcard { position: relative; min-width: 0; display: grid; gap: 2px; justify-items: center; text-align: center; font: inherit; color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: .45rem .25rem .35rem; cursor: pointer; }
+  .hb-pcard:hover { border-color: var(--color-fg-muted); }
+  .hb-pcard:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .hb-pcard.is-diff { border: 2px dashed var(--color-warn); padding: calc(.45rem - 1px) calc(.25rem - 1px) calc(.35rem - 1px); }
+  .hb-pcard.is-out { opacity: .72; }
+  .hb-pcard.is-sel { box-shadow: 0 0 0 2px var(--color-fg); }
+  .hb-pc-name { display: flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); }
+  .hb-pc-name span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hb-dot { flex: none; width: .7rem; height: .7rem; border-radius: 50%; background: linear-gradient(135deg, var(--c1, #888) 50%, var(--c2, #ccc) 50%); box-shadow: 0 0 0 1px var(--color-border-line); }
+  .hb-pc-team { font-size: 10px; color: var(--color-fg-muted); letter-spacing: .02em; }
+  .hb-pc-fx { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; font-size: 10px; color: var(--color-fg-muted); max-width: 100%; }
+  .hb-pc-fx > span { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+  .hb-pip { display: inline-grid; place-items: center; min-width: 1rem; height: 1rem; padding: 0 2px; border-radius: 3px; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); background: color-mix(in srgb, var(--pip) 28%, transparent); box-shadow: inset 0 -2px 0 var(--pip); }
+  .hb-pip[data-r="1"] { --pip: var(--color-ok); }
+  .hb-pip[data-r="2"] { --pip: color-mix(in srgb, var(--color-ok) 55%, var(--color-warn)); }
+  .hb-pip[data-r="3"] { --pip: var(--color-warn); }
+  .hb-pip[data-r="4"] { --pip: color-mix(in srgb, var(--color-warn) 45%, var(--color-bad)); }
+  .hb-pip[data-r="5"] { --pip: var(--color-bad); }
+  .hb-ha { font-size: 9px; opacity: .8; }
+  .hb-pc-xp { font-family: var(--font-anthropic-serif); font-size: 1.15rem; line-height: 1.1; }
+  .hb-pc-tag { font-size: 10px; line-height: 1.2; color: var(--color-warn); font-weight: var(--cds-font-weight-medium); }
+  .hb-pc-badge { position: absolute; top: -6px; right: -4px; min-width: 1.1rem; height: 1.1rem; display: grid; place-items: center; border-radius: 50%; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-bg); background: var(--color-fg); }
+  .hb-pc-flag { position: absolute; top: -6px; left: -4px; min-width: 1.1rem; height: 1.1rem; padding: 0 3px; display: grid; place-items: center; border-radius: 999px; font-size: 10px; font-weight: var(--cds-font-weight-medium); color: var(--color-bg); background: var(--color-warn); }
+  .hb-pc-flag.bad { background: var(--color-bad); }
+  .hb-pc-order { position: absolute; top: 2px; left: 4px; font-size: 9px; color: var(--color-fg-muted); }
+  .hb-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-xs) var(--cds-gap-sm); }
+  .hb tr.hb-tap { cursor: pointer; }
+  .hb tr.hb-tap:hover td, .hb tr.is-sel td { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+  .hb tr.hb-tap:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  /* player detail */
+  .hb-detail { border: 1px solid var(--color-fg-muted); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); }
+  .hb-detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .hb-detail-head h3 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .hb-btn { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: transparent; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: .35rem .7rem; cursor: pointer; }
+  .hb .hb-dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-xs) var(--cds-gap-lg); margin: 0; max-width: none; }
+  .hb-dgrid > div { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); border-bottom: 1px solid var(--color-border-line); padding: 3px 0; min-width: 0; }
+  .hb-dgrid dt { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); flex: none; }
+  .hb-dgrid dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .hb-dgrid .hb-wide { grid-column: 1 / -1; }
+  @media (max-width: 30rem) {
+    .hb #squad { padding: var(--cds-pad-md) var(--cds-pad-sm); }
+    .hb-pitch { padding: var(--cds-pad-md) 6px; gap: var(--cds-gap-sm); }
+    .hb-benchrow { padding: var(--cds-pad-sm) 6px; }
+    .hb-prow, .hb-benchrow { gap: 3px; }
+    .hb-pcard { padding: .45rem 2px .3rem; }
+    .hb-ha { font-size: 9px; opacity: .8; }
+  .hb-pc-xp { font-size: 1rem; }
+    .hb-pc-name { gap: 3px; }
+    .hb-dot { width: .55rem; height: .55rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hb-nav a, .hb-seg button { transition: background-color var(--cds-dur-slow) var(--cds-ease-out), color var(--cds-dur-slow) var(--cds-ease-out); }
+  }
+</style>
+
+<div class="hb">
+  <header class="hb-head" id="top">
+    <h1>HaramBall</h1>
+    <p class="hb-lede">
+      Gameweek <b data-draw="next-gw" data-source="summary" data-field="next_gw" data-row="0">—</b>
+      deadline <b data-draw="deadline" data-source="summary" data-field="deadline_utc" data-row="0">—</b>.
+      Free transfers: <b data-draw="ft" data-source="summary" data-field="free_transfers" data-row="0">—</b>.
+      Money in the bank: £<b data-draw="bank-lede" data-source="summary" data-field="bank_m" data-row="0">—</b>m.
+    </p>
+    <p class="hb-asof">Updated <span data-draw="as-of" data-source="summary" data-field="as_of_utc" data-row="0">—</span>. Recommendations come from models that are re-tested every day; see Model health.</p>
+  </header>
+
+  <nav class="hb-nav" id="nav" aria-label="Dashboard sections">
+    <a href="#transfers">This GW</a>
+    <a href="#planner">Planner</a>
+    <a href="#chips">Chips</a>
+    <a href="#players">Players</a>
+    <a href="#fixtures">Fixtures</a>
+    <a href="#model-health">Health</a>
+    <a href="#track-record">Record</a>
+    <a href="#team">Team</a>
+    <a href="#price-watch">Prices</a>
+    <a href="#squad">Squad</a>
+    <a href="#chip-status">Chip status</a>
+    <a href="#ft-history">Transfers</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <section class="hb-card hb-lead" id="transfers" data-model-section>
+    <h2>This gameweek</h2>
+    <p class="hb-lede">
+      Recommended: <b data-draw="rec-label" data-source="decision" data-field="label" data-where="recommended=Yes">—</b>
+      (in: <span data-draw="rec-in" data-source="decision" data-field="transfers_in" data-where="recommended=Yes">—</span>;
+      out: <span data-draw="rec-out" data-source="decision" data-field="transfers_out" data-where="recommended=Yes">—</span>),
+      <b data-draw="rec-delta" data-source="decision" data-field="delta_vs_roll" data-where="recommended=Yes">—</b> expected points against rolling over
+      <span data-draw="horizon" data-source="assumptions" data-field="horizon_gws" data-row="0">—</span> gameweeks.
+    </p>
+    <p class="hb-lede">
+      Captain <b data-draw="cap" data-source="lineup" data-field="player" data-where="role=Captain">—</b>,
+      vice <b data-draw="vice" data-source="lineup" data-field="player" data-where="role=Vice-captain">—</b>.
+    </p>
+    <p class="hb-note">Δ is in expected points over the planning horizon, later gameweeks weighted down, hits included. A hit is only recommended when it beats the free option by more than the hit hurdle in the assumptions. Flags compare each move with what the overall top 10,000 own.</p>
+    <div class="hb-scroll">
+      <table data-source="decision" data-row-key="option" aria-label="Transfer options">
+        <thead><tr>
+          <th data-field="label">Option</th>
+          <th data-field="transfers_in">In</th>
+          <th data-field="transfers_out">Out</th>
+          <th data-field="delta_vs_roll" class="num">Δ vs roll</th>
+          <th data-field="next_gw_xpts" class="num wide-only">Next GW xPts</th>
+          <th data-field="flags">Flags</th>
+        </tr></thead>
+        <tbody data-draw="decision"></tbody>
+      </table>
+    </div>
+    <div class="hb-grid">
+      <div class="hb-sub-card" id="captaincy">
+        <h3>Captaincy</h3>
+        <p class="hb-note">Simulated points this gameweek: average, the range covering 80% of outcomes, and the chance of 10 or more. Top-10k EO above 100% means most of them captain him.</p>
+        <div class="hb-scroll">
+          <table data-source="captaincy" data-row-key="element" aria-label="Captaincy">
+            <thead><tr>
+              <th data-field="player">Player</th>
+              <th data-field="mean" class="num">Avg</th>
+              <th data-field="p10" class="num">Low</th>
+              <th data-field="p90" class="num">High</th>
+              <th data-field="p_haul" class="num">10+ chance</th>
+              <th data-field="eo_top10k" class="num">Top-10k EO %</th>
+            </tr></thead>
+            <tbody data-draw="captaincy"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="hb-sub-card" id="lineup">
+        <h3>Line-up and bench order</h3>
+        <p class="hb-note">Bench in auto-sub order. Start chance comes from the minutes model plus FPL's injury flags.</p>
+        <div class="hb-scroll">
+          <table data-source="lineup" data-row-key="element" aria-label="Line-up">
+            <thead><tr>
+              <th data-field="role">Role</th>
+              <th data-field="player">Player</th>
+              <th data-field="pos">Pos</th>
+              <th data-field="xpts" class="num">xPts</th>
+              <th data-field="p_start" class="num">Start chance</th>
+              <th data-field="eo_top10k" class="num wide-only">Top-10k EO %</th>
+            </tr></thead>
+            <tbody data-draw="lineup"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hb-card" id="planner" data-model-section>
+    <h2>Planner</h2>
+    <p class="hb-note">The recommended path gameweek by gameweek. Later moves are provisional: the plan is re-solved every day with fresh data.</p>
+    <div class="hb-scroll">
+      <table data-source="plan" data-row-key="gw" aria-label="Transfer plan">
+        <thead><tr>
+          <th data-field="gw" class="num">GW</th>
+          <th data-field="free_transfers" class="num">Free</th>
+          <th data-field="transfers_in">In</th>
+          <th data-field="transfers_out">Out</th>
+          <th data-field="hits" class="num">Hits</th>
+          <th data-field="captain">Captain</th>
+          <th data-field="xpts" class="num">xPts</th>
+          <th data-field="bank_m" class="num wide-only">Bank £m</th>
+        </tr></thead>
+        <tbody data-draw="plan"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="hb-card" id="chips" data-model-section>
+    <h2>First-half chips</h2>
+    <p class="hb-lede">Planned together, your Wildcard, Bench Boost and Triple Captain are worth
+      <b data-draw="chips-value" data-source="chip_summary" data-field="chips_value" data-row="0">—</b> expected points over
+      <span data-draw="chips-horizon" data-source="chip_summary" data-field="horizon" data-row="0">—</span>.
+      Next-best plan: <span data-draw="chips-runner" data-source="chip_summary" data-field="runner_up" data-row="0">—</span>
+      (<span data-draw="chips-runner-cost" data-source="chip_summary" data-field="runner_up_cost" data-row="0">—</span>).</p>
+    <p class="hb-note">All first-half chips are lost after the gameweek 19 deadline. The plan looks four gameweeks past it so a late Wildcard keeps its value. Doubles and blanks are not announced yet, so late gameweeks will move.</p>
+    <div class="hb-scroll">
+      <table data-source="chip_plan" data-row-key="chip" aria-label="Chip plan">
+        <thead><tr>
+          <th data-field="chip">Chip</th>
+          <th data-field="best_gw" class="num">Best GW</th>
+          <th data-field="gain" class="num">Worth</th>
+          <th data-field="next_best_gw" class="num">Next best GW</th>
+          <th data-field="cost_of_next_best" class="num">Cost of waiting/moving</th>
+        </tr></thead>
+        <tbody data-draw="chip-plan"></tbody>
+      </table>
+    </div>
+    <p class="hb-note">Bars: what each chip adds if played in that gameweek, with the other chips at their best gameweeks.</p>
+    <div class="hb-chips" data-draw="chip-chart" data-source="chip_gain"></div>
+  </section>
+
+  <section class="hb-card" id="players" data-model-section>
+    <h2>Players</h2>
+    <p class="hb-note">Expected points for the next six gameweeks. "Affordable" means you could buy him with one sale at today's selling prices plus your bank.</p>
+    <div class="hb-scroll hb-tall">
+      <table data-source="players" data-row-key="element" aria-label="Players">
+        <thead><tr>
+          <th data-field="player">Player</th>
+          <th data-field="pos">Pos</th>
+          <th data-field="team" class="wide-only">Team</th>
+          <th data-field="price_m" class="num">£m</th>
+          <th data-field="xpts_total" class="num">Next 6</th>
+          <th data-field="gw1" class="num wide-only">GW+1</th>
+          <th data-field="gw2" class="num wide-only">GW+2</th>
+          <th data-field="gw3" class="num wide-only">GW+3</th>
+          <th data-field="p_start" class="num">Start chance</th>
+          <th data-field="eo_top10k" class="num">Top-10k EO %</th>
+          <th data-field="owned">Yours</th>
+          <th data-field="affordable" class="wide-only">Affordable</th>
+        </tr></thead>
+        <tbody data-draw="players"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="hb-card" id="fixtures" data-model-section>
+    <h2>Fixtures</h2>
+    <p class="hb-note">Our own ratings from expected goals, not FPL's difficulty scores. Darker means better for that team.</p>
+    <select class="dash-select hb-fx-metric" aria-label="Fixture measure">
+      <option value="xg_for">Attack: expected goals scored</option>
+      <option value="p_clean_sheet">Defence: clean-sheet chance</option>
+    </select>
+    <div class="hb-scroll">
+      <div class="hb-fx" data-draw="fixtures" data-source="fixtures_strength"></div>
+    </div>
+  </section>
+
+  <section class="hb-card" id="model-health">
+    <h2>Model health</h2>
+    <p class="hb-note">Each model is tested on past gameweeks it had not seen, against a simple baseline (points per match, last three matches, or season averages). Recommendations only appear while the models beat their baselines.</p>
+    <p class="hb-note">Status: <b data-draw="gate" data-source="assumptions" data-field="gate" data-row="0">—</b></p>
+    <div class="hb-scroll">
+      <table data-source="model_health" data-row-key="model,metric" aria-label="Model health">
+        <thead><tr>
+          <th data-field="model">Model</th>
+          <th data-field="metric">Measure</th>
+          <th data-field="value" class="num">Model</th>
+          <th data-field="baseline" class="num">Baseline</th>
+          <th data-field="verdict">Verdict</th>
+          <th data-field="test_rounds" class="wide-only">Tested on</th>
+        </tr></thead>
+        <tbody data-draw="health"></tbody>
+      </table>
+    </div>
+    <h3>Calibration</h3>
+    <p class="hb-note">Predicted against actual, grouped. Points on the diagonal mean the model is right on average.</p>
+    <div class="hb-grid">
+      <div class="hb-calib" data-draw="calib-xpts" data-source="calibration"></div>
+      <div class="hb-calib" data-draw="calib-start" data-source="calibration"></div>
+    </div>
+  </section>
+
+  <section class="hb-card" id="track-record" data-review-section>
+    <h2>Track record</h2>
+    <p class="hb-lede">Gameweeks graded: <b data-draw="tr-n" data-source="review_summary" data-field="gws_reviewed" data-row="0">—</b>.
+      Forecast error <b data-draw="tr-mae" data-source="review_summary" data-field="model_mae" data-row="0">—</b> points per player against
+      <b data-draw="tr-base" data-source="review_summary" data-field="baseline_mae" data-row="0">—</b> for the best simple baseline.
+      Recommended moves have netted <b data-draw="tr-net" data-source="review_summary" data-field="recommended_moves_net_points" data-row="0">—</b> points in their own gameweek.</p>
+    <p class="hb-note">Each gameweek is graded against what this page published before its deadline, after FPL finalises the points. A move's points count only its first gameweek, so a good long-term move can show a loss here.</p>
+    <div class="hb-scroll">
+      <table data-source="review" data-row-key="gw" aria-label="Track record">
+        <thead><tr>
+          <th data-field="gw" class="num">GW</th>
+          <th data-field="model_mae" class="num">Error</th>
+          <th data-field="baseline_mae" class="num">Baseline</th>
+          <th data-field="recommended">Advice</th>
+          <th data-field="recommended_move_points" class="num">Move pts</th>
+          <th data-field="followed">Followed</th>
+          <th data-field="captain">Captain</th>
+          <th data-field="captain_points" class="num">Pts</th>
+          <th data-field="best_captain" class="wide-only">Best in XI</th>
+          <th data-field="your_points" class="num">You</th>
+          <th data-field="average_points" class="num wide-only">Average</th>
+        </tr></thead>
+        <tbody data-draw="track"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <h2 class="hb-section-head" id="team">Your team now</h2>
+
+  <section class="hb-tiles" id="figures" aria-label="Key figures">
+    <div class="hb-tile">
+      <span class="hb-label">Overall rank</span>
+      <span class="hb-big" data-draw="rank" data-source="summary" data-field="overall_rank" data-row="0">—</span>
+      <span class="hb-sub">After gameweek <span data-draw="last-gw" data-source="summary" data-field="last_gw" data-row="0">—</span></span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Free transfers</span>
+      <span class="hb-big" data-draw="ft-tile" data-source="summary" data-field="free_transfers" data-row="0">—</span>
+      <span class="hb-sub">Already made this gameweek: <span data-draw="made" data-source="summary" data-field="transfers_made_next_gw" data-row="0">—</span></span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">In the bank</span>
+      <span class="hb-big">£<span data-draw="bank" data-source="summary" data-field="bank_m" data-row="0">—</span>m</span>
+      <span class="hb-sub">Spendable on top of selling prices</span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Team value if sold</span>
+      <span class="hb-big">£<span data-draw="sell-value" data-source="summary" data-field="selling_value_m" data-row="0">—</span>m</span>
+      <span class="hb-sub">Market value £<span data-draw="market-value" data-source="summary" data-field="market_value_m" data-row="0">—</span>m</span>
+    </div>
+    <div class="hb-tile">
+      <span class="hb-label">Points spent on hits</span>
+      <span class="hb-big" data-draw="hit-points" data-source="summary" data-field="hit_points_season" data-row="0">—</span>
+      <span class="hb-sub">Hits taken this season: <span data-draw="hits" data-source="summary" data-field="hits_taken" data-row="0">—</span></span>
+    </div>
+  </section>
+
+  <section class="hb-card" id="price-watch">
+    <h2>Price watch</h2>
+    <p class="hb-note">Your players FPL expects to change price at the next overnight update. A rise adds to your selling price only every second £0.1m; a drop comes off it in full.</p>
+    <p class="hb-note hb-pw-none" hidden>None of your players is expected to change price at the next update.</p>
+    <div class="hb-scroll">
+      <table data-source="squad" data-row-key="element" aria-label="Players expected to change price">
+        <thead><tr>
+          <th data-field="player">Player</th>
+          <th data-field="price_status">FPL price status</th>
+          <th data-field="price_progress_pct" class="num">Progress %</th>
+          <th data-field="sell_m" class="num">Sell £m</th>
+          <th data-field="owned_by_pct" class="num wide-only">Owned %</th>
+        </tr></thead>
+        <tbody data-draw="price-watch"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="hb-card" id="squad">
+    <div class="hb-squad-head">
+      <h2>Squad</h2>
+      <div class="hb-controls">
+        <div class="hb-seg" role="group" aria-label="Squad view">
+          <button type="button" data-squad-view="formation" aria-pressed="true">Formation</button>
+          <button type="button" data-squad-view="list" aria-pressed="false">List</button>
+        </div>
+        <div class="hb-seg" role="group" aria-label="Whose line-up" data-engine-only>
+          <button type="button" data-squad-pick="mine" aria-pressed="true">Your team</button>
+          <button type="button" data-squad-pick="engine" aria-pressed="false">Engine's pick</button>
+        </div>
+      </div>
+    </div>
+    <p class="hb-note">Your team as picked for gameweek <span data-draw="squad-last-gw" data-source="summary" data-field="last_gw" data-row="0">—</span>, plus transfers you have already made for gameweek <span data-draw="squad-next-gw" data-source="summary" data-field="next_gw" data-row="0">—</span>. FPL shows changes made in its app (line-up, captain) only after the deadline. Tap a player for details.</p>
+    <div class="hb-diffbox" id="engine-diff" hidden>
+      <p>Where the engine's pick for the coming gameweek differs from yours:</p>
+      <ul class="hb-diff-list" data-draw="team-diff" data-source="squad lineup"></ul>
+    </div>
+    <div class="hb-sub-card" id="squad-pane-formation" data-squad-pane="formation">
+      <h3>Starting eleven <span data-draw="formation-shape">—</span></h3>
+      <div class="hb-pitch" data-draw="formation" data-source="squad lineup" role="group" aria-label="Starting eleven by position">—</div>
+      <h3>Bench, in auto-sub order</h3>
+      <div class="hb-benchrow" data-draw="bench" data-source="squad lineup" role="group" aria-label="Bench in auto-sub order">—</div>
+      <div class="hb-note hb-legend">
+        <span>Big number: expected points next gameweek.</span>
+        <span>Fixture rating from our own model, <span class="hb-pip" data-r="1">1</span> easiest to <span class="hb-pip" data-r="5">5</span> hardest: clean-sheet chance for goalkeepers and defenders, expected goals for midfielders and forwards.</span>
+        <span>H home, A away.</span>
+        <span>C captain, V vice-captain; ! doubtful, ✕ unavailable. A dashed outline marks a player the engine would use differently.</span>
+      </div>
+    </div>
+    <div class="hb-sub-card" id="squad-pane-list" data-squad-pane="list" hidden>
+      <p class="hb-note">Starting eleven, then the bench in auto-sub order. Selling price is what you get back if you sell today.</p>
+      <div class="hb-scroll">
+        <table data-source="squad" data-row-key="element" aria-label="Squad">
+          <thead><tr>
+            <th data-field="role">Role</th>
+            <th data-field="player">Player</th>
+            <th data-field="armband">C/V</th>
+            <th data-field="pos">Pos</th>
+            <th data-field="team" class="wide-only">Team</th>
+            <th data-field="xpts_next" class="num">Next GW xPts</th>
+            <th data-field="sell_m" class="num">Sell £m</th>
+            <th data-field="bought_m" class="num wide-only">Bought £m</th>
+            <th data-field="now_m" class="num wide-only">Now £m</th>
+            <th data-field="locked_gain_m" class="num">Gain £m</th>
+            <th data-field="availability">Availability</th>
+            <th data-field="rec_role" class="wide-only">Engine</th>
+            <th data-field="price_status" class="wide-only">FPL price status</th>
+            <th data-field="next_fixtures">Next five gameweeks</th>
+          </tr></thead>
+          <tbody data-draw="squad"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="hb-detail" id="player-detail" hidden>
+      <div class="hb-detail-head">
+        <h3 data-draw="detail-name">—</h3>
+        <button type="button" class="hb-btn" data-detail-close>Close</button>
+      </div>
+      <dl class="hb-dgrid">
+        <div><dt>Team</dt><dd data-draw="detail" data-detail="team" data-field="team">—</dd></div>
+        <div><dt>Position</dt><dd data-draw="detail" data-detail="pos" data-field="pos">—</dd></div>
+        <div><dt>Your role</dt><dd data-draw="detail" data-detail="role" data-field="role">—</dd></div>
+        <div><dt>Armband</dt><dd data-draw="detail" data-detail="armband" data-field="armband">—</dd></div>
+        <div><dt>Engine's role</dt><dd data-draw="detail" data-detail="rec_role" data-field="rec_role">—</dd></div>
+        <div><dt>Availability</dt><dd data-draw="detail" data-detail="availability" data-field="availability">—</dd></div>
+        <div><dt>Expected points next gameweek</dt><dd data-draw="detail" data-detail="xpts_next" data-field="xpts_next">—</dd></div>
+        <div><dt>Start chance</dt><dd data-draw="detail" data-detail="p_start" data-field="p_start">—</dd></div>
+        <div><dt>Top-10k EO %</dt><dd data-draw="detail" data-detail="eo_top10k" data-field="eo_top10k">—</dd></div>
+        <div><dt>Sell £m</dt><dd data-draw="detail" data-detail="sell_m" data-field="sell_m">—</dd></div>
+        <div><dt>Bought £m</dt><dd data-draw="detail" data-detail="bought_m" data-field="bought_m">—</dd></div>
+        <div><dt>Now £m</dt><dd data-draw="detail" data-detail="now_m" data-field="now_m">—</dd></div>
+        <div><dt>Gain locked in £m</dt><dd data-draw="detail" data-detail="locked_gain_m" data-field="locked_gain_m">—</dd></div>
+        <div><dt>FPL price status</dt><dd data-draw="detail" data-detail="price_status" data-field="price_status">—</dd></div>
+        <div><dt>Owned overall %</dt><dd data-draw="detail" data-detail="owned_by_pct" data-field="owned_by_pct">—</dd></div>
+        <div class="hb-wide"><dt>Next five gameweeks</dt><dd data-draw="detail" data-detail="next_fixtures" data-field="next_fixtures">—</dd></div>
+        <div class="hb-wide"><dt>Our fixture ratings, same gameweeks</dt><dd data-draw="detail" data-detail="next5_diff" data-field="next5_diff">—</dd></div>
+        <div class="hb-wide"><dt>News</dt><dd data-draw="detail" data-detail="news" data-field="news">—</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="hb-grid">
+    <section class="hb-card" id="chip-status">
+      <h2>Chips</h2>
+      <p class="hb-note">First-half chips cannot be carried over: anything unused is lost at the gameweek 19 deadline.</p>
+      <div class="hb-scroll">
+        <table data-source="chips" data-row-key="chip,set" aria-label="Chips">
+          <thead><tr>
+            <th data-field="chip">Chip</th>
+            <th data-field="window">Window</th>
+            <th data-field="status">Status</th>
+            <th data-field="use_by_utc">Use by</th>
+          </tr></thead>
+          <tbody data-draw="chips"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="hb-card" id="ft-history">
+      <h2>Free transfers by gameweek</h2>
+      <p class="hb-note">Free transfers you had going into each gameweek, how many you made, and points paid for extras.</p>
+      <div class="hb-scroll">
+        <table data-source="ft_history" data-row-key="gw" aria-label="Free transfers by gameweek">
+          <thead><tr>
+            <th data-field="gw" class="num">GW</th>
+            <th data-field="ft_available" class="num">Free</th>
+            <th data-field="transfers" class="num">Made</th>
+            <th data-field="hit_points" class="num">Points lost</th>
+            <th data-field="chip">Chip</th>
+          </tr></thead>
+          <tbody data-draw="ft-history"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <details id="about">
+    <summary>About this page</summary>
+    <dl>
+      <dt>Where the numbers come from</dt>
+      <dd>The public FPL API, read by your fpl-tool engine and refreshed once a day after the overnight price changes.</dd>
+      <dt>Selling price</dt>
+      <dd>Purchase price plus half of any rise, rounded down to £0.1m. A fall is taken in full. Free Hit transfers are ignored because the squad reverts.</dd>
+      <dt>FPL price status</dt>
+      <dd>FPL's own prediction for the next overnight update. Progress shows how far the player is toward a change; past 100 a change is due.</dd>
+      <dt>Free transfers</dt>
+      <dd>Worked out from your transfer history, and checked against every hit FPL recorded.</dd>
+      <dt>How recommendations are made</dt>
+      <dd>Expected points per player come from expected goals and assists, minutes, clean-sheet chances from our own team ratings, defensive contributions, bonus and cards. An optimizer then searches transfers, captaincy and line-ups over the next six gameweeks with your real bank, selling prices and free transfers.</dd>
+      <dt>Assumptions</dt>
+      <dd>Model version <span data-draw="a-version" data-source="assumptions" data-field="model_version" data-row="0">—</span>. Later gameweeks are weighted by <span data-draw="a-decay" data-source="assumptions" data-field="decay" data-row="0">—</span> per week. Each hit must add <span data-draw="a-hurdle" data-source="assumptions" data-field="hit_hurdle" data-row="0">—</span> expected points over the free option. Ownership: <span data-draw="a-eo" data-source="assumptions" data-field="eo_source" data-row="0">—</span>. Price changes inside the horizon are ignored.</dd>
+      <dt>Not modelled yet</dt>
+      <dd>Cup and European fixtures (they affect rotation), injury return dates, and chip combinations played together.</dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+  const fmtDateTime = (iso) => new Intl.DateTimeFormat(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  }).format(new Date(iso));
+  const fmtDate = (iso) => new Intl.DateTimeFormat(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short'
+  }).format(new Date(iso));
+  const money = d3.format('.1f');
+  const pct = d3.format('.1f');
+  const comma = d3.format(',');
+
+  const priceClass = (s) => s.includes('rise') ? 'up ok' : s.includes('drop') ? 'down bad' : 'muted';
+  const availClass = (s) => s.startsWith('Available') ? '' : s.startsWith('Doubtful') ? 'warn' : 'bad';
+
+  const summaryField = (field, fmt) => (el) => {
+    const s = dash.data('summary');
+    const row = s.status === 'ok' ? s.data[0] : null;
+    el.textContent = row && row[field] != null ? (fmt ? fmt(row[field]) : String(row[field])) : '—';
+  };
+  dash.draw('next-gw', summaryField('next_gw'));
+  dash.draw('deadline', summaryField('deadline_utc', fmtDateTime));
+  dash.draw('ft', summaryField('free_transfers'));
+  dash.draw('bank-lede', summaryField('bank_m', money));
+  dash.draw('as-of', summaryField('as_of_utc', fmtDateTime));
+  dash.draw('rank', summaryField('overall_rank', comma));
+  dash.draw('last-gw', summaryField('last_gw'));
+  dash.draw('ft-tile', summaryField('free_transfers'));
+  dash.draw('made', summaryField('transfers_made_next_gw'));
+  dash.draw('bank', summaryField('bank_m', money));
+  dash.draw('sell-value', summaryField('selling_value_m', money));
+  dash.draw('market-value', summaryField('market_value_m', money));
+  dash.draw('hit-points', summaryField('hit_points_season'));
+  dash.draw('hits', summaryField('hits_taken'));
+
+  const cell = (tr, text, cls) => {
+    const td = tr.insertCell();
+    td.textContent = text;
+    if (cls) td.className = cls;
+    return td;
+  };
+
+  dash.draw('squad', (tbody) => {
+    const s = dash.data('squad');
+    const rows = s.status === 'ok' ? s.data : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      tr.className = 'hb-tap' + (r.role !== 'Starting' ? ' hb-bench' : '') + (String(r.element) === String(window.hbSel) ? ' is-sel' : '');
+      tr.tabIndex = 0;
+      cell(tr, r.role + (r.is_new === 'Yes' ? ' (new)' : ''), 'nowrap muted');
+      cell(tr, r.player, 'nowrap');
+      cell(tr, r.armband === 'Captain' ? 'C' : r.armband === 'Vice-captain' ? 'V' : '');
+      cell(tr, r.pos);
+      cell(tr, r.team, 'wide-only');
+      cell(tr, r.xpts_next == null ? '—' : d3.format('.1f')(r.xpts_next), 'num');
+      cell(tr, money(r.sell_m), 'num');
+      cell(tr, money(r.bought_m), 'num wide-only');
+      cell(tr, money(r.now_m), 'num wide-only');
+      cell(tr, money(r.locked_gain_m), r.locked_gain_m > 0 ? 'num pos' : 'num muted');
+      const a = cell(tr, r.availability, availClass(r.availability));
+      if (r.news) a.title = r.news;
+      cell(tr, r.rec_role == null ? '—' : r.rec_role + (r.rec_swap ? ' for ' + r.rec_swap : ''), 'nowrap wide-only' + (r.rec_role && r.rec_role !== r.role && !(r.role === 'Starting' && ['Captain', 'Vice-captain'].includes(r.rec_role)) ? ' warn' : ' muted'));
+      cell(tr, r.price_status, 'nowrap wide-only ' + priceClass(r.price_status));
+      cell(tr, r.next_fixtures, 'fixtures');
+    }
+  });
+
+  dash.draw('price-watch', (tbody) => {
+    const s = dash.data('squad');
+    const rows = s.status === 'ok'
+      ? s.data.filter((r) => r.price_status.includes('rise') || r.price_status.includes('drop'))
+      : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      cell(tr, r.player, 'nowrap');
+      cell(tr, r.price_status, 'nowrap ' + priceClass(r.price_status));
+      cell(tr, r.price_progress_pct == null ? '' : pct(r.price_progress_pct), 'num');
+      cell(tr, money(r.sell_m), 'num');
+      cell(tr, pct(r.owned_by_pct), 'num wide-only');
+    }
+    const none = s.status === 'ok' && rows.length === 0;
+    document.querySelectorAll('.hb-pw-none').forEach((n) => { n.hidden = !none; });
+  });
+
+  dash.draw('chips', (tbody) => {
+    const s = dash.data('chips');
+    const rows = s.status === 'ok' ? s.data : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = encodeURIComponent(r.chip) + ',' + encodeURIComponent(r.set);
+      cell(tr, r.chip, 'nowrap');
+      cell(tr, r.window, 'nowrap muted');
+      cell(tr, r.status, 'nowrap ' + (r.status === 'Available' ? 'ok' : r.status.startsWith('Used') ? 'muted' : ''));
+      cell(tr, r.use_by_utc ? fmtDate(r.use_by_utc) : '', 'nowrap');
+    }
+  });
+
+  dash.draw('ft-history', (tbody) => {
+    const s = dash.data('ft_history');
+    const rows = s.status === 'ok' ? [...s.data].sort((a, b) => b.gw - a.gw) : [];
+    tbody.replaceChildren();
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.gw);
+      cell(tr, String(r.gw), 'num');
+      cell(tr, String(r.ft_available), 'num');
+      cell(tr, String(r.transfers), 'num');
+      cell(tr, String(r.hit_points), r.hit_points ? 'num bad' : 'num muted');
+      cell(tr, r.chip);
+    }
+  });
+</script>
+
+<script>
+  const rowsOf = (id) => { const s = dash.data(id); return s.status === 'ok' ? s.data : []; };
+  const f2 = d3.format('.2f');
+  const f1 = d3.format('.1f');
+  const pc0 = d3.format('.0%');
+
+  dash.onData(() => {
+    const d = dash.data('decision');
+    const missing = d.status === 'missing';
+    document.querySelectorAll('[data-model-section]').forEach((s) => { s.hidden = missing; });
+    const r = dash.data('review');
+    document.querySelectorAll('[data-review-section]').forEach((s) => { s.hidden = r.status === 'missing'; });
+  });
+
+  const fieldWhere = (id, key, val, field, fmt) => (el) => {
+    const r = rowsOf(id).find((x) => String(x[key]) === val);
+    el.textContent = r && r[field] != null && r[field] !== '' ? (fmt ? fmt(r[field]) : String(r[field])) : '—';
+  };
+  dash.draw('rec-label', fieldWhere('decision', 'recommended', 'Yes', 'label'));
+  dash.draw('rec-in', fieldWhere('decision', 'recommended', 'Yes', 'transfers_in'));
+  dash.draw('rec-out', fieldWhere('decision', 'recommended', 'Yes', 'transfers_out'));
+  dash.draw('rec-delta', fieldWhere('decision', 'recommended', 'Yes', 'delta_vs_roll', f2));
+  dash.draw('horizon', (el) => { const r = rowsOf('assumptions')[0]; el.textContent = r ? String(r.horizon_gws) : '—'; });
+  const aField = (f) => (el) => { const r = rowsOf('assumptions')[0]; el.textContent = r && r[f] != null ? String(r[f]) : '—'; };
+  dash.draw('a-version', aField('model_version'));
+  dash.draw('a-decay', aField('decay'));
+  dash.draw('a-hurdle', aField('hit_hurdle'));
+  dash.draw('a-eo', aField('eo_source'));
+  dash.draw('gate', (el) => { const r = rowsOf('assumptions')[0]; el.textContent = r ? r.gate : '—'; });
+  dash.draw('cap', fieldWhere('lineup', 'role', 'Captain', 'player'));
+  dash.draw('vice', fieldWhere('lineup', 'role', 'Vice-captain', 'player'));
+
+  const td = (tr, text, cls) => { const c = tr.insertCell(); c.textContent = text; if (cls) c.className = cls; return c; };
+
+  dash.draw('decision', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of [...rowsOf('decision')].sort((a, b) => a.option - b.option)) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.option);
+      if (r.recommended === 'Yes') tr.className = 'hb-rec';
+      td(tr, r.label, 'nowrap');
+      td(tr, r.transfers_in);
+      td(tr, r.transfers_out);
+      td(tr, f2(r.delta_vs_roll), 'num');
+      td(tr, f1(r.next_gw_xpts), 'num wide-only');
+      td(tr, r.flags, 'flag');
+    }
+  });
+
+  dash.draw('captaincy', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('captaincy')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      if (r.chosen === 'Captain') tr.className = 'hb-rec';
+      td(tr, r.player, 'nowrap');
+      td(tr, f2(r.mean), 'num');
+      td(tr, f1(r.p10), 'num muted');
+      td(tr, f1(r.p90), 'num muted');
+      td(tr, pc0(r.p_haul), 'num');
+      td(tr, f1(r.eo_top10k), 'num');
+    }
+  });
+
+  dash.draw('lineup', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('lineup')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      if (r.role.startsWith('Bench')) tr.className = 'hb-bench';
+      td(tr, r.role, 'nowrap muted');
+      td(tr, r.player, 'nowrap');
+      td(tr, r.pos);
+      td(tr, f2(r.xpts), 'num');
+      td(tr, pc0(r.p_start), 'num ' + (r.p_start < 0.6 ? 'warn' : ''));
+      td(tr, f1(r.eo_top10k), 'num wide-only');
+    }
+  });
+
+  dash.draw('plan', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('plan')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.gw);
+      td(tr, String(r.gw), 'num');
+      td(tr, String(r.free_transfers), 'num');
+      td(tr, r.transfers_in);
+      td(tr, r.transfers_out, 'muted');
+      td(tr, String(r.hits), r.hits ? 'num bad' : 'num muted');
+      td(tr, r.captain, 'nowrap');
+      td(tr, f1(r.xpts), 'num');
+      td(tr, f1(r.bank_m), 'num wide-only');
+    }
+  });
+
+  dash.draw('players', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('players')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.element);
+      td(tr, r.player, 'nowrap');
+      td(tr, r.pos);
+      td(tr, r.team, 'wide-only');
+      td(tr, f1(r.price_m), 'num');
+      td(tr, f1(r.xpts_total), 'num');
+      td(tr, f2(r.gw1), 'num wide-only');
+      td(tr, f2(r.gw2), 'num wide-only');
+      td(tr, f2(r.gw3), 'num wide-only');
+      td(tr, pc0(r.p_start), 'num ' + (r.p_start < 0.6 ? 'warn' : ''));
+      td(tr, f1(r.eo_top10k), 'num');
+      td(tr, r.owned);
+      td(tr, r.affordable, 'wide-only ' + (r.affordable === 'No' ? 'muted' : ''));
+    }
+  });
+
+  const firstField = (id, f, fmt) => (el) => {
+    const r = rowsOf(id)[0];
+    el.textContent = r && r[f] != null && r[f] !== '' ? (fmt ? fmt(r[f]) : String(r[f])) : '—';
+  };
+  dash.draw('chips-value', firstField('chip_summary', 'chips_value', f1));
+  dash.draw('chips-horizon', firstField('chip_summary', 'horizon'));
+  dash.draw('chips-runner', firstField('chip_summary', 'runner_up'));
+  dash.draw('chips-runner-cost', firstField('chip_summary', 'runner_up_cost', f1));
+  dash.draw('tr-n', firstField('review_summary', 'gws_reviewed'));
+  dash.draw('tr-mae', firstField('review_summary', 'model_mae', f2));
+  dash.draw('tr-base', firstField('review_summary', 'baseline_mae', f2));
+  dash.draw('tr-net', firstField('review_summary', 'recommended_moves_net_points', f1));
+
+  dash.draw('chip-plan', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('chip_plan')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = r.chip;
+      if (r.now === 'Yes') tr.className = 'hb-rec';
+      td(tr, r.chip, 'nowrap');
+      td(tr, String(r.best_gw), 'num');
+      td(tr, f1(r.gain), 'num');
+      td(tr, r.next_best_gw == null ? '' : String(r.next_best_gw), 'num muted');
+      td(tr, r.cost_of_next_best == null ? '' : f1(r.cost_of_next_best), 'num muted');
+    }
+  });
+
+  dash.draw('track', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of [...rowsOf('review')].sort((a, b) => b.gw - a.gw)) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = String(r.gw);
+      td(tr, String(r.gw), 'num');
+      td(tr, f2(r.model_mae), 'num ' + (r.model_mae < r.baseline_mae ? 'ok' : 'bad'));
+      td(tr, f2(r.baseline_mae), 'num muted');
+      td(tr, r.recommended);
+      td(tr, f1(r.recommended_move_points), 'num ' + (r.recommended_move_points > 0 ? 'ok' : r.recommended_move_points < 0 ? 'bad' : 'muted'));
+      td(tr, r.followed, r.followed === 'Yes' ? '' : 'muted');
+      td(tr, r.captain, 'nowrap');
+      td(tr, String(r.captain_points), 'num');
+      td(tr, r.best_captain, 'nowrap wide-only muted');
+      td(tr, r.your_points == null ? '' : String(r.your_points), 'num');
+      td(tr, r.average_points == null ? '' : String(r.average_points), 'num wide-only muted');
+    }
+  });
+
+  dash.draw('health', (tbody) => {
+    tbody.replaceChildren();
+    for (const r of rowsOf('model_health')) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = encodeURIComponent(r.model) + ',' + encodeURIComponent(r.metric);
+      td(tr, r.model, 'nowrap');
+      td(tr, r.metric);
+      td(tr, d3.format('.3f')(r.value), 'num');
+      td(tr, d3.format('.3f')(r.baseline), 'num muted');
+      td(tr, r.verdict, r.verdict.startsWith('Better') ? 'ok' : r.verdict.startsWith('About') ? 'muted' : 'bad');
+      td(tr, r.test_rounds, 'wide-only muted');
+    }
+  });
+
+  const tipFor = (el) => {
+    el.classList.add('hb-rel');
+    const tip = document.createElement('div');
+    tip.className = 'hb-tip';
+    tip.hidden = true;
+    el.appendChild(tip);
+    return tip;
+  };
+  const placeTip = (el, tip, event, lines) => {
+    tip.replaceChildren(...lines.map((t, i) => { const d = document.createElement('div'); d.textContent = t; if (i === 0) d.style.color = 'var(--cds-text-secondary)'; return d; }));
+    tip.hidden = false;
+    const box = el.getBoundingClientRect();
+    const x = Math.min(event.clientX - box.left + 12, el.clientWidth - tip.offsetWidth - 4);
+    tip.style.left = Math.max(0, x) + 'px';
+    tip.style.top = (event.clientY - box.top + 12) + 'px';
+  };
+
+  dash.draw('chip-chart', (el) => {
+    el.replaceChildren();
+    const rows = rowsOf('chip_gain');
+    if (!rows.length) { el.textContent = '—'; return; }
+    const tip = tipFor(el);
+    const byChip = d3.group(rows, (r) => r.chip);
+    const width = Math.max(260, el.clientWidth);
+    for (const [chip, data] of byChip) {
+      const best = data.reduce((a, b) => (b.gain > a.gain ? b : a));
+      const wrap = document.createElement('div');
+      wrap.className = 'hb-chip-row';
+      const h = document.createElement('h3');
+      h.textContent = `${chip}: best gameweek ${best.gw}, ${f1(best.gain)} expected points`;
+      wrap.appendChild(h);
+      const height = 96, m = {t: 16, r: 4, b: 18, l: 4};
+      const x = d3.scaleBand(data.map((d) => d.gw), [m.l, width - m.r]).padding(0.25);
+      const ymax = Math.max(1, d3.max(data, (d) => d.gain));
+      const ymin = Math.min(0, d3.min(data, (d) => d.gain));
+      const y = d3.scaleLinear([ymin, ymax], [height - m.b, m.t]);
+      const svg = d3.select(wrap).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
+      svg.selectAll('rect').data(data).join('rect')
+        .attr('x', (d) => x(d.gw)).attr('width', x.bandwidth())
+        .attr('y', (d) => y(Math.max(0, d.gain))).attr('height', (d) => Math.abs(y(d.gain) - y(0)))
+        .attr('rx', 2)
+        .attr('fill', (d) => (d === best ? dash.colors[0] : 'var(--cds-chart-muted)'))
+        .on('pointermove', (event, d) => placeTip(el, tip, event, [`Gameweek ${d.gw}`, `Gain ${f2(d.gain)} xPts`, `That gameweek ${f1(d.gw_xpts)} xPts`]))
+        .on('pointerleave', () => { tip.hidden = true; });
+      svg.selectAll('text.gw').data(data).join('text').attr('class', (d) => (d === best ? 'chart-strong' : 'chart-label'))
+        .attr('x', (d) => x(d.gw) + x.bandwidth() / 2).attr('y', height - 4).attr('text-anchor', 'middle').text((d) => d.gw);
+      svg.append('text').attr('class', 'chart-strong').attr('x', x(best.gw) + x.bandwidth() / 2)
+        .attr('y', y(Math.max(0, best.gain)) - 4).attr('text-anchor', 'middle').text(f1(best.gain));
+      el.appendChild(wrap);
+    }
+    el.appendChild(tip);
+  });
+
+  const fxSelect = document.querySelectorAll('.hb-fx-metric');
+  fxSelect.forEach((s) => s.addEventListener('change', () => dash.draw('fixtures')));
+  dash.draw('fixtures', (el) => {
+    el.replaceChildren();
+    const rows = rowsOf('fixtures_strength');
+    if (!rows.length) { el.textContent = '—'; return; }
+    const metric = (fxSelect[0] && fxSelect[0].value) || 'xg_for';
+    const tip = tipFor(el);
+    const gws = [...new Set(rows.map((r) => r.gw))].sort((a, b) => a - b);
+    const cells = d3.rollups(rows, (v) => ({
+      opp: v.map((r) => r.opponent).join(' + '),
+      val: metric === 'xg_for' ? d3.sum(v, (r) => r.xg_for) : d3.mean(v, (r) => r.p_clean_sheet),
+      rows: v,
+    }), (r) => r.team, (r) => r.gw);
+    const teams = cells.map((c) => c[0]).sort();
+    const width = Math.max(el.clientWidth, 540), rowH = 22, left = 40, top = 18;
+    const height = top + teams.length * rowH + 2;
+    const x = d3.scaleBand(gws, [left, width]).padding(0.06);
+    const yb = d3.scaleBand(teams, [top, height - 2]).padding(0.08);
+    const all = cells.flatMap((c) => c[1].map((g) => g[1].val));
+    const op = d3.scaleLinear(d3.extent(all), [0.08, 0.75]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    svg.selectAll('text.gwh').data(gws).join('text').attr('class', 'chart-label')
+      .attr('x', (g) => x(g) + x.bandwidth() / 2).attr('y', 12).attr('text-anchor', 'middle').text((g) => 'GW' + g);
+    for (const [team, byGw] of cells) {
+      const m = new Map(byGw);
+      svg.append('text').attr('class', 'chart-strong').attr('x', 0).attr('y', yb(team) + yb.bandwidth() / 2 + 4).text(team);
+      for (const g of gws) {
+        const c = m.get(g);
+        const gx = x(g), gy = yb(team);
+        const rect = svg.append('rect').attr('x', gx).attr('y', gy).attr('width', x.bandwidth()).attr('height', yb.bandwidth()).attr('rx', 2)
+          .attr('fill', c ? dash.colors[0] : 'var(--cds-chart-muted)').attr('fill-opacity', c ? op(c.val) : 0.15);
+        svg.append('text').attr('class', 'chart-label').attr('x', gx + x.bandwidth() / 2).attr('y', gy + yb.bandwidth() / 2 + 4)
+          .attr('text-anchor', 'middle').style('fill', 'var(--color-fg)').text(c ? c.opp.split(' + ').map((o) => (o.includes('(H)') ? o.slice(0, 3).toUpperCase() : o.slice(0, 3).toLowerCase())).join('+') : 'Blank');
+        rect.on('pointermove', (event) => placeTip(el, tip, event, c
+          ? [`${team}, gameweek ${g}`, c.opp, ...c.rows.map((r) => `Scores ${f2(r.xg_for)}, concedes ${f2(r.xg_against)}, clean sheet ${pc0(r.p_clean_sheet)}`)]
+          : [`${team}, gameweek ${g}`, 'No fixture'])).on('pointerleave', () => { tip.hidden = true; });
+      }
+    }
+    el.appendChild(tip);
+  });
+
+  const calib = (name, label, fmt) => (el) => {
+    el.replaceChildren();
+    const rows = rowsOf('calibration').filter((r) => r.model === name);
+    if (!rows.length) { el.textContent = '—'; return; }
+    const tip = tipFor(el);
+    const width = Math.max(240, el.clientWidth), height = 210, m = {t: 22, r: 10, b: 30, l: 38};
+    const hi = Math.max(d3.max(rows, (r) => r.predicted), d3.max(rows, (r) => r.actual)) * 1.05;
+    const x = d3.scaleLinear([0, hi], [m.l, width - m.r]);
+    const y = d3.scaleLinear([0, hi], [height - m.b, m.t]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    svg.append('text').attr('class', 'chart-strong').attr('x', m.l).attr('y', 12).text(label);
+    svg.append('g').attr('transform', `translate(0,${height - m.b})`).call(d3.axisBottom(x).ticks(4).tickFormat(fmt))
+      .attr('font-size', null).attr('font-family', null).call((g) => g.selectAll('text').attr('class', 'chart-label'))
+      .call((g) => g.selectAll('line,path').attr('stroke', 'var(--cds-chart-axis)'));
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(fmt))
+      .attr('font-size', null).attr('font-family', null).call((g) => g.selectAll('text').attr('class', 'chart-label'))
+      .call((g) => g.selectAll('line,path').attr('stroke', 'var(--cds-chart-axis)'));
+    svg.append('line').attr('x1', x(0)).attr('y1', y(0)).attr('x2', x(hi)).attr('y2', y(hi))
+      .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+    svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', dash.colors[0]).attr('stroke-width', 2)
+      .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round')
+      .attr('d', d3.line().x((r) => x(r.predicted)).y((r) => y(r.actual)));
+    svg.selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.predicted)).attr('cy', (r) => y(r.actual)).attr('r', 3.5)
+      .attr('fill', dash.colors[0])
+      .on('pointermove', (event, r) => placeTip(el, tip, event, [`${r.n} predictions`, `Predicted ${fmt(r.predicted)}`, `Actual ${fmt(r.actual)}`]))
+      .on('pointerleave', () => { tip.hidden = true; });
+    el.appendChild(tip);
+  };
+  dash.draw('calib-xpts', calib('xPts', 'Points: predicted (across) vs actual (up)', d3.format('.1f')));
+  dash.draw('calib-start', calib('Start probability', 'Starts: predicted (across) vs actual (up)', d3.format('.0%')));
+</script>
+
+<script>
+  // Section nav, squad views (formation / list), engine differences and player detail.
+  // Both squad views read the same `squad` rows; "Engine's pick" reads `lineup` rows with the
+  // same field names. No browser storage: the view choice is the `squad_view` page param.
+  const sqRows = () => { const d = dash.data('squad'); return d.status === 'ok' ? d.data : []; };
+  const luRows = () => { const d = dash.data('lineup'); return d.status === 'ok' ? d.data : []; };
+  const isStart = (role) => !!role && !String(role).startsWith('Bench') && role !== 'New';
+  const POS_ORDER = ['GKP', 'DEF', 'MID', 'FWD'];
+  const hexColor = (c) => (/^#[0-9a-fA-F]{6}$/.test(c || '') ? c : null);
+  const n1 = d3.format('.1f'), n2 = d3.format('.2f'), p0 = d3.format('.0%');
+  const smooth = () => (window.matchMedia('(prefers-reduced-motion: no-preference)').matches ? 'smooth' : 'auto');
+  const key = (v) => String(v);
+  window.hbSel = null;
+  window.hbPick = 'mine';
+  window.hbView = 'formation';
+  window.hbForceView = null;
+
+  // ---- engine differences
+  const engineTag = (r) => {
+    const rec = r.rec_role;
+    if (rec == null) return '';
+    if (rec === 'Sell') return 'Engine: sell' + (r.rec_swap ? ' for ' + r.rec_swap : '');
+    const mine = isStart(r.role), eng = isStart(rec);
+    if (mine && !eng) return 'Engine: bench';
+    if (!mine && eng) return 'Engine: start';
+    if (rec === 'Captain' && r.armband !== 'Captain') return 'Engine: captain';
+    if (rec === 'Vice-captain' && r.armband !== 'Vice-captain') return 'Engine: vice';
+    return '';
+  };
+  const yoursTag = (r, mine) => {
+    if (r.is_new === 'Yes') return 'In' + (r.replaces ? ' for ' + r.replaces : '');
+    const m = mine.get(key(r.element));
+    if (!m) return '';
+    const you = isStart(m.role), eng = isStart(r.role);
+    if (eng && !you) return 'You: bench';
+    if (!eng && you) return 'You: start';
+    if (r.armband === 'Captain' && m.armband !== 'Captain') return 'New captain';
+    if (r.armband === 'Vice-captain' && m.armband !== 'Vice-captain') return 'New vice';
+    return '';
+  };
+  const diffItems = () => {
+    const sq = sqRows(), lu = luRows();
+    if (!sq.length || !lu.length) return [];
+    const mine = new Map(sq.map((r) => [key(r.element), r]));
+    const eng = new Map(lu.map((r) => [key(r.element), r]));
+    const out = [];
+    for (const [band, label] of [['Captain', 'Captain'], ['Vice-captain', 'Vice-captain']]) {
+      const y = sq.find((r) => r.armband === band), e = lu.find((r) => r.armband === band);
+      if (e && (!y || key(y.element) !== key(e.element))) out.push(`${label}: ${e.player} (yours: ${y ? y.player : 'none'})`);
+    }
+    for (const r of lu.filter((x) => x.is_new === 'Yes')) out.push(`Transfer: ${r.replaces || 'a player'} out, ${r.player} in`);
+    const start = lu.filter((r) => isStart(r.role) && mine.has(key(r.element)) && !isStart(mine.get(key(r.element)).role)).map((r) => r.player);
+    const bench = sq.filter((r) => isStart(r.role) && eng.has(key(r.element)) && !isStart(eng.get(key(r.element)).role)).map((r) => r.player);
+    if (start.length) out.push(`Start ${start.join(', ')}`);
+    if (bench.length) out.push(`Bench ${bench.join(', ')}`);
+    const myBench = sq.filter((r) => !isStart(r.role) && eng.has(key(r.element))).sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99)).map((r) => r.player);
+    const enBench = lu.filter((r) => !isStart(r.role)).map((r) => r.player);
+    if (!start.length && !bench.length && myBench.length === enBench.length && myBench.join() !== enBench.join()) out.push(`Bench order: ${enBench.join(', ')}`);
+    return out;
+  };
+
+  // ---- cards
+  const cardsFor = (pick) => {
+    const sq = sqRows(), lu = luRows();
+    if (pick === 'engine' && lu.length) {
+      const mine = new Map(sq.map((r) => [key(r.element), r]));
+      return lu.map((r) => ({ row: r, src: 'lineup', start: isStart(r.role), xField: 'xpts', tag: yoursTag(r, mine) }));
+    }
+    return [...sq].sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
+      .map((r) => ({ row: r, src: 'squad', start: isStart(r.role), xField: 'xpts_next', tag: engineTag(r) }));
+  };
+  const span = (cls, text) => { const e = document.createElement('span'); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const card = (c, order) => {
+    const r = c.row, where = 'element=' + r.element;
+    const mark = (e, field) => { e.dataset.source = c.src; e.dataset.field = field; e.dataset.where = where; return e; };
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hb-pcard';
+    b.dataset.player = key(r.element);
+    const av = String(r.availability || '');
+    const doubt = av.startsWith('Doubtful'), out = !!av && !av.startsWith('Available') && !doubt;
+    if (c.tag) b.classList.add('is-diff');
+    if (out) b.classList.add('is-out');
+    if (key(r.element) === key(window.hbSel)) b.classList.add('is-sel');
+    if (doubt || out) {
+      const pct = /\((\d+)%\)/.exec(av);
+      const f = mark(span('hb-pc-flag' + (out ? ' bad' : ''), out ? '✕' : (pct ? pct[1] + '%' : '!')), 'availability');
+      b.append(f);
+    }
+    if (r.armband === 'Captain' || r.armband === 'Vice-captain') b.append(mark(span('hb-pc-badge', r.armband === 'Captain' ? 'C' : 'V'), 'armband'));
+    if (order) b.append(span('hb-pc-order', order));
+    const dot = span('hb-dot');
+    if (hexColor(r.team_color)) dot.style.setProperty('--c1', r.team_color);
+    if (hexColor(r.team_color2)) dot.style.setProperty('--c2', r.team_color2);
+    const name = span('hb-pc-name');
+    name.append(dot, mark(span(null, r.player), 'player'));
+    b.append(name, mark(span('hb-pc-team', r.team || ''), 'team'));
+    const fx = mark(span('hb-pc-fx'), 'next_opp');
+    const opps = String(r.next_opp || '').split(' + ').filter(Boolean);
+    const diffs = String(r.next_diff ?? '').split('+');
+    if (!opps.length || opps[0] === 'Blank') fx.textContent = 'Blank';
+    opps.filter((o) => o !== 'Blank').forEach((o, i) => {
+      const w = span();
+      if (/^[1-5]$/.test(diffs[i] || '')) { const pip = span('hb-pip', diffs[i]); pip.dataset.r = diffs[i]; w.append(pip); }
+      const m = /^(\S+) \((H|A)\)$/.exec(o);
+      if (m) w.append(span(null, m[1]), span('hb-ha', m[2]));
+      else w.append(document.createTextNode(o));
+      fx.append(w);
+    });
+    b.append(fx);
+    const x = r[c.xField];
+    b.append(mark(span('hb-pc-xp', x == null ? '—' : n1(x)), c.xField));
+    if (c.tag) b.append(span('hb-pc-tag', c.tag));
+    const parts = [r.player, r.team, r.armband, av && av !== 'Available' ? av : '', opps.join(' and ') + (r.next_diff ? `, rating ${r.next_diff}` : ''), x == null ? '' : `${n1(x)} expected points`, c.tag];
+    b.setAttribute('aria-label', parts.filter(Boolean).join(', '));
+    return b;
+  };
+
+  dash.draw('formation', (el) => {
+    el.replaceChildren();
+    const xi = cardsFor(window.hbPick).filter((c) => c.start);
+    if (!xi.length) { el.textContent = '—'; return; }
+    for (const pos of POS_ORDER) {
+      const row = xi.filter((c) => c.row.pos === pos);
+      if (!row.length) continue;
+      const d = document.createElement('div');
+      d.className = 'hb-prow';
+      d.style.setProperty('--n', String(row.length));
+      row.forEach((c) => d.append(card(c)));
+      el.append(d);
+    }
+  });
+  dash.draw('formation-shape', (el) => {
+    const xi = cardsFor(window.hbPick).filter((c) => c.start);
+    el.textContent = xi.length ? ['DEF', 'MID', 'FWD'].map((p) => xi.filter((c) => c.row.pos === p).length).join('-') : '—';
+  });
+  dash.draw('bench', (el) => {
+    el.replaceChildren();
+    const bench = cardsFor(window.hbPick).filter((c) => !c.start);
+    if (!bench.length) { el.textContent = '—'; return; }
+    let n = 0;
+    bench.forEach((c) => el.append(card(c, c.row.pos === 'GKP' ? 'GK' : String(++n))));
+  });
+  dash.draw('team-diff', (ul) => {
+    ul.replaceChildren(...diffItems().map((t) => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  });
+  dash.draw('squad-last-gw', (el) => { const d = dash.data('summary'); el.textContent = d.status === 'ok' && d.data[0] ? String(d.data[0].last_gw) : '—'; });
+  dash.draw('squad-next-gw', (el) => { const d = dash.data('summary'); el.textContent = d.status === 'ok' && d.data[0] ? String(d.data[0].next_gw) : '—'; });
+
+  // ---- player detail (same panel for a pitch card and a list row)
+  const selected = () => {
+    if (window.hbSel == null) return null;
+    const s = sqRows().find((r) => key(r.element) === key(window.hbSel));
+    if (s) return { row: s, src: 'squad' };
+    const l = luRows().find((r) => key(r.element) === key(window.hbSel));
+    return l ? { row: l, src: 'lineup' } : null;
+  };
+  const DETAIL_FMT = {
+    xpts_next: n2, xpts: n2, p_start: p0, eo_top10k: n1, sell_m: n1, bought_m: n1, now_m: n1,
+    locked_gain_m: n1, owned_by_pct: n1,
+  };
+  const LINEUP_FIELD = { xpts_next: 'xpts', rec_role: 'role' };
+  dash.draw('detail', (dd) => {
+    const s = selected(), f = dd.dataset.detail;
+    if (!s) { dd.textContent = '—'; return; }
+    let field = f;
+    if (s.src === 'lineup') field = LINEUP_FIELD[f] || f;
+    let v = s.row[field];
+    if (s.src === 'lineup' && f === 'role') v = 'Not in your squad: the engine buys him' + (s.row.replaces ? ' for ' + s.row.replaces : '');
+    if (s.src === 'squad' && f === 'role' && s.row.is_new === 'Yes') v = s.row.role + ' (bought for the coming gameweek)';
+    if (s.src === 'squad' && f === 'rec_role' && v === 'Sell' && s.row.rec_swap) v = 'Sell for ' + s.row.rec_swap;
+    const fromRow = v === s.row[field];
+    if (fromRow && field in s.row) { dd.dataset.source = s.src; dd.dataset.field = field; dd.dataset.where = 'element=' + s.row.element; }
+    else { dd.removeAttribute('data-source'); dd.removeAttribute('data-where'); }
+    if (v == null || v === '') { dd.textContent = f === 'armband' || f === 'news' ? 'None' : '—'; return; }
+    dd.textContent = DETAIL_FMT[field] ? DETAIL_FMT[field](v) : String(v);
+  });
+  dash.draw('detail-name', (el) => {
+    const s = selected();
+    el.replaceChildren();
+    if (!s) { el.textContent = '—'; return; }
+    const dot = span('hb-dot');
+    if (hexColor(s.row.team_color)) dot.style.setProperty('--c1', s.row.team_color);
+    if (hexColor(s.row.team_color2)) dot.style.setProperty('--c2', s.row.team_color2);
+    const nm = span(null, s.row.player);
+    nm.dataset.source = s.src; nm.dataset.field = 'player'; nm.dataset.where = 'element=' + s.row.element;
+    el.append(dot, nm);
+  });
+
+  let lastTrigger = null;
+  const redrawSquad = () => ['formation', 'formation-shape', 'bench', 'squad', 'detail', 'detail-name'].forEach((n) => dash.draw(n));
+  const openDetail = (id, trigger) => {
+    window.hbSel = id;
+    lastTrigger = trigger && trigger.matches('tr') ? trigger : null;
+    document.querySelectorAll('#player-detail').forEach((p) => { p.hidden = false; });
+    redrawSquad();
+    requestAnimationFrame(() => document.querySelectorAll('#player-detail').forEach((p) => p.scrollIntoView({ block: 'nearest', behavior: smooth() })));
+  };
+  const closeDetail = () => {
+    const id = window.hbSel;
+    window.hbSel = null;
+    document.querySelectorAll('#player-detail').forEach((p) => { p.hidden = true; });
+    redrawSquad();
+    const back = lastTrigger && lastTrigger.isConnected ? lastTrigger
+      : [...document.querySelectorAll('#squad [data-squad-pane]:not([hidden]) [data-player], #squad [data-squad-pane]:not([hidden]) tr[data-key]')].find((e) => (e.dataset.player || e.dataset.key) === key(id));
+    if (back) back.focus({ preventScroll: false });
+  };
+  document.querySelectorAll('#squad').forEach((sec) => {
+    sec.addEventListener('click', (e) => {
+      if (e.target.closest('[data-detail-close]')) { closeDetail(); return; }
+      const t = e.target.closest('[data-player], tbody tr[data-key]');
+      if (t && sec.contains(t)) openDetail(t.dataset.player || t.dataset.key, t);
+    });
+    sec.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && window.hbSel != null) { closeDetail(); return; }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tbody tr[data-key]')) { e.preventDefault(); openDetail(e.target.dataset.key, e.target); }
+    });
+  });
+
+  // ---- view toggles
+  const applyView = (v) => {
+    window.hbView = v;
+    document.querySelectorAll('[data-squad-pane]').forEach((p) => { p.hidden = p.dataset.squadPane !== v; });
+    document.querySelectorAll('[data-squad-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.squadView === v)));
+  };
+  const applyPick = (v) => {
+    window.hbPick = v;
+    document.querySelectorAll('[data-squad-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.squadPick === v)));
+  };
+  document.querySelectorAll('[data-squad-view]').forEach((b) => b.addEventListener('click', () => {
+    const v = b.dataset.squadView;
+    window.hbForceView = null;
+    applyView(v);
+    try { dash.setParams({ squad_view: v }); } catch (err) { /* params unavailable: the choice lasts this visit */ }
+    redrawSquad();
+    requestAnimationFrame(() => b.scrollIntoView({ block: 'nearest' }));  // the views differ in height
+  }));
+  document.querySelectorAll('[data-squad-pick]').forEach((b) => b.addEventListener('click', () => {
+    applyPick(b.dataset.squadPick);
+    redrawSquad();
+    requestAnimationFrame(() => b.scrollIntoView({ block: 'nearest' }));
+  }));
+
+  // ---- section nav
+  const ALIAS = { 'this-gw': 'transfers', 'chip-gain': 'chips', 'team-now': 'team', 'squad-list': 'squad', 'squad-formation': 'squad' };
+  const navLinks = () => [...document.querySelectorAll('.hb-nav a[href^="#"]')];
+  const targetOf = (a) => document.getElementById(a.getAttribute('href').slice(1));
+  const shown = (t) => !!t && !t.closest('[hidden]');
+  let current = null, lockUntil = 0, userMoved = false;
+  const setActive = (id) => {
+    if (id === current) return;
+    current = id;
+    for (const a of navLinks()) {
+      const on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', on);
+      if (on) {
+        a.setAttribute('aria-current', 'location');
+        const nav = a.closest('.hb-nav');
+        if (nav && (a.offsetLeft < nav.scrollLeft || a.offsetLeft + a.offsetWidth > nav.scrollLeft + nav.clientWidth - 24)) {
+          nav.scrollTo({ left: Math.max(0, a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2), behavior: smooth() });
+        }
+      } else a.removeAttribute('aria-current');
+    }
+    try { dash.setLink(id); } catch (err) { /* links unavailable */ }
+  };
+  const navHeight = () => { const n = document.querySelector('.hb-nav'); return n ? n.getBoundingClientRect().height : 0; };
+  let pinned = null;  // a tapped section stays active while it is in view, even at the page end
+  ['wheel', 'touchmove', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { pinned = null; }, { passive: true }));
+  const compute = () => {
+    if (Date.now() < lockUntil) return;
+    if (pinned) {
+      const t = document.getElementById(pinned);
+      const r = t && t.getBoundingClientRect();
+      if (r && r.top < window.innerHeight && r.bottom > 0) { setActive(pinned); return; }
+      pinned = null;
+    }
+    const line = navHeight() + 32;
+    const vis = navLinks().map(targetOf).filter(shown);
+    if (!vis.length) return;
+    let best = vis[0].id;
+    for (const t of vis) if (t.getBoundingClientRect().top <= line) best = t.id;
+    const se = document.scrollingElement;
+    if (se && se.scrollHeight > se.clientHeight && se.scrollTop + se.clientHeight >= se.scrollHeight - 2) {
+      const last = vis[vis.length - 1];
+      if (last.getBoundingClientRect().top < window.innerHeight) best = last.id;
+    }
+    setActive(best);
+  };
+  let raf = 0;
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; compute(); }); };
+  document.addEventListener('scroll', schedule, { passive: true, capture: true });
+  document.addEventListener('scrollend', (e) => {
+    if (e.target && e.target.closest && e.target.closest('.hb-nav')) return;  // the pill row itself
+    lockUntil = 0;
+    schedule();
+  }, { passive: true, capture: true });
+  window.addEventListener('resize', schedule, { passive: true });
+  ['wheel', 'touchstart', 'keydown'].forEach((ev) => window.addEventListener(ev, () => { userMoved = true; }, { passive: true, once: true }));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(schedule, { root: document, threshold: [0, 1] });
+    navLinks().map(targetOf).filter(Boolean).forEach((t) => io.observe(t));
+  }
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => {
+      const h = Math.ceil(navHeight());
+      document.querySelectorAll('.hb').forEach((root) => root.style.setProperty('--hb-nav-h', h + 'px'));
+    });
+    document.querySelectorAll('.hb-nav').forEach((n) => ro.observe(n));
+  }
+  const go = (raw, instant) => {
+    const id = ALIAS[raw] || raw;
+    if (raw === 'squad-list') { window.hbForceView = 'list'; applyView('list'); redrawSquad(); }
+    const t = document.getElementById(id);
+    if (!shown(t) && !(t && t.tagName === 'DETAILS')) return false;
+    if (t.tagName === 'DETAILS') t.open = true;
+    lockUntil = Date.now() + (instant ? 150 : 1500);
+    pinned = id;
+    setActive(id);
+    t.scrollIntoView({ behavior: instant ? 'auto' : smooth(), block: 'start' });
+    return true;
+  };
+  document.querySelectorAll('.hb-nav').forEach((nav) => nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    e.preventDefault();
+    userMoved = true;
+    go(a.getAttribute('href').slice(1));
+  }));
+
+  // ---- per-update state: views from the page param, hidden pills, engine-only controls, deep link
+  const opened = Date.now();
+  const hash = (() => { try { return decodeURIComponent((location.hash || '').slice(1)); } catch (err) { return ''; } })();
+  if (hash === 'squad-list') window.hbForceView = 'list';
+  window.addEventListener('load', () => { if (hash && !userMoved) go(hash, true); });
+  dash.onData(() => {
+    let p = {};
+    try { p = (dash.params && dash.params()) || {}; } catch (err) { p = {}; }
+    const view = window.hbForceView || (p.squad_view === 'list' ? 'list' : 'formation');
+    if (view !== window.hbView || !document.querySelector('[data-squad-pane]:not([hidden])')) applyView(view);
+    const lu = luRows();
+    document.querySelectorAll('[data-engine-only]').forEach((e) => { e.hidden = !lu.length; });
+    if (!lu.length && window.hbPick !== 'mine') applyPick('mine');
+    const items = diffItems();
+    document.querySelectorAll('#engine-diff').forEach((e) => { e.hidden = !items.length; });
+    navLinks().forEach((a) => { const t = targetOf(a); a.hidden = !(shown(t) || (t && t.tagName === 'DETAILS')); });
+    if (hash && !userMoved && Date.now() - opened < 5000) requestAnimationFrame(() => go(hash, true));
+    schedule();
+  });
+</script>

@@ -1,0 +1,24 @@
+[
+ {
+  "gw": 10,
+  "n_players": 406,
+  "model_mae": 1.665,
+  "baseline_mae": 1.749,
+  "model_spearman": 0.599,
+  "baseline_spearman": 0.521,
+  "recommended": "1 transfer: Barry for N.Jackson",
+  "recommended_move_points": 5.0,
+  "followed": "No",
+  "captain": "Haaland",
+  "captain_points": 2,
+  "template_captain": "Haaland",
+  "template_captain_points": 2,
+  "best_captain": "Barry",
+  "best_captain_points": 16,
+  "your_points": 59,
+  "average_points": 55,
+  "predicted_xi_xpts": 54.8,
+  "actual_xi_points": 69,
+  "model_beat_baselines": "Yes"
+ }
+]
