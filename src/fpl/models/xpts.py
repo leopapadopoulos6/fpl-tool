@@ -61,8 +61,12 @@ class PlayerRates:
     table: pd.DataFrame  # element -> xg90, xa90, saves90, yellow90, dc90, minutes
 
 
-def fit_rates(train: pd.DataFrame) -> PlayerRates:
-    """Shrunk per-90 rates from training matches (rounds before the target)."""
+def fit_rates(train: pd.DataFrame, prior: pd.DataFrame | None = None) -> PlayerRates:
+    """Shrunk per-90 rates from training matches (rounds before the target).
+
+    ``prior`` (optional, indexed by element): history-based career rates ``xg90``/``xa90``
+    and prior strength ``k90`` (in 90s) from the judgment layer. Where present they replace
+    the price-based prior and its fixed pseudo-minutes for xG and xA."""
     g = train.groupby("element")
     mins = g["minutes"].sum()
     last = train.sort_values("round").groupby("element").tail(1).set_index("element")
@@ -74,9 +78,14 @@ def fit_rates(train: pd.DataFrame) -> PlayerRates:
     sums["dc"] = dc_count.groupby(train["element"]).sum()
     for key, s in sums.items():
         raw90 = (s * 90 / mins.replace(0, np.nan)).fillna(0)
-        prior = _price_prior(raw90, mins, pos, price)
-        m0 = PRIOR_MINUTES[key]
-        out[f"{key}90"] = (s.fillna(0) + prior * m0 / 90) * 90 / (mins + m0)
+        prior_rate = _price_prior(raw90, mins, pos, price)
+        m0 = pd.Series(PRIOR_MINUTES[key], index=raw90.index, dtype=float)
+        if prior is not None and key in ("xg", "xa") and f"{key}90" in prior:
+            hp = prior.reindex(raw90.index)
+            has = hp[f"{key}90"].notna() & (hp["k90"] > 0)
+            prior_rate = prior_rate.where(~has, hp[f"{key}90"])
+            m0 = m0.where(~has, hp["k90"] * 90)
+        out[f"{key}90"] = (s.fillna(0) + prior_rate * m0 / 90) * 90 / (mins + m0)
     return PlayerRates(out)
 
 

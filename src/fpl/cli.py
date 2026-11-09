@@ -253,6 +253,66 @@ def ui() -> None:
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)], check=False)
 
 
+history_app = typer.Typer(no_args_is_help=True, help="Historical data layer")
+app.add_typer(history_app, name="history")
+
+
+@history_app.command("fetch")
+def history_fetch() -> None:
+    """Fetch raw sources into data/external (sparse git clones; probes Understat/ClubElo)."""
+    from fpl.history.build import fetch as hfetch
+
+    s = get_settings()
+    for k, v in hfetch(s.external_dir).items():
+        console.print(f"{k}: {v}")
+
+
+@history_app.command("build")
+def history_build() -> None:
+    """Normalise, link IDs, compute Elo, write data/history/*.parquet and COVERAGE.md."""
+    import pandas as pd
+
+    from fpl.history.build import build as hbuild
+
+    s = get_settings()
+    cur_path = s.data_dir / "processed" / "player_matches.parquet"
+    current = pd.read_parquet(cur_path) if cur_path.exists() else None
+    try:
+        with FPLClient(s) as c:
+            boot, fx = ep.bootstrap_static(c), ep.fixtures(c)
+    except Exception:  # offline: latest snapshot
+        with FPLClient(s, offline=True) as c:
+            boot, fx = ep.bootstrap_static(c), ep.fixtures(c)
+    with console.status("building historical tables..."):
+        tables = hbuild(s.external_dir, s.history_dir, current, boot, fx)
+    for name, df in tables.items():
+        console.print(f"{name}: {len(df):,} rows")
+    console.print(f"coverage report -> {s.history_dir / 'COVERAGE.md'}")
+
+
+@history_app.command("publish")
+def history_publish(
+    paths: Annotated[list[str] | None, typer.Option("--path", help="Paths to stage")] = None,
+    message: Annotated[str, typer.Option(help="Commit message")] = "history tables",
+) -> None:
+    """Commit paths (default history/) under the data worktree to the data branch as a single
+    parentless commit, keeping the branch tip's other files (force-with-lease, retried)."""
+    from datetime import UTC, datetime
+
+    from fpl.history.publish import publish
+
+    s = get_settings()
+    sha = publish(s.data_dir, f"{message} {datetime.now(UTC):%Y-%m-%d %H:%M} UTC",
+                  tuple(paths or ["history"]))
+    console.print(f"data branch now at {sha[:10]} (single commit)")
+
+
+@history_app.command("report")
+def history_report() -> None:
+    """Print the coverage report from the last build."""
+    console.print((get_settings().history_dir / "COVERAGE.md").read_text())
+
+
 def load_state(eid: int, offline: bool = False) -> tuple[ManagerState, GameRules]:
     ctx = load_context(eid, offline)
     return ctx.state, ctx.rules

@@ -16,7 +16,8 @@ def _repo_root() -> Path:
 
 @dataclass(frozen=True)
 class Settings:
-    entry_id: int = field(default_factory=lambda: int(os.getenv("FPL_ENTRY_ID", DEFAULT_ENTRY_ID)))
+    entry_id: int = field(default_factory=lambda: int(
+        os.getenv("FPL_TEAM_ID") or os.getenv("FPL_ENTRY_ID") or DEFAULT_ENTRY_ID))
     base_url: str = field(default_factory=lambda: os.getenv("FPL_BASE_URL", BASE_URL))
     data_dir: Path = field(
         default_factory=lambda: Path(os.getenv("FPL_DATA_DIR", _repo_root() / "data"))
@@ -29,6 +30,16 @@ class Settings:
     @property
     def raw_dir(self) -> Path:
         return self.data_dir / "raw"
+
+    @property
+    def external_dir(self) -> Path:
+        """Raw third-party sources (never committed)."""
+        return self.data_dir / "external"
+
+    @property
+    def history_dir(self) -> Path:
+        """Processed historical tables (published to the data branch)."""
+        return self.data_dir / "history"
 
 
 def get_settings() -> Settings:

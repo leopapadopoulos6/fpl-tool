@@ -24,7 +24,10 @@ TEAM_PARAMS = TeamStrengthParams(ridge=100.0)
 
 
 def predictions(features: pd.DataFrame, team_matches: pd.DataFrame, rules: GameRules,
-                test_rounds: list[int], prior: dict | None = None) -> pd.DataFrame:
+                test_rounds: list[int], prior: dict | None = None,
+                rate_prior_fn=None) -> pd.DataFrame:
+    """``rate_prior_fn(as_of) -> DataFrame`` (by element: xg90, xa90, k90) supplies the
+    history-based player prior as of each round (no lookahead)."""
     f = features.sort_values(["element", "kickoff", "fixture"]).copy()
     gp = f.groupby("element")["total_points"]
     f["ppm"] = gp.transform(lambda s: s.shift(1).expanding().mean())
@@ -39,7 +42,8 @@ def predictions(features: pd.DataFrame, team_matches: pd.DataFrame, rules: GameR
         as_of = pd.to_datetime(test["kickoff_time"], utc=True).min()
         team = fit(tm_tr, TEAM_PARAMS, as_of=as_of, prior=prior)
         mins = mm.fit(tr).predict(test)
-        xp = expected_points(test, mins, fit_rates(tr), team,
+        rp = rate_prior_fn(as_of) if rate_prior_fn is not None else None
+        xp = expected_points(test, mins, fit_rates(tr, rp), team,
                              team_average_lambdas(team, tm_tr), fit_bonus(tr), rules)
         xp["round"] = g
         xp["actual"] = test["total_points"].to_numpy()
