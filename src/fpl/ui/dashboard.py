@@ -222,6 +222,10 @@ DATASET_META = {
     "lineup": ("Line-up and bench", "Recommended starting eleven, captain, vice-captain and "
                "bench order after the recommended transfers, with expected points, start "
                "chance, next fixture and our fixture rating."),
+    "option_lineups": ("Line-up for each option", "For every transfer option in the "
+                       "options table, the starting eleven, captain, vice-captain and bench "
+                       "order the engine would pick for the coming gameweek, with expected "
+                       "points, next fixture and our fixture rating."),
     "plan": ("Transfer plan", "The recommended transfer path for each gameweek of the horizon."),
     "chip_gain": ("Chip gains", "Expected gain from each remaining first-half chip in each "
                   "gameweek up to GW19, versus not playing it."),
@@ -245,8 +249,8 @@ DATASET_META = {
     "assumptions": ("Assumptions", "Model version, horizon, decay, hit hurdle, ownership "
                     "source and whether the backtest gate passed."),
 }
-MODEL_DATASETS = ("decision", "captaincy", "lineup", "plan", "chip_gain", "chip_plan",
-                  "chip_summary", "players", "fixtures_strength")
+MODEL_DATASETS = ("decision", "captaincy", "lineup", "option_lineups", "plan", "chip_gain",
+                  "chip_plan", "chip_summary", "players", "fixtures_strength")
 
 
 def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path,

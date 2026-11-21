@@ -218,7 +218,7 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - After writing the page, read the `data/users/me` `check` document.
 - **Sections and stable anchors** (deep link: `<dashboard url>#<anchor>`; the page reads `location.hash` and calls `dash.setLink` as the reader moves):
   - a **sticky section nav** (`.hb-nav`): one row of pills that scrolls sideways on phones; the active pill follows the scroll, and pills for hidden sections hide;
-  - **model sections** (`data-model-section`, hidden if `decision` is missing): `#transfers` (This gameweek: options, `#captaincy`, `#lineup`), `#planner`, `#chips` (first-half chip plan), `#players`, `#fixtures`;
+  - **model sections** (`data-model-section`, hidden if `decision` is missing): `#transfers` (This gameweek: options, each with a **Line-up** button that opens the `#option-xi` popup — a `<dialog>` via `showModal()`, a bottom sheet on phones, in-place fallback — showing that option's XI, captain, vice and bench on the same pitch cards as the Squad view, plus changes from your team; `#captaincy`, `#lineup`), `#planner`, `#chips` (first-half chip plan), `#players`, `#fixtures`;
   - `#model-health`; `#track-record` (`data-review-section`);
   - `#team` (Your team now + key figures), `#price-watch`, `#squad`, `#chip-status` (chips table), `#ft-history` (free transfers by GW), `#about`;
   - old ids still work as aliases: `#this-gw`, `#chip-gain`, `#team-now`; `#squad-list` opens the squad's list view.
@@ -230,10 +230,11 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - `#engine-diff` lists where the engine's pick differs (captain, vice, transfers, start/bench, bench order);
   - tapping a card or a list row opens the same `#player-detail` panel;
   - the "your team" lineup is the **latest GW's picks plus transfers already made** (the API hides pre-deadline line-up or captain changes; `my-team` needs auth).
-- **Datasets:** state (`summary`, `squad`, `chips`, `ft_history`); model (`decision`, `captaincy`, `lineup`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions`); track record (`review`, `review_summary`).
+- **Datasets:** state (`summary`, `squad`, `chips`, `ft_history`); model (`decision`, `captaincy`, `lineup`, `option_lineups`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions`); track record (`review`, `review_summary`).
   - **`squad` state fields:** slot, role, `is_new` (a transfer already made takes the sold player's slot), `armband` (from `ManagerState.captain`/`vice`), `team_color(2)`, `next_opp`, prices, availability, news, price status, `next_fixtures`.
   - **`squad` model fields** (merged in by `report/build.build(squad_rows=…)` only when the gate passes): `xpts_next`, `p_start`, `eo_top10k`, `next_diff`, `next5_diff`, `rec_role` (Captain / Vice-captain / Starting / Bench n / Sell) and `rec_swap`.
   - **`lineup`** also carries the card fields plus `is_new` and `replaces`.
+  - **`option_lineups`**: the same rows for **every** option in `decision` (key `option,element`; `option` matches `decision.option`, plus `option_label`, `recommended`), built by `report/build._xi_rows` from each `Option.plan.gws[0]`. The recommended option's rows equal `lineup`. `engine.apply_captain_hurdle` applies the captain hurdle to every option's first GW.
   - **Fixture rating** (`report/build.fixture_ratings`): 1 easiest to 5 hardest, quintiles across all team fixtures in the horizon of team xG for (`attack_rating`, MID/FWD) or clean-sheet chance (`defence_rating`, GKP/DEF). `fixtures_strength` carries both.
 - **Local preview and browser tests:**
   - `scripts/dashboard_preview.py --data DIR --d3 d3.min.js --out page.html` wraps the page in a stub of the type (`#dash-root`, theme tokens light/dark via `?theme=dark`, a stub `dash`, each script in its own scope, no drawing inside `hidden`);
@@ -287,7 +288,7 @@ uv run fpl history report             # print COVERAGE.md
 
 ## How to test
 ```bash
-uv run pytest            # offline suite (76 tests); live: uv run pytest -m live
+uv run pytest            # offline suite (78 tests); live: uv run pytest -m live
 FPL_D3=path/to/d3.min.js uv run pytest -m ui   # dashboard page in Chromium (Node playwright + d3@7.9.0)
 uv run ruff check .
 ```

@@ -106,6 +106,15 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
   - the real shell's scroll container: the sticky nav and scroll-spy were tested only in the local harness.
 - **Live data:** the refresh routine must run once with this branch so `squad`/`lineup` carry the new fields. Until then cards show "—" for xPts, with no ratings, C/V badges or engine tags.
 
+### Line-up popup for every transfer option (2026-11-21)
+- **What it is:** each row of the options table (#transfers) has a Line-up button; the lede has "See the line-up". Both open `#option-xi` with that option's XI, captain and bench.
+- **Data:** new dataset `option_lineups`. The captain hurdle now applies to every option's GW1 plan.
+- **Verified:**
+  - store page written (version 7);
+  - `pytest -m ui` passes at 390/320/400/1280px, light and dark;
+  - every option's popup matches its rows; the recommended one equals `lineup`.
+- **Not verified:** `showModal()` inside the real dashboard shell; the page falls back to an in-place panel if it throws.
+
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**
    - Current-season backtest, 2026-27 GW4–9, with code-default params (365, 0.5, 20), via `scripts/research/current_season_backtest.py`:

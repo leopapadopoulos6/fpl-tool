@@ -128,6 +128,23 @@
   .hb-dgrid dt { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); flex: none; }
   .hb-dgrid dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; }
   .hb-dgrid .hb-wide { grid-column: 1 / -1; }
+  /* option line-up popup */
+  .hb-modal { box-sizing: border-box; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 0; background: var(--color-bg); color: var(--color-fg); width: min(46rem, calc(100vw - 2rem)); max-width: none; max-height: 90vh; overflow: auto; overscroll-behavior: contain; font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .hb-modal::backdrop { background: rgb(0 0 0 / .45); }
+  .hb-modal.is-inline { position: static; width: auto; max-height: none; margin: 0; }
+  .hb-modal-body { display: grid; gap: var(--cds-gap-sm); padding: var(--cds-pad-lg); min-width: 0; }
+  .hb-modal-head { position: sticky; top: calc(-1 * var(--cds-pad-lg)); z-index: 2; background: var(--color-bg); display: flex; align-items: flex-start; justify-content: space-between; gap: var(--cds-gap-sm); padding: var(--cds-pad-sm) 0; }
+  .hb-modal-head h3 { font-size: var(--cds-font-size-heading); }
+  .hb-pcard.is-static { cursor: default; }
+  .hb-pcard.is-static:hover { border-color: var(--color-border-line); }
+  .hb-pcard.is-static.is-diff:hover { border-color: var(--color-warn); }
+  .hb-xi-btn { white-space: nowrap; }
+  .hb tr.hb-rec td .hb-xi-btn, .hb tr.hb-rec td:first-child .hb-xi-btn { font-weight: var(--cds-font-weight-medium); }
+  @media (max-width: 40rem) {
+    .hb-modal[open]:not(.is-inline) { width: 100vw; margin: auto 0 0; border-radius: var(--cds-radius) var(--cds-radius) 0 0; max-height: 88vh; border-bottom: 0; }
+    .hb-modal-body { padding: var(--cds-pad-md) var(--cds-pad-sm); }
+    .hb-modal-head { top: calc(-1 * var(--cds-pad-md)); }
+  }
   @media (max-width: 30rem) {
     .hb #squad { padding: var(--cds-pad-md) var(--cds-pad-sm); }
     .hb-pitch { padding: var(--cds-pad-md) 6px; gap: var(--cds-gap-sm); }
@@ -180,6 +197,7 @@
       out: <span data-draw="rec-out" data-source="decision" data-field="transfers_out" data-where="recommended=Yes">—</span>),
       <b data-draw="rec-delta" data-source="decision" data-field="delta_vs_roll" data-where="recommended=Yes">—</b> expected points against rolling over
       <span data-draw="horizon" data-source="assumptions" data-field="horizon_gws" data-row="0">—</span> gameweeks.
+      <button type="button" class="hb-btn hb-xi-btn" data-option-xi="rec" data-xi-only>See the line-up</button>
     </p>
     <p class="hb-lede">
       Captain <b data-draw="cap" data-source="lineup" data-field="player" data-where="role=Captain">—</b>,
@@ -195,10 +213,30 @@
           <th data-field="delta_vs_roll" class="num">Δ vs roll</th>
           <th data-field="next_gw_xpts" class="num wide-only">Next GW xPts</th>
           <th data-field="flags">Flags</th>
+          <th class="hb-xi-col" data-xi-only>Line-up</th>
         </tr></thead>
         <tbody data-draw="decision"></tbody>
       </table>
     </div>
+    <p class="hb-note" data-xi-only>Line-up shows the starting eleven, captain and bench the engine would pick for that option in the coming gameweek.</p>
+    <dialog class="hb-modal" id="option-xi" aria-labelledby="option-xi-title">
+      <div class="hb-modal-body">
+        <div class="hb-modal-head">
+          <h3 id="option-xi-title"><span data-draw="xi-title" data-source="decision" data-field="label">—</span></h3>
+          <button type="button" class="hb-btn" data-xi-close>Close</button>
+        </div>
+        <p class="hb-note">In: <span data-draw="xi-in" data-source="decision" data-field="transfers_in">—</span>. Out: <span data-draw="xi-out" data-source="decision" data-field="transfers_out">—</span>. Against rolling: <b data-draw="xi-delta" data-source="decision" data-field="delta_vs_roll">—</b> expected points over the horizon. Next gameweek: <b data-draw="xi-next" data-source="decision" data-field="next_gw_xpts">—</b> expected points after hits.</p>
+        <div class="hb-diffbox">
+          <p>Changes from your team:</p>
+          <ul class="hb-diff-list" data-draw="xi-diff" data-source="squad option_lineups"></ul>
+        </div>
+        <h3>Starting eleven <span data-draw="xi-shape">—</span></h3>
+        <div class="hb-pitch" data-draw="xi-pitch" data-source="option_lineups" role="group" aria-label="Starting eleven for this option">—</div>
+        <h3>Bench, in auto-sub order</h3>
+        <div class="hb-benchrow" data-draw="xi-bench" data-source="option_lineups" role="group" aria-label="Bench for this option">—</div>
+        <p class="hb-note">Big number: expected points next gameweek. Fixture rating 1 easiest to 5 hardest, from our own model. Tags compare with your current team; a dashed outline marks a change.</p>
+      </div>
+    </dialog>
     <div class="hb-grid">
       <div class="hb-sub-card" id="captaincy">
         <h3>Captaincy</h3>
@@ -719,6 +757,16 @@
       td(tr, f2(r.delta_vs_roll), 'num');
       td(tr, f1(r.next_gw_xpts), 'num wide-only');
       td(tr, r.flags, 'flag');
+      if (rowsOf('option_lineups').some((x) => String(x.option) === String(r.option))) {
+        const c = tr.insertCell();
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hb-btn hb-xi-btn';
+        btn.dataset.optionXi = String(r.option);
+        btn.textContent = 'Line-up';
+        btn.setAttribute('aria-label', `Line-up for option ${r.option}: ${r.label}${r.transfers_in && r.transfers_in !== 'None' ? ', ' + r.transfers_in + ' in' : ''}`);
+        c.appendChild(btn);
+      }
     }
   });
 
@@ -1015,8 +1063,8 @@
     if (r.armband === 'Vice-captain' && m.armband !== 'Vice-captain') return 'New vice';
     return '';
   };
-  const diffItems = () => {
-    const sq = sqRows(), lu = luRows();
+  const diffItems = (luIn) => {
+    const sq = sqRows(), lu = luIn || luRows();
     if (!sq.length || !lu.length) return [];
     const mine = new Map(sq.map((r) => [key(r.element), r]));
     const eng = new Map(lu.map((r) => [key(r.element), r]));
@@ -1048,17 +1096,17 @@
   };
   const span = (cls, text) => { const e = document.createElement('span'); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const card = (c, order) => {
-    const r = c.row, where = 'element=' + r.element;
+    const r = c.row, where = c.where || 'element=' + r.element;
     const mark = (e, field) => { e.dataset.source = c.src; e.dataset.field = field; e.dataset.where = where; return e; };
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'hb-pcard';
-    b.dataset.player = key(r.element);
+    const b = document.createElement(c.static ? 'div' : 'button');
+    if (c.static) b.setAttribute('role', 'listitem'); else b.type = 'button';
+    b.className = 'hb-pcard' + (c.static ? ' is-static' : '');
+    if (!c.static) b.dataset.player = key(r.element);
     const av = String(r.availability || '');
     const doubt = av.startsWith('Doubtful'), out = !!av && !av.startsWith('Available') && !doubt;
     if (c.tag) b.classList.add('is-diff');
     if (out) b.classList.add('is-out');
-    if (key(r.element) === key(window.hbSel)) b.classList.add('is-sel');
+    if (!c.static && key(r.element) === key(window.hbSel)) b.classList.add('is-sel');
     if (doubt || out) {
       const pct = /\((\d+)%\)/.exec(av);
       const f = mark(span('hb-pc-flag' + (out ? ' bad' : ''), out ? '✕' : (pct ? pct[1] + '%' : '!')), 'availability');
@@ -1194,6 +1242,102 @@
     });
   });
 
+  // ---- option line-up popup (every row of the transfer options table)
+  window.hbXiOpt = null;
+  const optAll = () => { const d = dash.data('option_lineups'); return d.status === 'ok' ? d.data : []; };
+  const optRows = (n) => optAll().filter((r) => key(r.option) === key(n));
+  const decRow = (n) => { const d = dash.data('decision'); return d.status === 'ok' ? d.data.find((r) => key(r.option) === key(n)) : null; };
+  const xiCards = () => {
+    const rows = window.hbXiOpt == null ? [] : optRows(window.hbXiOpt);
+    const mine = new Map(sqRows().map((r) => [key(r.element), r]));
+    return rows.map((r) => ({ row: r, src: 'option_lineups', start: isStart(r.role), xField: 'xpts', static: true,
+      where: `option=${r.option}&element=${r.element}`, tag: yoursTag(r, mine) }));
+  };
+  dash.draw('xi-pitch', (el) => {
+    el.replaceChildren();
+    const xi = xiCards().filter((c) => c.start);
+    if (!xi.length) { el.textContent = '—'; return; }
+    for (const pos of POS_ORDER) {
+      const row = xi.filter((c) => c.row.pos === pos);
+      if (!row.length) continue;
+      const d = document.createElement('div');
+      d.className = 'hb-prow';
+      d.setAttribute('role', 'list');
+      d.style.setProperty('--n', String(row.length));
+      row.forEach((c) => d.append(card(c)));
+      el.append(d);
+    }
+  });
+  dash.draw('xi-bench', (el) => {
+    el.replaceChildren();
+    const bench = xiCards().filter((c) => !c.start);
+    if (!bench.length) { el.textContent = '—'; return; }
+    el.setAttribute('role', 'list');
+    let n = 0;
+    bench.forEach((c) => el.append(card(c, c.row.pos === 'GKP' ? 'GK' : String(++n))));
+  });
+  dash.draw('xi-shape', (el) => {
+    const xi = xiCards().filter((c) => c.start);
+    el.textContent = xi.length ? ['DEF', 'MID', 'FWD'].map((p) => xi.filter((c) => c.row.pos === p).length).join('-') : '—';
+  });
+  dash.draw('xi-diff', (ul) => {
+    const rows = window.hbXiOpt == null ? [] : optRows(window.hbXiOpt);
+    const items = rows.length ? diffItems(rows) : [];
+    ul.replaceChildren(...(items.length ? items : ['No changes: this is your current team as it stands.']).map((t) => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  });
+  const xiField = (field, fmt) => (el) => {
+    const r = window.hbXiOpt == null ? null : decRow(window.hbXiOpt);
+    if (!r || r[field] == null) { el.textContent = '—'; el.removeAttribute('data-where'); return; }
+    el.dataset.where = 'option=' + r.option;
+    el.textContent = fmt ? fmt(r[field]) : String(r[field]);
+  };
+  const signed = (v) => (v > 0 ? '+' : '') + n2(v);
+  dash.draw('xi-title', xiField('label'));
+  dash.draw('xi-in', xiField('transfers_in'));
+  dash.draw('xi-out', xiField('transfers_out'));
+  dash.draw('xi-delta', xiField('delta_vs_roll', signed));
+  dash.draw('xi-next', xiField('next_gw_xpts', n1));
+  const XI_DRAWS = ['xi-title', 'xi-in', 'xi-out', 'xi-delta', 'xi-next', 'xi-diff', 'xi-shape', 'xi-pitch', 'xi-bench'];
+  let xiTrigger = null;
+  const openXi = (n, trigger) => {
+    window.hbXiOpt = n;
+    xiTrigger = trigger || null;
+    XI_DRAWS.forEach((d) => dash.draw(d));
+    document.querySelectorAll('#option-xi').forEach((dlg) => {
+      if (dlg.open) return;
+      let modal = false;
+      try { if (typeof dlg.showModal === 'function') { dlg.classList.remove('is-inline'); dlg.showModal(); modal = true; } } catch (err) { modal = false; }
+      if (!modal) {
+        dlg.classList.add('is-inline');
+        dlg.open = true;
+        requestAnimationFrame(() => dlg.scrollIntoView({ block: 'start', behavior: smooth() }));
+      }
+      dlg.scrollTop = 0;
+    });
+  };
+  const closeXi = () => document.querySelectorAll('#option-xi').forEach((dlg) => {
+    if (typeof dlg.close === 'function' && dlg.open) dlg.close(); else dlg.open = false;
+  });
+  document.querySelectorAll('#option-xi').forEach((dlg) => {
+    dlg.addEventListener('close', () => {
+      window.hbXiOpt = null;
+      const t = xiTrigger;
+      xiTrigger = null;
+      if (t && t.isConnected) t.focus({ preventScroll: !dlg.classList.contains('is-inline') });
+    });
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg || e.target.closest('[data-xi-close]')) closeXi();  // backdrop or Close
+    });
+    dlg.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dlg.classList.contains('is-inline')) { e.preventDefault(); closeXi(); } });
+  });
+  document.querySelectorAll('#transfers').forEach((sec) => sec.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-option-xi]');
+    if (!b) return;
+    let n = b.dataset.optionXi;
+    if (n === 'rec') { const r = optAll().find((x) => x.recommended === 'Yes'); n = r ? r.option : null; }
+    if (n != null && optRows(n).length) openXi(n, b);
+  }));
+
   // ---- view toggles
   const applyView = (v) => {
     window.hbView = v;
@@ -1319,6 +1463,8 @@
     if (!lu.length && window.hbPick !== 'mine') applyPick('mine');
     const items = diffItems();
     document.querySelectorAll('#engine-diff').forEach((e) => { e.hidden = !items.length; });
+    const hasXi = optAll().length > 0;
+    document.querySelectorAll('[data-xi-only]').forEach((e) => { e.hidden = !hasXi; });
     navLinks().forEach((a) => { const t = targetOf(a); a.hidden = !(shown(t) || (t && t.tagName === 'DETAILS')); });
     if (hash && !userMoved && Date.now() - opened < 5000) requestAnimationFrame(() => go(hash, true));
     schedule();

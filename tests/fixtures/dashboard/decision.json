@@ -6,7 +6,7 @@
   "transfers_out": "None",
   "hits": 0,
   "delta_vs_roll": 0.0,
-  "next_gw_xpts": 52.58,
+  "next_gw_xpts": 52.59,
   "horizon_xpts": 328.8,
   "recommended": "",
   "flags": ""
@@ -30,8 +30,8 @@
   "transfers_out": "Diop",
   "hits": 0,
   "delta_vs_roll": 0.92,
-  "next_gw_xpts": 53.98,
-  "horizon_xpts": 329.5,
+  "next_gw_xpts": 53.99,
+  "horizon_xpts": 329.6,
   "recommended": "",
   "flags": ""
  },
@@ -42,7 +42,7 @@
   "transfers_out": "Diop, Belloumi",
   "hits": 0,
   "delta_vs_roll": 1.87,
-  "next_gw_xpts": 54.73,
+  "next_gw_xpts": 54.74,
   "horizon_xpts": 330.3,
   "recommended": "Yes",
   "flags": "Differential in: E.Le Fée"

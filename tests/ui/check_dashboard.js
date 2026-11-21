@@ -156,6 +156,60 @@ async function checkLayout(page, label) {
         await page.locator('#squad').scrollIntoViewIfNeeded();
         await page.screenshot({ path: `${SHOTS}/${label}-engine.png` });
       }
+      // --- option line-up popup: every row of the options table builds its own team
+      await page.click('[data-squad-pick=mine]');
+      const options = await page.evaluate(() => window.__dash.data.decision.map((r) => r.option));
+      for (const opt of options) {
+        const btn = `#transfers tbody [data-option-xi="${opt}"]`;
+        await page.click(btn);
+        await page.waitForTimeout(150);
+        const x = await page.evaluate((opt) => {
+          const dlg = document.getElementById('option-xi');
+          const rows = window.__dash.data.option_lineups.filter((r) => r.option === opt);
+          const xi = rows.filter((r) => !r.role.startsWith('Bench'));
+          const box = dlg.getBoundingClientRect();
+          const pitchRows = [...dlg.querySelectorAll('.hb-pitch .hb-prow')].map((r) => r.children.length);
+          const want = ['GKP', 'DEF', 'MID', 'FWD'].map((p) => xi.filter((r) => r.pos === p).length);
+          const benchNames = [...dlg.querySelectorAll('.hb-benchrow .hb-pc-name span:last-child')].map((n) => n.textContent);
+          const cap = [...dlg.querySelectorAll('.hb-pitch .hb-pc-badge')].find((b) => b.textContent === 'C');
+          return { open: dlg.open, modal: dlg.matches(':modal'), pitchRows, want,
+                   bench: benchNames, benchWant: rows.filter((r) => r.role.startsWith('Bench')).map((r) => r.player),
+                   capName: cap ? cap.parentElement.querySelector('.hb-pc-name span:last-child').textContent : null,
+                   capWant: (rows.find((r) => r.armband === 'Captain') || {}).player,
+                   newTags: dlg.querySelectorAll('.hb-pc-tag').length, newWant: rows.filter((r) => r.is_new === 'Yes').length,
+                   title: document.querySelector('[data-draw=xi-title]').textContent,
+                   fits: box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1,
+                   inner: dlg.scrollWidth <= dlg.clientWidth + 1, side: document.documentElement.scrollWidth <= innerWidth + 1 };
+        }, opt);
+        assert.ok(x.open && x.modal, `${tag}: option ${opt} popup opens as a modal`);
+        assert.deepStrictEqual(x.pitchRows, x.want, `${tag}: option ${opt} formation`);
+        assert.deepStrictEqual(x.bench, x.benchWant, `${tag}: option ${opt} bench order`);
+        assert.strictEqual(x.capName, x.capWant, `${tag}: option ${opt} captain badge`);
+        assert.ok(x.newTags >= x.newWant, `${tag}: option ${opt} new players tagged`);
+        assert.ok(x.fits && x.inner && x.side, `${tag}: option ${opt} popup fits ${JSON.stringify(x)}`);
+        if (SHOTS && theme === 'light') {
+          const rec = await page.evaluate(() => window.__dash.data.decision.find((r) => r.recommended === 'Yes').option);
+          if (opt === rec) await page.screenshot({ path: `${SHOTS}/${label}-option-xi.png` });
+        }
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(100);
+        const after = await page.evaluate((btn) => ({ open: document.getElementById('option-xi').open,
+          focus: document.activeElement === document.querySelector(btn) }), btn);
+        assert.ok(!after.open && after.focus, `${tag}: option ${opt} closes and returns focus`);
+      }
+      // the lede button opens the recommended option, which is the Squad section's Engine's pick
+      await page.click('#transfers [data-option-xi="rec"]');
+      await page.waitForTimeout(150);
+      const rec = await page.evaluate(() => {
+        const ids = [...document.querySelectorAll('#option-xi .hb-pc-name span:last-child')].map((n) => n.textContent);
+        return { ids, want: window.__dash.data.lineup.map((r) => r.player) };
+      });
+      assert.deepStrictEqual(rec.ids, rec.want, `${tag}: recommended popup equals the line-up dataset`);
+      // backdrop tap closes
+      await page.mouse.click(2, 2);
+      await page.waitForTimeout(100);
+      assert.ok(!(await page.evaluate(() => document.getElementById('option-xi').open)), `${tag}: backdrop closes the popup`);
+
       if (theme === 'dark' && SHOTS && label === 'iphone13') {
         await page.click('[data-squad-pick=mine]');
         await page.click('.hb-nav a[href="#squad"]');
@@ -189,7 +243,7 @@ async function checkLayout(page, label) {
   {
     const { ctx, page } = await open(browser, { ...devices['iPhone 13'] });
     await page.evaluate(() => {
-      for (const id of ['decision', 'captaincy', 'lineup', 'plan', 'players', 'fixtures_strength']) window.__dash.setData(id, null);
+      for (const id of ['decision', 'captaincy', 'lineup', 'option_lineups', 'plan', 'players', 'fixtures_strength']) window.__dash.setData(id, null);
       const bare = window.__dash.data.squad.map((r) => { const o = { ...r }; for (const k of ['xpts_next', 'p_start', 'eo_top10k', 'next_diff', 'next5_diff', 'rec_role', 'rec_swap']) delete o[k]; return o; });
       window.__dash.setData('squad', bare);
     });
@@ -197,8 +251,9 @@ async function checkLayout(page, label) {
     const r = await page.evaluate(() => ({ cards: document.querySelectorAll('.hb-pitch .hb-pcard').length,
       bench: document.querySelectorAll('.hb-benchrow .hb-pcard').length, diff: document.getElementById('engine-diff').hidden,
       toggle: document.querySelector('[data-squad-pick]').closest('[data-engine-only]').hidden,
-      navTransfers: document.querySelector('.hb-nav a[href="#transfers"]').hidden, errors: window.__dash.errors }));
-    assert.deepStrictEqual(r, { cards: 11, bench: 4, diff: true, toggle: true, navTransfers: true, errors: [] }, 'gate failed state');
+      navTransfers: document.querySelector('.hb-nav a[href="#transfers"]').hidden,
+      xi: [...document.querySelectorAll('[data-xi-only]')].every((e) => e.hidden), errors: window.__dash.errors }));
+    assert.deepStrictEqual(r, { cards: 11, bench: 4, diff: true, toggle: true, navTransfers: true, xi: true, errors: [] }, 'gate failed state');
     await ctx.close();
   }
 

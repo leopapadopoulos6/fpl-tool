@@ -138,6 +138,7 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     out.update(_decisions(res, names, eo_map))
     ratings = fixture_ratings(res.forecast.by_fixture)
     out.update(_lineup(res, names, eo_map, own_map, b, fixtures, ratings))
+    out["option_lineups"] = _option_lineups(res, names, eo_map, own_map, b, fixtures, ratings)
     out["plan"] = _plan(res, names)
     out["players"] = _players(res, state, eo_map, b)
     out["fixtures_strength"] = _fixtures(res, b, ratings)
@@ -248,9 +249,10 @@ def squad_model(res: EngineResult, state: ManagerState, eo: dict, names: dict,
     return out
 
 
-def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
-            fixtures: list[Fixture], ratings: pd.DataFrame) -> dict:
-    g = res.best.gws[0]
+def _xi_rows(g, res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
+             fixtures: list[Fixture], ratings: pd.DataFrame) -> list[dict]:
+    """The 15 rows (XI in pick order, then the bench in auto-sub order) of one plan's first
+    gameweek, with the fields a dashboard player card reads."""
     fc = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")
     pos = res.players["position"].to_dict()
     team = res.players["team"].to_dict()
@@ -261,8 +263,8 @@ def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
     for p in g.lineup + g.bench:
         role = roles[p]
         rows.append({"element": p, "player": names[p], "pos": pos[p], "role": role,
-                     "xpts": round(float(fc.at[p, "xpts"]), 2),
-                     "p_start": round(float(fc.at[p, "p_start"]), 2),
+                     "xpts": round(float(fc.at[p, "xpts"]), 2) if p in fc.index else 0.0,
+                     "p_start": round(float(fc.at[p, "p_start"]), 2) if p in fc.index else 0.0,
                      "eo_top10k": round(eo.get(p, 0.0), 1),
                      "owned_top10k": round(own.get(p, 0.0), 1),
                      **card_fields(els[p], b, fixtures, g.gw),
@@ -270,6 +272,25 @@ def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
                      "armband": role if role in ("Captain", "Vice-captain") else "",
                      "is_new": "Yes" if p in g.buys else "",
                      "replaces": names[replaces[p]] if p in replaces else ""})
+    return rows
+
+
+def _option_lineups(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
+                    fixtures: list[Fixture], ratings: pd.DataFrame) -> list[dict]:
+    """Every transfer option's own line-up for the coming gameweek; ``option`` matches the
+    ``decision`` rows (1-based, in ``res.options`` order)."""
+    rows = []
+    for i, o in enumerate(res.options):
+        for r in _xi_rows(o.plan.gws[0], res, names, eo, own, b, fixtures, ratings):
+            rows.append({"option": i + 1, "option_label": o.label,
+                         "recommended": "Yes" if o.plan is res.best else "", **r})
+    return rows
+
+
+def _lineup(res: EngineResult, names: dict, eo: dict, own: dict, b: Bootstrap,
+            fixtures: list[Fixture], ratings: pd.DataFrame) -> dict:
+    g = res.best.gws[0]
+    rows = _xi_rows(g, res, names, eo, own, b, fixtures, ratings)
     cap = res.captaincy.copy()
     caps = []
     for r in cap.head(6).itertuples():

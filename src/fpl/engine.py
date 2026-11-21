@@ -25,23 +25,37 @@ CAPTAIN_HURDLE = 1.0  # xPts edge needed to captain against the top-10k majority
 TEMPLATE_CAPTAIN_EO = 100.0  # top-10k EO at/above which most of them captain the player
 
 
-def apply_captain_hurdle(res: EngineResult, eo: dict[int, float],
-                         hurdle: float = CAPTAIN_HURDLE) -> str | None:
-    """Keep the top-10k majority captain unless the model's pick beats him by ``hurdle``
-    simulated points. Returns a note when the captain was changed back."""
-    g = res.best.gws[0]
+def _hurdle_plan(g, mean: dict, xp: pd.Series, eo: dict[int, float], hurdle: float) -> str | None:
     template = max((p for p in g.lineup if eo.get(p, 0) >= TEMPLATE_CAPTAIN_EO),
                    key=lambda p: eo.get(p, 0), default=None)
     if template is None or template == g.captain:
         return None
-    mean = res.captaincy.set_index("element")["mean"]
-    edge = float(mean.get(g.captain, 0) - mean.get(template, 0))
+    m = lambda p: float(mean[p]) if p in mean else float(xp.get(p, 0))  # noqa: E731
+    edge = m(g.captain) - m(template)
     if edge >= hurdle:
         return None
-    xp = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")["xpts"]
     g.xpts += float(xp.get(template, 0) - xp.get(g.captain, 0))
     g.vice, g.captain = g.captain, template
     return f"model captain edge {edge:.2f} < hurdle {hurdle}: kept template captain"
+
+
+def apply_captain_hurdle(res: EngineResult, eo: dict[int, float],
+                         hurdle: float = CAPTAIN_HURDLE) -> str | None:
+    """Keep the top-10k majority captain unless the model's pick beats him by ``hurdle``
+    simulated points (players outside the simulation fall back to their xPts). Applied to
+    the recommended plan and to every other option's first gameweek, so each option's
+    line-up follows the same rule. Returns a note when the recommended captain changed."""
+    g = res.best.gws[0]
+    mean = res.captaincy.set_index("element")["mean"].to_dict()
+    xp = res.forecast.by_gw[res.forecast.by_gw["event"] == g.gw].set_index("element")["xpts"]
+    note = _hurdle_plan(g, mean, xp, eo, hurdle)
+    done = {id(g)}
+    for o in getattr(res, "options", []):
+        og = o.plan.gws[0]
+        if id(og) not in done:
+            done.add(id(og))
+            _hurdle_plan(og, mean, xp, eo, hurdle)
+    return note
 
 
 def recommend(options: list[Option], hit_hurdle: float = HIT_HURDLE) -> Option:

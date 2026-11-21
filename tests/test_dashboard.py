@@ -155,3 +155,61 @@ def test_roles_and_sale_pairs():
                             4: "Bench 1", 5: "Bench 2"}
     pos = {1: "MID", 5: "DEF", 8: "MID", 9: "DEF"}
     assert _sale_pairs(g, pos) == {5: 9, 1: 8}
+
+
+def test_xi_rows_for_any_plan(bootstrap, picks, rules, fixtures_upcoming):
+    from types import SimpleNamespace
+
+    import pandas as pd
+
+    from fpl.optimize.milp import GWPlan
+    from fpl.report.build import _xi_rows
+
+    ids = [p.element for p in sorted(picks.picks, key=lambda p: p.position)]
+    els = bootstrap.elements_by_id()
+    spare = next(e.id for e in bootstrap.elements
+                 if e.id not in ids and e.element_type == els[ids[14]].element_type)
+    lineup, bench = ids[:11], [ids[11], ids[12], ids[13], spare]  # sells ids[14] for spare
+    g = GWPlan(gw=10, chip=None, buys=[spare], sells=[ids[14]], hits=0, free_transfers=1,
+               lineup=lineup, bench=bench, captain=lineup[9], vice=lineup[10], xpts=50.0,
+               bank_after=0)
+    players = pd.DataFrame({"position": {e: rules.position_by_type[els[e].element_type]
+                                         for e in ids + [spare]},
+                            "team": {e: els[e].team for e in ids + [spare]}})
+    by_gw = pd.DataFrame({"element": ids + [spare], "event": 10, "xpts": 3.0, "p_start": 0.9})
+    res = SimpleNamespace(forecast=SimpleNamespace(by_gw=by_gw), players=players)
+    names = {e: els[e].web_name for e in ids + [spare]}
+    ratings = pd.DataFrame(columns=["team", "event", "fixture", "attack_rating", "defence_rating"])
+    rows = _xi_rows(g, res, names, {}, {}, bootstrap, fixtures_upcoming, ratings)
+    assert [r["element"] for r in rows] == lineup + bench
+    assert sum(not r["role"].startswith("Bench") for r in rows) == 11
+    assert [r["role"] for r in rows[11:]] == ["Bench 1", "Bench 2", "Bench 3", "Bench 4"]
+    assert [r["armband"] for r in rows].count("Captain") == 1
+    assert [r["armband"] for r in rows].count("Vice-captain") == 1
+    new = [r for r in rows if r["is_new"] == "Yes"]
+    assert [r["element"] for r in new] == [spare] and new[0]["replaces"] == names[ids[14]]
+    assert all(r["team_color"] and r["next_opp"] for r in rows)
+
+
+def test_option_lineups_fixture_consistent():
+    """The stored dashboard run: every option has a legal 15, and the recommended option's
+    line-up is the ``lineup`` dataset."""
+    from collections import Counter
+    from pathlib import Path
+
+    d = Path(__file__).parent / "fixtures" / "dashboard"
+    dec = json.loads((d / "decision.json").read_text())
+    opt = json.loads((d / "option_lineups.json").read_text())
+    lineup = json.loads((d / "lineup.json").read_text())
+    for o in dec:
+        rows = [r for r in opt if r["option"] == o["option"]]
+        assert len(rows) == 15
+        xi = Counter(r["pos"] for r in rows if not r["role"].startswith("Bench"))
+        assert sum(xi.values()) == 11 and xi["GKP"] == 1
+        assert 3 <= xi["DEF"] <= 5 and 2 <= xi["MID"] <= 5 and 1 <= xi["FWD"] <= 3
+        new = {r["player"] for r in rows if r["is_new"] == "Yes"}
+        want = set() if o["transfers_in"] == "None" else set(o["transfers_in"].split(", "))
+        assert new == want
+        if o["recommended"] == "Yes":
+            assert [(r["element"], r["role"]) for r in rows] == [
+                (r["element"], r["role"]) for r in lineup]
