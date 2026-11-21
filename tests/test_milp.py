@@ -171,3 +171,21 @@ def test_chip_forbid_gives_next_best_assignment(R):
               chip_forbid=[{"3xc": 2}])
     assert all(g.chip != "3xc" or g.gw == 1 for g in nxt.gws)
     assert nxt.objective < best.objective
+
+
+def test_chip_timing_is_not_biased_toward_early_gameweeks(R):
+    # The same captain is worth 10.0 in GW1 and 10.5 in GW3. The engine's 0.9 weekly decay
+    # would make GW1 look better (10.0 vs 10.5 * 0.81 = 8.5), but a chip can be held at no
+    # cost, so the planner must compare undiscounted values and pick GW3.
+    from fpl.chips.joint import plan_joint
+    from fpl.rules import ChipWindow
+
+    pl, xp = toy([], gws=(1, 2, 3))
+    xp.loc[13, 1], xp.loc[13, 3] = 10.0, 10.5
+    inp = OptInput(players=pl, xp=xp, gws=[1, 2, 3], bank=0, free_transfers=1, rules=R,
+                   settings=OptSettings(ft_value=0.0, decay=0.9))
+    res = plan_joint(inp, [ChipWindow("3xc", 3, 1, 3)])
+    assert res.assignment == {"3xc": 3}
+    gains = {r["gw"]: r["gain"] for r in res.by_gw}
+    assert gains[3] == pytest.approx(10.5, abs=1e-6)  # gain in undiscounted points
+    assert gains[1] == pytest.approx(10.0, abs=1e-6)

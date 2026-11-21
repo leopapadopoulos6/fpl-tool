@@ -19,7 +19,7 @@ from fpl.api.models import Bootstrap, Fixture
 from fpl.backtest import minutes as bt_min
 from fpl.backtest import team_strength as bt_team
 from fpl.backtest import xpts as bt_xpts
-from fpl.chips.joint import plan_joint
+from fpl.chips.joint import CHIP_DECAY, plan_joint
 from fpl.chips.planner import CHIP_LABEL
 from fpl.data.features import build_player_features
 from fpl.data.priors import team_prior
@@ -118,7 +118,7 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     out["assumptions"] = [{
         "model_version": MODEL_VERSION, "horizon_gws": horizon, "decay": settings.decay,
         "bench_weight": settings.bench_weight, "ft_value_end": settings.ft_value,
-        "hit_hurdle": HIT_HURDLE, "captain_hurdle": CAPTAIN_HURDLE,
+        "hit_hurdle": HIT_HURDLE, "captain_hurdle": CAPTAIN_HURDLE, "chip_decay": CHIP_DECAY,
         "gate": "passed" if gate.passed else "failed: " + "; ".join(gate.reasons),
         "eo_source": (f"top {eo_meta['top_k']:,} overall, {eo_meta['sampled']} sampled, "
                       f"GW{eo_meta['gw']} picks") if eo_meta else "not sampled",

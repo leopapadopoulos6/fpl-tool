@@ -208,7 +208,7 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - bonus = linear regression on components; cards.
 - **xPts backtest, GW4–9:** MAE 1.70 vs 1.89 and Spearman 0.56 vs 0.48 against baselines; calibrated by decile. Weak spot: GKP ranking (0.41 vs 0.45).
 - **MILP:** 6-GW solve about 2 s, decay 0.9, bench weight 0.1, end value 1.5 per banked FT. Options are forced first-GW transfer counts plus no-good cuts.
-- **Chips:** `chips/joint.py` takes about 6 minutes per run on real data, with every solve gap < 0.1%. The exact joint MILP (`OptInput.chip_search`) is correct on toys but has a 13% gap after 300 s at real size, so it isn't used.
+- **Chips:** `chips/joint.py` takes about 6–8 minutes per run on real data, with every solve gap < 0.1%. Chip timing uses **no weekly discount** (`CHIP_DECAY = 1.0`): the 0.9 decay is for transfer decisions, and on a chip that can be held it biased every chip toward the current GW (it called a GW11 Triple Captain that was no better than GW15 and worse than GW16). Chip gains are undiscounted expected points; `assumptions.chip_decay` records it. The exact joint MILP (`OptInput.chip_search`) is correct on toys but has a 13% gap after 300 s at real size, so it isn't used.
 - **Gate** (`report/build.model_health`): xPts must beat both baselines on MAE and Spearman, and P(start) must beat its baselines. On failure the manifest `remove` list takes model datasets off the dashboard.
 
 ## Dashboard, refresh, ledger

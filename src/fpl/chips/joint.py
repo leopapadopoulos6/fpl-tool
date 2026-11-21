@@ -9,6 +9,13 @@ Why not one MILP with chip binaries (``OptInput.chip_search``)? It is exact and 
 small cases, but at real size its LP relaxation is weak (13% gap after 300 s over 13 GWs),
 while a fixed-chip solve over the same horizon takes seconds.
 
+No time discount when timing chips (``CHIP_DECAY = 1.0``). The engine weights later
+gameweeks by ``OptSettings.decay`` (0.9 a week) to hedge forecast uncertainty in transfer
+decisions. Applied to a chip that can be held at no cost, that weight makes every later
+gameweek look worse just for being later, so the planner always played chips early (GW11
+Triple Captain on Haaland looked worth 5.6 against 3.7 in GW15, when undiscounted the two
+were equal and GW16 was better). Chip gains are therefore in undiscounted expected points.
+
 The horizon runs ``tail_gws`` past the chips' deadline (default 4) so a late Wildcard's
 value to the squad after the deadline counts instead of being truncated. Free Hit is not
 searched (planned separately once blanks are announced).
@@ -22,6 +29,7 @@ from fpl.optimize.milp import OptInput, Plan, solve
 from fpl.rules import ChipWindow
 
 SEARCHED = ("wildcard", "bboost", "3xc")
+CHIP_DECAY = 1.0  # chips are timed on undiscounted expected points (see module docstring)
 
 
 def chip_search_space(available: list[ChipWindow], gws: list[int]) -> dict[str, list[int]]:
@@ -54,10 +62,10 @@ class JointResult:
 
 
 def plan_joint(inp: OptInput, available: list[ChipWindow], time_limit: float = 30.0,
-               max_rounds: int = 4) -> JointResult:
+               max_rounds: int = 4, decay: float = CHIP_DECAY) -> JointResult:
     search = chip_search_space(available, inp.gws)
     base = replace(inp, chips={}, chip_search={},
-                   settings=replace(inp.settings, time_limit=time_limit))
+                   settings=replace(inp.settings, time_limit=time_limit, decay=decay))
     cache: dict[frozenset, Plan] = {}
 
     def run(assign: dict[str, int]) -> Plan:
