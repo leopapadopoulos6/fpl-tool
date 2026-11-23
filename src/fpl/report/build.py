@@ -133,7 +133,6 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     cap_note = apply_captain_hurdle(res, eo_map)
     if cap_note:
         out["assumptions"][0]["captain_note"] = cap_note
-    ledger.save(ledger.make_entry(res, eo_map, names), data_dir / "ledger")
     own_map = eo.set_index("element")["owned_pct"].to_dict() if eo is not None else {}
     out.update(_decisions(res, names, eo_map))
     ratings = fixture_ratings(res.forecast.by_fixture)
@@ -148,6 +147,9 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
             row.update(model.get(row["element"], {}))
     if chips:
         out.update(_chips(b, fixtures, pm, tm, state, rules, prior, settings))
+    now = [{"chip": r["chip"], "gw": r["best_gw"], "gain": r["gain"]}
+           for r in out.get("chip_plan", []) if r.get("now") == "Yes"]
+    ledger.save(ledger.make_entry(res, eo_map, names, chips_now=now), data_dir / "ledger")
     return out
 
 

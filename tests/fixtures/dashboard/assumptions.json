@@ -7,8 +7,9 @@
   "ft_value_end": 1.5,
   "hit_hurdle": 1.0,
   "captain_hurdle": 1.0,
+  "chip_decay": 1.0,
   "gate": "passed",
   "eo_source": "top 10,000 overall, 500 sampled, GW10 picks",
-  "generated_utc": "2026-11-21T04:16:08.562813Z"
+  "generated_utc": "2026-11-23T18:41:52.130985Z"
  }
 ]

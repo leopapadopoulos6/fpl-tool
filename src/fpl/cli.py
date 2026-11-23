@@ -374,6 +374,7 @@ def dashboard_data(
         ctx.bootstrap, ctx.state, ctx.fixtures, datetime.now(UTC),
         last_gw_points=last.points, total_points=last.total_points,
     )
+    extra_manifest: dict = {}
     if engine:
         from fpl.report.build import build
 
@@ -386,57 +387,124 @@ def dashboard_data(
                               squad_rows=data["squad"]))
         gate = data["assumptions"][0]["gate"]
         console.print(f"backtest gate: {gate}")
-        reviews = _reviews(ctx, pm, offline)
+        reviews, posts, pending = _reviews(ctx, pm, offline)
         if reviews:
             from fpl.report.ledger import summarise
+            from fpl.report.postmortem import lessons
 
             data["review"] = reviews
-            data["review_summary"] = [summarise(reviews)]
-            console.print(f"graded GWs: {[r['gw'] for r in reviews]}")
+            data["review_summary"] = [{**summarise(reviews), **lessons(posts)}]
+            data["review_gw"] = [p["summary"] for p in posts]
+            data["review_decisions"] = [d for p in posts for d in p["decisions"]]
+            data["review_players"] = [x for p in posts for x in p["players"]]
+            console.print(f"graded GWs: {[(r['gw'], r['status']) for r in reviews]}")
+            console.print(f"latest review: {posts[-1]['summary']['headline']}")
+        if pending:
+            extra_manifest["review_pending"] = pending
+            console.print(f"review pending: GW{pending} finished, bonus not yet added")
     ledger_file = get_settings().data_dir / "ledger" / f"gw{ctx.state.next_gw:02d}.json"
-    for p in write_datasets(data, out, ledger_file if ledger_file.exists() else None):
+    for p in write_datasets(data, out, ledger_file if ledger_file.exists() else None,
+                            extra_manifest):
         console.print(f"wrote {p} ({len(data[p.stem])} rows)")
     for w in ctx.state.warnings:
         console.print(f"[yellow]warning:[/] {w}")
 
 
-def _reviews(ctx: Context, pm, offline: bool) -> list[dict]:
-    """Grade every finished, data-checked GW that has a ledger entry."""
+def review_status(ev, fixtures: list[Fixture], status: dict | None) -> str | None:
+    """"final" once FPL has checked the gameweek; "provisional" as soon as every fixture is
+    (provisionally) finished and bonus has been added for every day of it; else None."""
+    if ev is None:
+        return None
+    if ev.finished and ev.data_checked:
+        return "final"
+    if ev.finished:
+        return "provisional"
+    fx = [f for f in fixtures if f.event == ev.id]
+    played = fx and all(f.finished or getattr(f, "finished_provisional", False) for f in fx)
+    days = [d for d in (status or {}).get("status", []) if d.get("event") == ev.id]
+    if played and days and all(d.get("bonus_added") for d in days):
+        return "provisional"
+    return None
+
+
+def review_pending(ctx: Context, status: dict | None) -> int | None:
+    """The current GW if all its fixtures have kicked off and finished but the review is
+    not ready yet (bonus not added) — the routine then books a later refresh."""
+    cur = ctx.bootstrap.current_event()
+    if cur is None or review_status(cur, ctx.fixtures, status):
+        return None
+    fx = [f for f in ctx.fixtures if f.event == cur.id]
+    done = fx and all(f.finished or getattr(f, "finished_provisional", False) for f in fx)
+    return cur.id if done else None
+
+
+def _reviews(ctx: Context, pm, offline: bool) -> tuple[list[dict], list[dict], int | None]:
+    """Grade every gameweek that has a ledger entry and is ready (see ``review_status``).
+    Returns (old-style review rows, post-mortems, pending GW)."""
     from fpl.report.ledger import load_all, review
+    from fpl.report.postmortem import review_gw
 
     entries = load_all(get_settings().data_dir / "ledger")
-    events = {e.id: e for e in ctx.bootstrap.events}
+    b = ctx.bootstrap
+    events = {e.id: e for e in b.events}
     hist = {h.event: h for h in ctx.history.current}
     fh = {c.event for c in ctx.history.chips if c.name == "freehit"}
-    rows = []
+    positions = {e.id: ctx.rules.position_by_type[e.element_type] for e in b.elements}
+    names = {e.id: e.web_name for e in b.elements}
+    short = {t.id: t.short_name for t in b.teams}
+    teams = {e.id: short[e.team] for e in b.elements}
+    rows, posts = [], []
     with FPLClient(offline=offline) as c:
+        status = ep.event_status(c)
         transfers = ep.entry_transfers(c, ctx.entry.id)
-        for gw, entry in sorted(entries.items()):
-            ev = events.get(gw)
-            if ev is None or not (ev.finished and ev.data_checked):
-                continue
+        ready = {gw: st for gw in entries
+                 if (st := review_status(events.get(gw), ctx.fixtures, status))}
+        lives = {gw: ep.event_live(c, gw) for gw in ready}
+        picks = {gw: ep.entry_picks(c, ctx.entry.id, gw).model_dump() for gw in ready}
+        for gw, st in sorted(ready.items()):
+            ev, entry = events[gw], entries[gw]
             moves = [(t.element_in, t.element_out) for t in transfers
                      if t.event == gw and gw not in fh]
-            rows.append(review(entry, ep.event_live(c, gw), pm,
-                               hist[gw].points if gw in hist else None,
-                               getattr(ev, "average_entry_score", None), moves))
-    return rows
+            all_moves = [(t.element_in, t.element_out) for t in transfers if t.event == gw]
+            avg = getattr(ev, "average_entry_score", None)
+            r = review(entry, lives[gw], pm, hist[gw].points if gw in hist else None, avg, moves)
+            r["status"] = st
+            rows.append(r)
+            later = {g: {"live": lives[g], "entry": entries.get(g),
+                         "your_points": picks[g]["entry_history"]["points"]}
+                     for g in ready if g > gw}
+            posts.append(review_gw(entry, lives[gw], picks[gw], all_moves, positions, names,
+                                   teams, ctx.rules, average_points=avg, status=st,
+                                   later=later))
+    return rows, posts, review_pending(ctx, status)
 
 
 @app.command()
 def review(gw: Annotated[int, typer.Option(help="Gameweek to grade")]) -> None:
     """Grade one finished GW's published forecast and advice (needs data/ledger/gwNN.json)."""
-    import json
 
     import pandas as pd
 
     ctx = load_context(get_settings().entry_id)
     pm = pd.read_parquet(get_settings().data_dir / "processed" / "player_matches.parquet")
-    rows = [r for r in _reviews(ctx, pm, False) if r["gw"] == gw]
-    if not rows:
-        console.print(f"GW{gw}: no ledger entry, or the gameweek is not finished and checked")
+    _, posts, _ = _reviews(ctx, pm, False)
+    post = next((p for p in posts if p["summary"]["gw"] == gw), None)
+    if post is None:
+        console.print(f"GW{gw}: no ledger entry, or the gameweek has not finished (bonus added)")
         raise typer.Exit(1)
-    console.print_json(json.dumps(rows[0]))
+    from tabulate import tabulate
+
+    console.print(post["summary"]["headline"])
+    console.print(tabulate([[d["decision"], d["option"], d["detail"], d["points"],
+                             d["running"], d["verdict"]] for d in post["decisions"]],
+                           headers=["Decision", "Option", "Detail", "Pts", "Running", "Verdict"]))
+    top = sorted(post["players"], key=lambda p: -abs(p["miss"]))[:12]
+    console.print(tabulate([[p["player"], p["role"], p["pred_xpts"], p["points"], p["minutes"],
+                             p["xg"], p["xa"], p["forecast_error"], p["luck"], p["label"]]
+                            for p in top],
+                           headers=["Player", "Role", "Pred", "Pts", "Min", "xG", "xA",
+                                    "Forecast err", "Finishing luck", "Why"]))
+
 
 
 @app.command()

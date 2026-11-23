@@ -115,6 +115,12 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
   - every option's popup matches its rows; the recommended one equals `lineup`.
 - **Not verified:** `showModal()` inside the real dashboard shell; the page falls back to an in-place panel if it throws.
 
+### Post-gameweek review (2026-11-23)
+- **What:** `report/postmortem.py` re-grades every decision of a finished GW on actual points (see CLAUDE.md, "Post-gameweek review"). It's graded provisionally once bonus is added, so the GW11 review is due in the 24 Nov 03:23 UK refresh.
+- **Verified:** on GW10 (final): you 59 (average 55), best possible 74, captaincy gap 9. The recommended Barry for N.Jackson move's model XI would have scored 69 against your 59.
+- **Pending:** the routine prompt edit (step 8 books a 10:00 UK run when `manifest.review_pending`; step 9 leads with a new review) has been proposed to the user, not yet saved.
+- **Chip planner:** `CHIP_DECAY = 1.0` since 21 Nov (see CLAUDE.md, Engine design, "Chips").
+
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**
    - Current-season backtest, 2026-27 GW4–9, with code-default params (365, 0.5, 20), via `scripts/research/current_season_backtest.py`:

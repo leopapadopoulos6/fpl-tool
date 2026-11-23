@@ -4,6 +4,12 @@
   "model_mae": 1.665,
   "baseline_mae": 1.749,
   "gws_model_beat_baselines": 1,
-  "recommended_moves_net_points": 5.0
+  "recommended_moves_net_points": 5.0,
+  "points_left_on_table": 15,
+  "captaincy_gap": 9,
+  "luck_xi": -14.9,
+  "forecast_error_xi": 22.2,
+  "engine_captain_minus_yours": 0.0,
+  "recommended_minus_yours": 10.0
  }
 ]

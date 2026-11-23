@@ -2,19 +2,19 @@
  {
   "team": "HaramBall",
   "entry_id": 1020085,
-  "overall_rank": 299642,
-  "last_gw": 10,
-  "last_gw_points": 59,
-  "total_points": 678,
-  "next_gw": 11,
-  "deadline_utc": "2026-11-21T11:00:00Z",
-  "bank_m": 3.8,
-  "free_transfers": 2,
+  "overall_rank": 216475,
+  "last_gw": 11,
+  "last_gw_points": 44,
+  "total_points": 722,
+  "next_gw": 12,
+  "deadline_utc": "2026-11-27T18:30:00Z",
+  "bank_m": 2.1,
+  "free_transfers": 1,
   "transfers_made_next_gw": 0,
-  "selling_value_m": 101.3,
-  "market_value_m": 103.8,
+  "selling_value_m": 101.4,
+  "market_value_m": 104.0,
   "hit_points_season": 4,
   "hits_taken": 1,
-  "as_of_utc": "2026-11-21T04:13:09.774698Z"
+  "as_of_utc": "2026-11-23T18:38:51.985015Z"
  }
 ]

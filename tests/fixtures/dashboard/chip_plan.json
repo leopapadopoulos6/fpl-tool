@@ -1,0 +1,26 @@
+[
+ {
+  "chip": "Wildcard",
+  "best_gw": 12,
+  "gain": 10.54,
+  "next_best_gw": 13,
+  "cost_of_next_best": -2.81,
+  "now": "Yes"
+ },
+ {
+  "chip": "Triple Captain",
+  "best_gw": 16,
+  "gain": 6.49,
+  "next_best_gw": 13,
+  "cost_of_next_best": -0.47,
+  "now": ""
+ },
+ {
+  "chip": "Bench Boost",
+  "best_gw": 18,
+  "gain": 14.69,
+  "next_best_gw": 19,
+  "cost_of_next_best": -0.24,
+  "now": ""
+ }
+]

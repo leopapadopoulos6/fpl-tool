@@ -19,6 +19,7 @@
   "average_points": 55,
   "predicted_xi_xpts": 54.8,
   "actual_xi_points": 69,
-  "model_beat_baselines": "Yes"
+  "model_beat_baselines": "Yes",
+  "status": "final"
  }
 ]

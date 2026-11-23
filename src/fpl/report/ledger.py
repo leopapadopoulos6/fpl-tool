@@ -28,7 +28,10 @@ from fpl.pipeline import MODEL_VERSION
 MIN_P_START = 0.05
 
 
-def make_entry(res: Any, eo: dict[int, float], names: dict[int, str]) -> dict[str, Any]:
+def make_entry(res: Any, eo: dict[int, float], names: dict[int, str],
+               chips_now: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """``chips_now``: chip-plan rows the planner says to play this gameweek (post-GW review
+    grades the advice). Each option also stores its own XI/captain/bench."""
     g = res.best.gws[0]
     gw = g.gw
     rec = next(o for o in res.options if o.plan is res.best)
@@ -41,8 +44,11 @@ def make_entry(res: Any, eo: dict[int, float], names: dict[int, str]) -> dict[st
         "recommended": {"label": rec.label, "in": rec.transfers_in, "out": rec.transfers_out,
                         "hits": rec.hits, "delta_vs_roll": round(rec.delta_vs_roll, 3)},
         "options": [{"label": o.label, "in": o.transfers_in, "out": o.transfers_out,
-                     "hits": o.hits, "delta_vs_roll": round(o.delta_vs_roll, 3)}
+                     "hits": o.hits, "delta_vs_roll": round(o.delta_vs_roll, 3),
+                     "lineup": o.plan.gws[0].lineup, "bench": o.plan.gws[0].bench,
+                     "captain": o.plan.gws[0].captain, "vice": o.plan.gws[0].vice}
                     for o in res.options],
+        "chips_now": chips_now or [],
         "captain": g.captain, "vice": g.vice, "template_captain": template,
         "lineup": g.lineup, "bench": g.bench,
         "names": {str(p): names[p] for p in set(g.lineup + g.bench + rec.transfers_in

@@ -2,64 +2,64 @@
  {
   "model": "xPts",
   "metric": "Average error (points)",
-  "value": 1.686,
-  "baseline": 1.855,
+  "value": 1.687,
+  "baseline": 1.847,
   "verdict": "Better than baseline",
-  "sample": 3004,
-  "test_rounds": "GW4–10"
+  "sample": 3422,
+  "test_rounds": "GW4–11"
  },
  {
   "model": "xPts",
   "metric": "Rank correlation",
   "value": 0.574,
-  "baseline": 0.494,
+  "baseline": 0.498,
   "verdict": "Better than baseline",
-  "sample": 3004,
-  "test_rounds": "GW4–10"
+  "sample": 3422,
+  "test_rounds": "GW4–11"
  },
  {
   "model": "xPts",
   "metric": "Actual points of top 20 picks",
-  "value": 4.593,
-  "baseline": 4.129,
+  "value": 4.531,
+  "baseline": 4.094,
   "verdict": "Better than baseline",
-  "sample": 3004,
-  "test_rounds": "GW4–10"
+  "sample": 3422,
+  "test_rounds": "GW4–11"
  },
  {
   "model": "DefCon",
   "metric": "Probability error (Brier)",
-  "value": 0.068,
-  "baseline": 0.082,
+  "value": 0.066,
+  "baseline": 0.08,
   "verdict": "Better than baseline",
-  "sample": 3004,
-  "test_rounds": "GW4–10"
+  "sample": 3422,
+  "test_rounds": "GW4–11"
  },
  {
   "model": "Minutes",
   "metric": "Start probability error (Brier)",
-  "value": 0.12,
-  "baseline": 0.143,
+  "value": 0.121,
+  "baseline": 0.145,
   "verdict": "Better than baseline",
-  "sample": 3004,
-  "test_rounds": "GW4–10"
+  "sample": 3422,
+  "test_rounds": "GW4–11"
  },
  {
   "model": "Team strength",
   "metric": "Clean-sheet probability error (Brier)",
-  "value": 0.218,
-  "baseline": 0.216,
-  "verdict": "Worse than baseline",
-  "sample": 60,
-  "test_rounds": "GW8–10"
+  "value": 0.203,
+  "baseline": 0.209,
+  "verdict": "Better than baseline",
+  "sample": 58,
+  "test_rounds": "GW9–11"
  },
  {
   "model": "Team strength",
   "metric": "Goals prediction loss",
-  "value": 1.42,
-  "baseline": 1.401,
-  "verdict": "Worse than baseline",
-  "sample": 60,
-  "test_rounds": "GW8–10"
+  "value": 1.49,
+  "baseline": 1.478,
+  "verdict": "About equal",
+  "sample": 58,
+  "test_rounds": "GW9–11"
  }
 ]

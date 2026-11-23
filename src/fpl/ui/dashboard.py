@@ -245,7 +245,20 @@ DATASET_META = {
                      "the planning horizon."),
     "review": ("Track record", "Each finished gameweek graded against the forecast and advice "
                "published before its deadline."),
-    "review_summary": ("Track record summary", "Totals across all graded gameweeks."),
+    "review_summary": ("Track record summary", "Totals across all graded gameweeks, plus "
+                       "running lessons: points left on the table, captaincy gap, forecast "
+                       "error against luck."),
+    "review_gw": ("Gameweek reviews", "For each finished gameweek: your score, the best your "
+                  "own 15 could have scored, captaincy and bench, and how much of the gap "
+                  "was forecast error and how much was luck. Provisional until FPL checks "
+                  "the gameweek."),
+    "review_decisions": ("Decisions graded", "Every decision of each finished gameweek "
+                         "(transfers, captain, starting XI, bench, chip): yours, the "
+                         "engine's and the alternatives, in actual points, with running "
+                         "totals for transfers and the Wildcard."),
+    "review_players": ("Players graded", "Each relevant player's forecast against what "
+                       "happened, with the miss split into forecast error and luck "
+                       "(goals and assists against xG and xA)."),
     "assumptions": ("Assumptions", "Model version, horizon, decay, hit hurdle, ownership "
                     "source and whether the backtest gate passed."),
 }
@@ -254,7 +267,8 @@ MODEL_DATASETS = ("decision", "captaincy", "lineup", "option_lineups", "plan", "
 
 
 def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path,
-                   ledger_file: Path | None = None) -> list[Path]:
+                   ledger_file: Path | None = None,
+                   extra_manifest: dict[str, Any] | None = None) -> list[Path]:
     """Write one JSON file per dataset plus ``manifest.json`` for the refresh routine:
     ``datasets`` (id, file, title, description) and ``remove`` (model datasets withheld
     because the backtest gate failed, so stale recommendations are taken down)."""
@@ -275,5 +289,6 @@ def write_datasets(datasets: dict[str, list[dict[str, Any]]], out_dir: Path,
         dest.write_text(ledger_file.read_text())
         manifest["ledger"] = {"collection": "ledger", "doc_id": ledger_file.stem,
                               "file": dest.name}
+    manifest.update(extra_manifest or {})
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1))
     return paths

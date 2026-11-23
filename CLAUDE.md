@@ -108,6 +108,8 @@ src/fpl/
                        backtests: season_tables(), team_prior_for())
   report/build.py      backtest gate + all dashboard datasets; saves the ledger entry
   report/ledger.py     forward-test ledger (make_entry/save/load_all/review/summarise)
+  report/postmortem.py post-gameweek review: every decision re-graded on actual points,
+                       forecast error vs finishing luck per player (review_gw, best_xi, lessons)
   ui/dashboard.py      state datasets, TEAM_COLORS, card_fields(), DATASET_META, write_datasets()
                        + manifest.json
   ui/dashboard_page.html  dashboard page (copy of the store's files/index.html)
@@ -230,7 +232,7 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - `#engine-diff` lists where the engine's pick differs (captain, vice, transfers, start/bench, bench order);
   - tapping a card or a list row opens the same `#player-detail` panel;
   - the "your team" lineup is the **latest GW's picks plus transfers already made** (the API hides pre-deadline line-up or captain changes; `my-team` needs auth).
-- **Datasets:** state (`summary`, `squad`, `chips`, `ft_history`); model (`decision`, `captaincy`, `lineup`, `option_lineups`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions`); track record (`review`, `review_summary`).
+- **Datasets:** state (`summary`, `squad`, `chips`, `ft_history`); model (`decision`, `captaincy`, `lineup`, `option_lineups`, `plan`, `chip_gain`, `chip_plan`, `chip_summary`, `players`, `fixtures_strength`, `model_health`, `calibration`, `assumptions`); track record (`review`, `review_summary`, `review_gw`, `review_decisions`, `review_players`).
   - **`squad` state fields:** slot, role, `is_new` (a transfer already made takes the sold player's slot), `armband` (from `ManagerState.captain`/`vice`), `team_color(2)`, `next_opp`, prices, availability, news, price status, `next_fixtures`.
   - **`squad` model fields** (merged in by `report/build.build(squad_rows=…)` only when the gate passes): `xpts_next`, `p_start`, `eo_top10k`, `next_diff`, `next5_diff`, `rec_role` (Captain / Vice-captain / Starting / Bench n / Sell) and `rec_swap`.
   - **`lineup`** also carries the card fields plus `is_new` and `replaces`.
@@ -251,9 +253,15 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
 
   It prefers `main` once `main` contains `src/fpl/report/ledger.py`.
 - **Ledger:**
-  - The store keeps `ledger/gw10`, reconstructed with `build_state(next_gw=10)`: Barry for N.Jackson +2.09, C Haaland, VC Gabriel.
-  - `ledger/gw11` is also stored.
-  - `fpl review --gw N` grades a finished, data-checked GW.
+  - The store keeps `ledger/gwNN` for GW10 (reconstructed with `build_state(next_gw=10)`), GW11 and GW12. The last refresh before a deadline wins.
+  - Entries (`report/ledger.make_entry`) hold the recommendation, every option's in/out **and its XI/captain/bench**, `chips_now` (chip-plan rows marked "play now"), our XI/captain, the template captain, and every player's predicted xPts and start chance. Entries before 23 Nov 2026 lack the option XIs and `chips_now`; the review rebuilds option teams from the predictions.
+- **Post-gameweek review** (`report/postmortem.py`, `fpl review --gw N`):
+  - **When:** `cli.review_status` grades a GW **provisionally** once every fixture is (provisionally) finished and `event-status` shows bonus added for every day. It is **final** once FPL sets `data_checked`. If the current GW has finished but bonus isn't added yet, `manifest.review_pending` holds its number, so the routine can book a later run.
+  - **Inputs:** the ledger entry, `event/{gw}/live`, your picks (`entry/{id}/event/{gw}/picks`: XI, captain, chip, autosubs, bench points) and transfers.
+  - **Decisions:** transfers (yours vs every option, each scored with the model's XI for that squad, plus running totals over 5 GWs); captain (yours, engine, top-10k template, best in XI); starting XI (yours vs the model's XI for your 15 vs the hindsight best, via `best_xi` + `autosub`); bench; chip (Triple Captain extra, Bench Boost bench, Wildcard/Free Hit vs your pre-deadline 15, Wildcard running to GW19); planner chip advice followed or not.
+  - **Players:** forecast vs actual. `underlying_points` swaps goals and assists for xG and xA, so `actual − forecast = forecast error + finishing luck`. Labels: minutes, forecast, finishing luck, as expected.
+  - **Datasets:** `review_gw` (one summary per GW + `headline`), `review_decisions` (key `gw,decision,option`), `review_players` (key `gw,element`). `review` rows gain `status`; `review_summary` gains the running lessons (`postmortem.lessons`).
+  - **Dashboard:** `#gw-review` block at the top of Track record, with a gameweek picker.
 
 ## Data persistence (decided by the user)
 - **The `data` branch is always ONE commit.** `fpl history publish` (`history/publish.py`):
@@ -277,7 +285,7 @@ uv run fpl doctor                     # every endpoint; non-zero exit on failure
 uv run fpl state                      # squad, prices, bank, FTs, chips, FT self-check
 uv run fpl build-tables               # current-season tables -> data/processed/
 uv run fpl plan [--horizon 6]         # terminal decision report
-uv run fpl review --gw N              # grade a finished GW from data/ledger/gwNN.json
+uv run fpl review --gw N              # post-gameweek review from data/ledger/gwNN.json
 uv run fpl dashboard-data --out DIR [--no-refresh-tables] [--eo-sample 0] [--no-chips]
 uv run fpl ui                         # Streamlit what-if app
 uv run fpl history fetch              # raw sources -> data/external/ (git sparse clones)
@@ -288,7 +296,7 @@ uv run fpl history report             # print COVERAGE.md
 
 ## How to test
 ```bash
-uv run pytest            # offline suite (78 tests); live: uv run pytest -m live
+uv run pytest            # offline suite (88 tests); live: uv run pytest -m live
 FPL_D3=path/to/d3.min.js uv run pytest -m ui   # dashboard page in Chromium (Node playwright + d3@7.9.0)
 uv run ruff check .
 ```

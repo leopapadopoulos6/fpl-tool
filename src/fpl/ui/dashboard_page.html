@@ -139,6 +139,12 @@
   .hb-pcard.is-static:hover { border-color: var(--color-border-line); }
   .hb-pcard.is-static.is-diff:hover { border-color: var(--color-warn); }
   .hb-xi-btn { white-space: nowrap; }
+  .hb-review { border-bottom: 1px solid var(--color-border-line); padding-bottom: var(--cds-gap-md); }
+  .hb tr.hb-group-start td { border-top: 2px solid var(--color-border-line); }
+  .hb td.detail { min-width: 14rem; }
+  .hb .narrow-only { display: none; }
+  .hb .hb-rv-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 2px; }
+  @media (max-width: 40rem) { .hb .narrow-only { display: block; } }
   .hb tr.hb-rec td .hb-xi-btn, .hb tr.hb-rec td:first-child .hb-xi-btn { font-weight: var(--cds-font-weight-medium); }
   @media (max-width: 40rem) {
     .hb-modal[open]:not(.is-inline) { width: 100vw; margin: auto 0 0; border-radius: var(--cds-radius) var(--cds-radius) 0 0; max-height: 88vh; border-bottom: 0; }
@@ -180,6 +186,7 @@
     <a href="#players">Players</a>
     <a href="#fixtures">Fixtures</a>
     <a href="#model-health">Health</a>
+    <a href="#gw-review">Review</a>
     <a href="#track-record">Record</a>
     <a href="#team">Team</a>
     <a href="#price-watch">Prices</a>
@@ -382,11 +389,52 @@
 
   <section class="hb-card" id="track-record" data-review-section>
     <h2>Track record</h2>
+    <div class="hb-sub-card hb-review" id="gw-review" data-gwreview-section>
+      <div class="hb-squad-head">
+        <h3>Gameweek review</h3>
+        <select class="dash-select hb-review-gw" data-draw="rv-select" data-source="review_gw" aria-label="Gameweek to review"></select>
+      </div>
+      <p class="hb-lede">Gameweek <b data-draw="rv-gw" data-source="review_gw" data-field="gw">—</b>, <span data-draw="rv-status" data-source="review_gw" data-field="status">—</span>: you scored <b data-draw="rv-you" data-source="review_gw" data-field="your_points">—</b> against an average of <b data-draw="rv-avg" data-source="review_gw" data-field="average_points">—</b>. Your own 15 could have scored <b data-draw="rv-best" data-source="review_gw" data-field="best_possible">—</b>, so <b data-draw="rv-left" data-source="review_gw" data-field="left_on_table">—</b> points were left on the table, <b data-draw="rv-capgap" data-source="review_gw" data-field="captain_gap">—</b> of them from the captaincy.</p>
+      <p class="hb-lede">Your starting XI was forecast <b data-draw="rv-pred" data-source="review_gw" data-field="predicted_xi_xpts">—</b> points. The gap splits into forecast error of <b data-draw="rv-fe" data-source="review_gw" data-field="forecast_error_xi">—</b> (minutes, clean sheets, bonus and chances) and finishing luck of <b data-draw="rv-luck" data-source="review_gw" data-field="luck_xi">—</b> (goals and assists against xG and xA).</p>
+      <p class="hb-note">Graded as soon as FPL adds the bonus, marked provisional until FPL checks the gameweek. Option rows show what the model's XI for that squad would have scored. Running totals add later gameweeks: a transfer over five gameweeks, the Wildcard up to gameweek 19.</p>
+      <div class="hb-scroll">
+        <table data-source="review_decisions" data-row-key="gw,decision,option" aria-label="Decisions graded">
+          <thead><tr>
+            <th data-field="decision">Decision</th>
+            <th data-field="option">Option</th>
+            <th data-field="detail" class="wide-only">Detail</th>
+            <th data-field="points" class="num">Points</th>
+            <th data-field="running" class="num">Running</th>
+            <th data-field="verdict">Verdict</th>
+          </tr></thead>
+          <tbody data-draw="rv-decisions"></tbody>
+        </table>
+      </div>
+      <h3>Players: forecast against what happened</h3>
+      <div class="hb-scroll hb-tall">
+        <table data-source="review_players" data-row-key="gw,element" aria-label="Players graded">
+          <thead><tr>
+            <th data-field="player">Player</th>
+            <th data-field="role">Role</th>
+            <th data-field="pred_xpts" class="num">Forecast</th>
+            <th data-field="points" class="num">Points</th>
+            <th data-field="minutes" class="num wide-only">Min</th>
+            <th data-field="xg" class="num wide-only">xG</th>
+            <th data-field="xa" class="num wide-only">xA</th>
+            <th data-field="forecast_error" class="num">Forecast error</th>
+            <th data-field="luck" class="num">Finishing luck</th>
+            <th data-field="label">Why</th>
+          </tr></thead>
+          <tbody data-draw="rv-players"></tbody>
+        </table>
+      </div>
+    </div>
+    <h3>All graded gameweeks</h3>
     <p class="hb-lede">Gameweeks graded: <b data-draw="tr-n" data-source="review_summary" data-field="gws_reviewed" data-row="0">—</b>.
       Forecast error <b data-draw="tr-mae" data-source="review_summary" data-field="model_mae" data-row="0">—</b> points per player against
       <b data-draw="tr-base" data-source="review_summary" data-field="baseline_mae" data-row="0">—</b> for the best simple baseline.
       Recommended moves have netted <b data-draw="tr-net" data-source="review_summary" data-field="recommended_moves_net_points" data-row="0">—</b> points in their own gameweek.</p>
-    <p class="hb-note">Each gameweek is graded against what this page published before its deadline, after FPL finalises the points. A move's points count only its first gameweek, so a good long-term move can show a loss here.</p>
+    <p class="hb-note">Each gameweek is graded against what this page published before its deadline: provisionally once FPL adds the bonus, then again when FPL finalises the points. A move's points count only its first gameweek, so a good long-term move can show a loss here.</p>
     <div class="hb-scroll">
       <table data-source="review" data-row-key="gw" aria-label="Track record">
         <thead><tr>
@@ -1468,5 +1516,92 @@
     navLinks().forEach((a) => { const t = targetOf(a); a.hidden = !(shown(t) || (t && t.tagName === 'DETAILS')); });
     if (hash && !userMoved && Date.now() - opened < 5000) requestAnimationFrame(() => go(hash, true));
     schedule();
+  });
+</script>
+
+<script>
+  // Gameweek review: one finished gameweek at a time (latest by default), from review_gw,
+  // review_decisions and review_players.
+  const rvRows = (id) => { const d = dash.data(id); return d.status === 'ok' ? d.data : []; };
+  const rvGws = () => [...new Set(rvRows('review_gw').map((r) => Number(r.gw)))].sort((a, b) => b - a);
+  const rvGw = () => { const g = rvGws(); return g.includes(window.hbReviewGw) ? window.hbReviewGw : g[0]; };
+  const rvSel = () => rvRows('review_gw').find((r) => Number(r.gw) === rvGw()) || null;
+  const rvN1 = d3.format('.1f');
+  const rvSigned = (v) => (v > 0 ? '+' : '') + rvN1(v);
+  const RV_DRAWS = ['rv-gw', 'rv-status', 'rv-you', 'rv-avg', 'rv-best', 'rv-left', 'rv-capgap', 'rv-pred', 'rv-fe', 'rv-luck', 'rv-decisions', 'rv-players'];
+
+  dash.onData(() => {
+    const has = rvRows('review_gw').length > 0;
+    document.querySelectorAll('[data-gwreview-section]').forEach((e) => { e.hidden = !has; });
+    document.querySelectorAll('.hb-nav a[href="#gw-review"]').forEach((a) => { a.hidden = !has; });
+  });
+
+  dash.draw('rv-select', (sel) => {
+    const gws = rvGws();
+    sel.replaceChildren(...gws.map((g) => new Option(`Gameweek ${g}`, String(g))));
+    sel.value = String(rvGw() ?? '');
+    sel.onchange = () => { window.hbReviewGw = Number(sel.value); RV_DRAWS.forEach((d) => dash.draw(d)); };
+  });
+  const rvField = (field, fmt) => (el) => {
+    const r = rvSel();
+    if (!r || r[field] == null || r[field] === '') { el.textContent = '—'; el.removeAttribute('data-where'); return; }
+    el.dataset.where = 'gw=' + r.gw;
+    el.textContent = fmt ? fmt(r[field]) : String(r[field]);
+  };
+  dash.draw('rv-gw', rvField('gw'));
+  dash.draw('rv-status', rvField('status'));
+  dash.draw('rv-you', rvField('your_points'));
+  dash.draw('rv-avg', rvField('average_points'));
+  dash.draw('rv-best', rvField('best_possible'));
+  dash.draw('rv-left', rvField('left_on_table'));
+  dash.draw('rv-capgap', rvField('captain_gap'));
+  dash.draw('rv-pred', rvField('predicted_xi_xpts', rvN1));
+  dash.draw('rv-fe', rvField('forecast_error_xi', rvSigned));
+  dash.draw('rv-luck', rvField('luck_xi', rvSigned));
+
+  const rvVerdict = (v) => (/better than yours|not followed/.test(v) ? 'warn' : /loss/.test(v) ? 'bad'
+    : /worse than yours|gain|followed/.test(v) ? 'ok' : 'muted');
+  const rvCell = (tr, text, cls) => { const c = tr.insertCell(); c.textContent = text; if (cls) c.className = cls; return c; };
+  dash.draw('rv-decisions', (tbody) => {
+    tbody.replaceChildren();
+    const g = rvGw();
+    let last = null;
+    for (const r of rvRows('review_decisions').filter((x) => Number(x.gw) === g)) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = [r.gw, r.decision, r.option].map((v) => encodeURIComponent(String(v))).join(',');
+      if (r.decision !== last && last !== null) tr.className = 'hb-group-start';
+      rvCell(tr, r.decision === last ? '' : r.decision, 'nowrap');
+      last = r.decision;
+      const oc = rvCell(tr, r.option, r.option === 'Yours' ? '' : 'muted');
+      const sub = document.createElement('div');
+      sub.className = 'narrow-only hb-rv-sub';
+      sub.textContent = r.detail;
+      oc.appendChild(sub);
+      rvCell(tr, r.detail, 'detail wide-only');
+      rvCell(tr, r.points == null ? '—' : (Number.isInteger(r.points) ? String(r.points) : rvN1(r.points)), 'num');
+      rvCell(tr, r.running == null ? '' : (r.running > 0 ? '+' : '') + (Number.isInteger(r.running) ? String(r.running) : rvN1(r.running)), 'num muted');
+      rvCell(tr, r.verdict, rvVerdict(r.verdict));
+    }
+  });
+  const RV_LABEL = { minutes: 'bad', forecast: 'warn', 'finishing luck': 'muted', 'as expected': 'ok' };
+  dash.draw('rv-players', (tbody) => {
+    tbody.replaceChildren();
+    const g = rvGw();
+    const rows = rvRows('review_players').filter((x) => Number(x.gw) === g)
+      .sort((a, b) => Math.abs(b.miss) - Math.abs(a.miss));
+    for (const r of rows) {
+      const tr = tbody.insertRow();
+      tr.dataset.key = encodeURIComponent(String(r.gw)) + ',' + encodeURIComponent(String(r.element));
+      rvCell(tr, r.player, 'nowrap');
+      rvCell(tr, r.role, 'nowrap muted');
+      rvCell(tr, rvN1(r.pred_xpts), 'num');
+      rvCell(tr, String(r.points), 'num');
+      rvCell(tr, String(r.minutes), 'num wide-only');
+      rvCell(tr, d3.format('.2f')(r.xg), 'num wide-only');
+      rvCell(tr, d3.format('.2f')(r.xa), 'num wide-only');
+      rvCell(tr, rvSigned(r.forecast_error), 'num');
+      rvCell(tr, rvSigned(r.luck), 'num');
+      rvCell(tr, r.label, 'nowrap ' + (RV_LABEL[r.label] || ''));
+    }
   });
 </script>

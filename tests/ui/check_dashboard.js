@@ -274,6 +274,50 @@ async function checkLayout(page, label) {
     await ctx.close();
   }
 
+  // --- gameweek review block: latest gameweek, decisions, players sorted by the miss
+  for (const [label, opts] of [['iphone13', { ...devices['iPhone 13'] }], ['phone320', { viewport: { width: 320, height: 640 } }],
+    ['desktop', { viewport: { width: 1280, height: 900 } }]]) {
+    const { ctx, page } = await open(browser, { ...opts, deviceScaleFactor: SHOTS ? 2 : 1 });
+    const has = await page.evaluate(() => (window.__dash.data.review_gw || []).length > 0);
+    if (!has) { await ctx.close(); continue; }
+    await page.click('.hb-nav a[href="#gw-review"]');
+    await settle(page);
+    const r = await page.evaluate(() => {
+      const gws = window.__dash.data.review_gw.map((x) => x.gw);
+      const latest = Math.max(...gws);
+      const dec = window.__dash.data.review_decisions.filter((d) => d.gw === latest);
+      const rows = [...document.querySelectorAll('[data-draw=rv-decisions] tr')].length;
+      const misses = [...document.querySelectorAll('[data-draw=rv-players] tr')].map((tr) => {
+        const c = tr.cells; return Math.abs(Number(c[3].textContent) - Number(c[2].textContent));
+      });
+      const sorted = misses.every((m, i) => i === 0 || misses[i - 1] + 0.11 >= m);
+      return { shown: !document.getElementById('gw-review').hidden, gw: Number(document.querySelector('[data-draw=rv-gw]').textContent),
+               latest, rows, want: dec.length, sorted, players: misses.length,
+               you: document.querySelector('[data-draw=rv-you]').textContent,
+               side: document.documentElement.scrollWidth <= innerWidth + 1, errors: window.__dash.errors };
+    });
+    assert.ok(r.shown && r.gw === r.latest && r.rows === r.want && r.players > 0 && r.sorted && r.side && r.you !== '—'
+      && r.errors.length === 0, `${label}: gameweek review ${JSON.stringify(r)}`);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/${label}-review.png` });
+    const gws = await page.evaluate(() => [...new Set(window.__dash.data.review_gw.map((x) => x.gw))].sort((a, b) => a - b));
+    if (gws.length > 1) {
+      await page.selectOption('.hb-review-gw', String(gws[0]));
+      await page.waitForTimeout(150);
+      const g = await page.evaluate(() => Number(document.querySelector('[data-draw=rv-gw]').textContent));
+      assert.strictEqual(g, gws[0], `${label}: review gameweek picker`);
+    }
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open(browser, { ...devices['iPhone 13'] });
+    await page.evaluate(() => { for (const id of ['review_gw', 'review_decisions', 'review_players']) window.__dash.setData(id, null); });
+    await page.waitForTimeout(100);
+    const r = await page.evaluate(() => ({ block: document.getElementById('gw-review').hidden,
+      pill: document.querySelector('.hb-nav a[href="#gw-review"]').hidden, errors: window.__dash.errors }));
+    assert.deepStrictEqual(r, { block: true, pill: true, errors: [] }, 'no review: block and pill hidden');
+    await ctx.close();
+  }
+
   await browser.close();
   console.log('dashboard page: all checks passed');
 })().catch((e) => { console.error(e); process.exit(1); });

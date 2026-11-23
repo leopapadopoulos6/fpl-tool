@@ -68,5 +68,12 @@
   "transfers": 0,
   "hit_points": 0,
   "chip": ""
+ },
+ {
+  "gw": 11,
+  "ft_available": 2,
+  "transfers": 2,
+  "hit_points": 0,
+  "chip": ""
  }
 ]
