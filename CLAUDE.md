@@ -249,7 +249,8 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   4. uploads each manifest file, updates or creates `datasets/<id>`, and deletes the old assets;
   5. processes `remove`;
   6. saves `ledger/gwNN`;
-  7. schedules a one-shot pre-deadline run 3 h before a deadline that is 3–27 h away.
+  7. schedules a one-shot pre-deadline run 3 h before a deadline that is 3–27 h away, and a one-shot "FPL post-gameweek review GW<n>" at 10:00 UK when `manifest.review_pending`;
+  8. leads its push summary with a newly graded (or newly final) gameweek review, then the coming gameweek's decision.
 
   It prefers `main` once `main` contains `src/fpl/report/ledger.py`.
 - **Ledger:**

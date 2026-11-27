@@ -118,7 +118,8 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
 ### Post-gameweek review (2026-11-23)
 - **What:** `report/postmortem.py` re-grades every decision of a finished GW on actual points (see CLAUDE.md, "Post-gameweek review"). It's graded provisionally once bonus is added, so the GW11 review is due in the 24 Nov 03:23 UK refresh.
 - **Verified:** on GW10 (final): you 59 (average 55), best possible 74, captaincy gap 9. The recommended Barry for N.Jackson move's model XI would have scored 69 against your 59.
-- **Pending:** the routine prompt edit (step 8 books a 10:00 UK run when `manifest.review_pending`; step 9 leads with a new review) has been proposed to the user, not yet saved.
+- **Routine:** prompt updated 27 Nov 03:09 UTC with the user's approval. Step 3a notes the reviews already stored. Step 8 books "FPL post-gameweek review GW<n>" at 10:00 UK when `manifest.review_pending`. Step 9 leads the push summary with a newly graded or newly final gameweek.
+- **GW11 review (final):** 44 points against an average of 35; best possible 54 (7 of the 10 lost to the captaincy: Haaland 2, Calvert-Lewin 9). Forecast error −0.2, finishing luck −10.5.
 - **Chip planner:** `CHIP_DECAY = 1.0` since 21 Nov (see CLAUDE.md, Engine design, "Chips").
 
 ## 4. In progress: exactly where it stopped
