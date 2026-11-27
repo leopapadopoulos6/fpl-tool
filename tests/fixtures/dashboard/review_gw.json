@@ -1,0 +1,25 @@
+[
+ {
+  "gw": 10,
+  "status": "final",
+  "your_points": 59,
+  "hits": 0,
+  "average_points": 55,
+  "chip": "",
+  "best_possible": 74,
+  "left_on_table": 15,
+  "captain": "Haaland",
+  "captain_points": 2,
+  "best_captain": "N.Jackson",
+  "best_captain_points": 11,
+  "captain_gap": 9,
+  "bench_points": 8,
+  "model_xi_points": 64,
+  "roll_points": 64,
+  "predicted_xi_xpts": 51.7,
+  "forecast_error_xi": 22.2,
+  "luck_xi": -14.9,
+  "calc_points_check": 59,
+  "headline": "GW10 final: you scored 59 (average 55); best possible from your 15 was 74 (15 left on the table, 9 of it captaincy). Captain Haaland 2, best in XI N.Jackson 11. Your XI was forecast 51.7: forecast error +22.2 (minutes, clean sheets, bonus, chances), finishing luck -14.9."
+ }
+]

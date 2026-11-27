@@ -1,0 +1,73 @@
+name: FPL snapshots
+
+# The FPL API only serves current state (prices, flags, ownership, price predictions).
+# This workflow keeps the as-of record on the `data` branch:
+#   raw/<UTC date>/...   daily, after the midnight-UK price changes
+#   deadlines/gwNN/...   last capture inside the 3h before each GW deadline
+# Note: scheduled workflows only run from the default branch.
+
+on:
+  schedule:
+    - cron: "37 1 * * *" # daily snapshot
+    - cron: "7 * * * *" # hourly: pre-deadline capture only
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Also fetch every live GW, all picks and all element summaries"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fpl-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - run: uv sync --frozen
+
+      - name: Check out data branch into ./data
+        run: |
+          if git fetch --depth=1 origin data; then
+            git worktree add -B data data FETCH_HEAD
+          else
+            git worktree add --orphan -b data data
+          fi
+
+      - name: Fetch
+        env:
+          HOURLY: ${{ github.event.schedule == '7 * * * *' }}
+          FULL: ${{ inputs.full && '--full' || '' }}
+        run: |
+          if [ "$HOURLY" = "true" ]; then
+            # Hourly runs keep nothing except a pre-deadline copy.
+            export FPL_DATA_DIR="$RUNNER_TEMP/snap"
+            uv run fpl fetch --pre-deadline-hours 3
+            if [ -d "$FPL_DATA_DIR/deadlines" ]; then
+              cp -r "$FPL_DATA_DIR/deadlines" data/
+            fi
+          else
+            FPL_DATA_DIR="$PWD/data" uv run fpl fetch --pre-deadline-hours 3 $FULL
+          fi
+
+      - name: Publish to data branch (single commit, force-with-lease)
+        env:
+          GIT_AUTHOR_NAME: fpl-snapshot-bot
+          GIT_AUTHOR_EMAIL: actions@users.noreply.github.com
+          GIT_COMMITTER_NAME: fpl-snapshot-bot
+          GIT_COMMITTER_EMAIL: actions@users.noreply.github.com
+        run: |
+          # The data branch is kept at one commit: start from its current tip, add the new
+          # snapshot files, write a parentless commit and push with a lease (retried).
+          paths=""
+          for p in raw deadlines README.md; do [ -e "data/$p" ] && paths="$paths --path $p"; done
+          FPL_DATA_DIR="$PWD/data" uv run fpl history publish $paths --message "snapshot"

@@ -1,0 +1,83 @@
+[
+ {
+  "model": "xPts",
+  "metric": "Average error (points)",
+  "value": 1.687,
+  "baseline": 1.847,
+  "verdict": "Better than baseline",
+  "sample": 3422,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "xPts",
+  "metric": "Rank correlation",
+  "value": 0.574,
+  "baseline": 0.498,
+  "verdict": "Better than baseline",
+  "sample": 3422,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "xPts",
+  "metric": "Actual points of top 20 picks",
+  "value": 4.531,
+  "baseline": 4.094,
+  "verdict": "Better than baseline",
+  "sample": 3422,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "DefCon",
+  "metric": "Probability error (Brier)",
+  "value": 0.066,
+  "baseline": 0.08,
+  "verdict": "Better than baseline",
+  "sample": 3422,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "Minutes",
+  "metric": "Start probability error (Brier)",
+  "value": 0.121,
+  "baseline": 0.145,
+  "verdict": "Better than baseline",
+  "sample": 3422,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "Team strength",
+  "metric": "Clean-sheet probability error (Brier)",
+  "value": 0.203,
+  "baseline": 0.209,
+  "verdict": "Better than baseline",
+  "sample": 58,
+  "test_rounds": "GW9–11"
+ },
+ {
+  "model": "Team strength",
+  "metric": "Goals prediction loss",
+  "value": 1.49,
+  "baseline": 1.478,
+  "verdict": "About equal",
+  "sample": 58,
+  "test_rounds": "GW9–11"
+ },
+ {
+  "model": "Team range",
+  "metric": "Team totals inside the 10–90% range (target 0.8)",
+  "value": 0.72,
+  "baseline": 0.698,
+  "verdict": "Better than baseline",
+  "sample": 2400,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "Team range",
+  "metric": "Team total forecast loss (CRPS)",
+  "value": 7.107,
+  "baseline": 7.017,
+  "verdict": "Worse than baseline",
+  "sample": 2400,
+  "test_rounds": "GW4–11"
+ }
+]

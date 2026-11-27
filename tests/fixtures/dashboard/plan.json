@@ -1,0 +1,62 @@
+[
+ {
+  "gw": 12,
+  "free_transfers": 1,
+  "transfers_in": "Lammens",
+  "transfers_out": "Raya",
+  "hits": 0,
+  "captain": "Calvert-Lewin",
+  "xpts": 51.7,
+  "bank_m": 3.4
+ },
+ {
+  "gw": 13,
+  "free_transfers": 1,
+  "transfers_in": "Barry",
+  "transfers_out": "N.Jackson",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 53.1,
+  "bank_m": 4.7
+ },
+ {
+  "gw": 14,
+  "free_transfers": 1,
+  "transfers_in": "B.Fernandes",
+  "transfers_out": "Rogers",
+  "hits": 0,
+  "captain": "B.Fernandes",
+  "xpts": 57.7,
+  "bank_m": 1.0
+ },
+ {
+  "gw": 15,
+  "free_transfers": 1,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 55.2,
+  "bank_m": 1.0
+ },
+ {
+  "gw": 16,
+  "free_transfers": 2,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "Haaland",
+  "xpts": 57.7,
+  "bank_m": 1.0
+ },
+ {
+  "gw": 17,
+  "free_transfers": 3,
+  "transfers_in": "Roll",
+  "transfers_out": "",
+  "hits": 0,
+  "captain": "B.Fernandes",
+  "xpts": 53.5,
+  "bank_m": 1.0
+ }
+]

@@ -1,0 +1,128 @@
+[
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Yours",
+  "detail": "No transfers",
+  "points": 59.0,
+  "running": null,
+  "verdict": ""
+ },
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Roll",
+  "detail": "No transfers · model's XI",
+  "points": 64.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Recommended",
+  "detail": "N.Jackson → Barry · model's XI",
+  "points": 69.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Option 3",
+  "detail": "Schade → Mbeumo · model's XI",
+  "points": 65.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Option 4",
+  "detail": "N.Jackson → Barry, Belloumi → Mbeumo (−4) · model's XI",
+  "points": 66.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Transfers",
+  "option": "Option 5",
+  "detail": "N.Jackson → Barry, Belloumi → E.Le Fée (−4) · model's XI",
+  "points": 75.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Captain",
+  "option": "Yours",
+  "detail": "Haaland",
+  "points": 2.0,
+  "running": null,
+  "verdict": ""
+ },
+ {
+  "gw": 10,
+  "decision": "Captain",
+  "option": "Engine",
+  "detail": "Haaland",
+  "points": 2.0,
+  "running": null,
+  "verdict": "same as yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Captain",
+  "option": "Top-10k template",
+  "detail": "Haaland",
+  "points": 2.0,
+  "running": null,
+  "verdict": "same as yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Captain",
+  "option": "Best in your XI",
+  "detail": "N.Jackson",
+  "points": 11.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Starting XI",
+  "option": "Yours",
+  "detail": "11 players, autosubs: none",
+  "points": 59.0,
+  "running": null,
+  "verdict": ""
+ },
+ {
+  "gw": 10,
+  "decision": "Starting XI",
+  "option": "Model's XI for your 15",
+  "detail": "starts Bogle instead of Calvert-Lewin, captain Haaland",
+  "points": 64.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Starting XI",
+  "option": "Best possible",
+  "detail": "hindsight: starts Bogle instead of Schade, captain N.Jackson",
+  "points": 74.0,
+  "running": null,
+  "verdict": "better than yours"
+ },
+ {
+  "gw": 10,
+  "decision": "Bench",
+  "option": "Points on bench",
+  "detail": "Dubravka 0, Bogle 7, Belloumi 0, Diop 1",
+  "points": 8.0,
+  "running": null,
+  "verdict": ""
+ }
+]

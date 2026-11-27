@@ -1,0 +1,110 @@
+[
+ {
+  "chip": "Triple Captain",
+  "gw": 13,
+  "gain": 6.02,
+  "gw_xpts": 60.6
+ },
+ {
+  "chip": "Triple Captain",
+  "gw": 14,
+  "gain": 5.88,
+  "gw_xpts": 64.3
+ },
+ {
+  "chip": "Triple Captain",
+  "gw": 15,
+  "gain": 5.65,
+  "gw_xpts": 61.4
+ },
+ {
+  "chip": "Triple Captain",
+  "gw": 16,
+  "gain": 6.49,
+  "gw_xpts": 66.6
+ },
+ {
+  "chip": "Triple Captain",
+  "gw": 17,
+  "gain": 5.48,
+  "gw_xpts": 58.9
+ },
+ {
+  "chip": "Triple Captain",
+  "gw": 19,
+  "gain": 5.82,
+  "gw_xpts": 64.4
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 13,
+  "gain": 12.92,
+  "gw_xpts": 69.2
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 14,
+  "gain": 12.74,
+  "gw_xpts": 73.9
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 15,
+  "gain": 13.2,
+  "gw_xpts": 70.0
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 17,
+  "gain": 14.27,
+  "gw_xpts": 68.5
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 18,
+  "gain": 14.69,
+  "gw_xpts": 69.5
+ },
+ {
+  "chip": "Bench Boost",
+  "gw": 19,
+  "gain": 14.45,
+  "gw_xpts": 75.0
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 12,
+  "gain": 10.54,
+  "gw_xpts": 54.6
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 13,
+  "gain": 7.73,
+  "gw_xpts": 54.8
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 14,
+  "gain": 4.4,
+  "gw_xpts": 58.3
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 15,
+  "gain": 2.52,
+  "gw_xpts": 55.5
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 17,
+  "gain": 3.94,
+  "gw_xpts": 53.5
+ },
+ {
+  "chip": "Wildcard",
+  "gw": 19,
+  "gain": 3.25,
+  "gw_xpts": 59.1
+ }
+]
