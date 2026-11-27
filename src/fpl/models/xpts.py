@@ -212,27 +212,107 @@ def simulate(xp: pd.DataFrame, rules: GameRules, n: int = 4000, seed: int = 0) -
     """
     rng = np.random.default_rng(seed)
     k = len(xp)
+    start, played60, appear, mins_frac = _draw_minutes(xp, rng, n)
+    g_rate, a_rate = _attack_rates(xp, mins_frac)
+    g = rng.poisson(g_rate)
+    a = rng.poisson(a_rate)
+    cs = played60 & (rng.random((n, k)) < xp["p_cs"].to_numpy())
+    dc = _draw_defcon(xp, rng, start)
+    total = _total(xp, rules, appear, played60, g, a, cs, dc)
+    return total + xp["pts_conceded"].to_numpy()
+
+
+def _draw_minutes(xp: pd.DataFrame, rng: np.random.Generator, n: int):
+    k = len(xp)
     start = rng.random((n, k)) < xp["p_start"].to_numpy()
     p60s = np.where(xp["p_start"] > 0, xp["p_60"] / xp["p_start"].clip(lower=1e-9), 0)
     sub_p = np.where(xp["p_start"] < 1, (xp["p_appear"] - xp["p_start"])
                      / (1 - xp["p_start"]).clip(lower=1e-9), 0)
     played60 = start & (rng.random((n, k)) < p60s)
     sub = ~start & (rng.random((n, k)) < sub_p)
-    appear = start | sub
     mins_frac = np.where(played60, 1.0, np.where(start, 0.6, np.where(sub, 0.25, 0.0)))
+    return start, played60, start | sub, mins_frac
+
+
+def _attack_rates(xp: pd.DataFrame, mins_frac: np.ndarray):
+    """Per-draw goal and assist rates: the row's expectation rescaled by minutes played."""
     scale = xp["e_minutes"].to_numpy() / 90
     scale = np.where(scale > 0, scale, 1e-9)
-    g = rng.poisson(xp["e_goals"].to_numpy() / scale * mins_frac)
-    a = rng.poisson(xp["e_assists"].to_numpy() / scale * mins_frac)
-    cs = played60 & (rng.random((n, k)) < xp["p_cs"].to_numpy())
+    return (xp["e_goals"].to_numpy() / scale * mins_frac,
+            xp["e_assists"].to_numpy() / scale * mins_frac)
+
+
+def _draw_defcon(xp: pd.DataFrame, rng: np.random.Generator, start: np.ndarray) -> np.ndarray:
     pdc = np.where(xp["p_start"] > 0, xp["p_defcon"] / xp["p_start"].clip(lower=1e-9), 0)
-    dc = start & (rng.random((n, k)) < pdc)
+    return start & (rng.random(start.shape) < pdc)
+
+
+def _total(xp, rules, appear, played60, g, a, cs, dc) -> np.ndarray:
+    """Points from drawn components; saves, bonus and cards enter at their expected values."""
     pos = xp["position"].to_numpy()
     pts = lambda stat: np.array([rules.points(stat, p) for p in pos], dtype=float)  # noqa: E731
     total = (appear * 1.0 + played60 * 1.0 + g * pts("goals_scored") + a * pts("assists")
              + cs * pts("clean_sheets") + dc * pts("defensive_contribution"))
-    total = total + (xp["pts_conceded"] + xp["pts_saves"] + xp["pts_bonus"]
-                     + xp["pts_cards"]).to_numpy()
+    return total + (xp["pts_saves"] + xp["pts_bonus"] + xp["pts_cards"]).to_numpy()
+
+
+def simulate_joint(xp: pd.DataFrame, rules: GameRules, n: int = 4000,
+                   seed: int = 0) -> np.ndarray:
+    """Monte Carlo points per row (n draws) with **one score per match**, shared by every
+    player in it, so players in the same match are correlated as they are on the pitch:
+    a defender's clean sheet and goals conceded come from the same draw as the opposing
+    attackers' goals, and team-mates' attacking returns come from their team's goals.
+
+    Needs the per-fixture columns of ``expected_points`` (fixture, team, opponent_team,
+    lambda_for, lambda_against, e_goals, e_assists, ...). Per (fixture, team):
+      - each player's goals ~ Poisson(his per-draw rate), exactly as in ``simulate``;
+      - the team's other goals ~ Poisson(max(lambda_for - sum of those rates, 0)), so team
+        goals ~ Poisson(lambda_for) whenever the players' rates fit inside it;
+      - each team goal is an assist for a player with probability his assist rate / team
+        rate (a thinning, so his assists stay Poisson with his own mean).
+    Clean sheet = 60+ minutes and the opponent scored 0; goals conceded = the opponent's
+    goals while he was on (thinned by minutes). DefCon, minutes, saves, bonus and cards are
+    as in ``simulate``. Each player's marginal matches ``simulate``; only the joint changes.
+    """
+    rng = np.random.default_rng(seed)
+    r = xp.reset_index(drop=True)
+    k = len(r)
+    start, played60, appear, mins_frac = _draw_minutes(r, rng, n)
+    g_rate, a_rate = _attack_rates(r, mins_frac)
+    g = rng.poisson(g_rate)
+    a = np.zeros((n, k), dtype=np.int64)
+
+    lam: dict[tuple[int, int], float] = {}
+    for f, t, o, lf, la in zip(r["fixture"], r["team"], r["opponent_team"], r["lambda_for"],
+                               r["lambda_against"], strict=True):
+        lam.setdefault((f, t), float(lf))
+        lam.setdefault((f, o), float(la))
+    groups = r.groupby(["fixture", "team"]).indices
+    team_goals: dict[tuple[int, int], np.ndarray] = {}
+    for key, lf in lam.items():
+        idx = groups.get(key)
+        if idx is None:
+            team_goals[key] = rng.poisson(lf, n)
+            continue
+        mine = g_rate[:, idx].sum(axis=1)
+        tot = np.maximum(lf, mine)
+        team_goals[key] = g[:, idx].sum(axis=1) + rng.poisson(tot - mine)
+        for j in idx:
+            a[:, j] = rng.binomial(team_goals[key], np.clip(a_rate[:, j] / tot, 0, 1))
+
+    against = np.column_stack([team_goals[(f, o)] for f, o in
+                               zip(r["fixture"], r["opponent_team"], strict=True)]) \
+        if k else np.zeros((n, 0), dtype=np.int64)
+    cs = played60 & (against == 0)
+    dc = _draw_defcon(r, rng, start)
+    total = _total(r, rules, appear, played60, g, a, cs, dc)
+    pos = r["position"].to_numpy()
+    concede = np.isin(pos, ["GKP", "DEF"])
+    if concede.any():
+        on = rng.binomial(against[:, concede], mins_frac[:, concede])
+        on = np.where(start[:, concede], on, 0)
+        gc_pts = np.array([rules.points("goals_conceded", p) for p in pos[concede]], dtype=float)
+        total[:, concede] += (on // 2) * gc_pts
     return total
 
 

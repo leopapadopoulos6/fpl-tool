@@ -61,5 +61,23 @@
   "verdict": "About equal",
   "sample": 58,
   "test_rounds": "GW9–11"
+ },
+ {
+  "model": "Team range",
+  "metric": "Team totals inside the 10–90% range (target 0.8)",
+  "value": 0.72,
+  "baseline": 0.698,
+  "verdict": "Better than baseline",
+  "sample": 2400,
+  "test_rounds": "GW4–11"
+ },
+ {
+  "model": "Team range",
+  "metric": "Team total forecast loss (CRPS)",
+  "value": 7.107,
+  "baseline": 7.017,
+  "verdict": "Worse than baseline",
+  "sample": 2400,
+  "test_rounds": "GW4–11"
  }
 ]

@@ -210,6 +210,7 @@
       Captain <b data-draw="cap" data-source="lineup" data-field="player" data-where="role=Captain">—</b>,
       vice <b data-draw="vice" data-source="lineup" data-field="player" data-where="role=Vice-captain">—</b>.
     </p>
+    <p class="hb-note" data-risk-note hidden><span data-draw="risk-note" data-source="assumptions" data-field="risk_note" data-row="0">—</span></p>
     <p class="hb-note">Δ is in expected points over the planning horizon, later gameweeks weighted down, hits included. A hit is only recommended when it beats the free option by more than the hit hurdle in the assumptions. Flags compare each move with what the overall top 10,000 own.</p>
     <div class="hb-scroll">
       <table data-source="decision" data-row-key="option" aria-label="Transfer options">
@@ -219,6 +220,8 @@
           <th data-field="transfers_out">Out</th>
           <th data-field="delta_vs_roll" class="num">Δ vs roll</th>
           <th data-field="next_gw_xpts" class="num wide-only">Next GW xPts</th>
+          <th data-field="p10" class="num wide-only" data-risk-col>Next GW range</th>
+          <th data-field="p_beat_top10k" class="num wide-only" data-risk-col>Beats top 10k</th>
           <th data-field="flags">Flags</th>
           <th class="hb-xi-col" data-xi-only>Line-up</th>
         </tr></thead>
@@ -233,6 +236,8 @@
           <button type="button" class="hb-btn" data-xi-close>Close</button>
         </div>
         <p class="hb-note">In: <span data-draw="xi-in" data-source="decision" data-field="transfers_in">—</span>. Out: <span data-draw="xi-out" data-source="decision" data-field="transfers_out">—</span>. Against rolling: <b data-draw="xi-delta" data-source="decision" data-field="delta_vs_roll">—</b> expected points over the horizon. Next gameweek: <b data-draw="xi-next" data-source="decision" data-field="next_gw_xpts">—</b> expected points after hits.</p>
+        <p class="hb-note" data-risk-only>Coming gameweek: <b data-draw="xi-range" data-source="decision" data-field="p10">—</b> points in 80% of simulations, each match simulated once for everyone in it (<span data-draw="xi-range-ind" data-source="decision" data-field="p10_independent">—</span> if every player were independent). Against the top-10k average: <b data-draw="xi-vs" data-source="decision" data-field="vs_top10k">—</b> expected, ahead <b data-draw="xi-beat" data-source="decision" data-field="p_beat_top10k">—</b> of the time.</p>
+        <p class="hb-note" data-risk-only><span data-draw="xi-pairs" data-source="decision" data-field="pairings">—</span></p>
         <div class="hb-diffbox">
           <p>Changes from your team:</p>
           <ul class="hb-diff-list" data-draw="xi-diff" data-source="squad option_lineups"></ul>
@@ -764,6 +769,8 @@
   const f2 = d3.format('.2f');
   const f1 = d3.format('.1f');
   const pc0 = d3.format('.0%');
+  const f0 = d3.format('.0f');
+  const hasRisk = () => rowsOf('decision').some((r) => r.p10 != null);
 
   dash.onData(() => {
     const d = dash.data('decision');
@@ -771,7 +778,11 @@
     document.querySelectorAll('[data-model-section]').forEach((s) => { s.hidden = missing; });
     const r = dash.data('review');
     document.querySelectorAll('[data-review-section]').forEach((s) => { s.hidden = r.status === 'missing'; });
+    const a = rowsOf('assumptions')[0];
+    document.querySelectorAll('[data-risk-note]').forEach((e) => { e.hidden = !(a && a.risk_note); });
+    document.querySelectorAll('[data-risk-col], [data-risk-only]').forEach((e) => { e.hidden = !hasRisk(); });
   });
+  dash.draw('risk-note', (el) => { const a = rowsOf('assumptions')[0]; el.textContent = a && a.risk_note ? a.risk_note : '—'; });
 
   const fieldWhere = (id, key, val, field, fmt) => (el) => {
     const r = rowsOf(id).find((x) => String(x[key]) === val);
@@ -804,6 +815,10 @@
       td(tr, r.transfers_out);
       td(tr, f2(r.delta_vs_roll), 'num');
       td(tr, f1(r.next_gw_xpts), 'num wide-only');
+      if (hasRisk()) {
+        td(tr, r.p10 != null ? `${f0(r.p10)}–${f0(r.p90)}` : '—', 'num wide-only nowrap');
+        td(tr, r.p_beat_top10k != null ? pc0(r.p_beat_top10k) : '—', 'num wide-only');
+      }
       td(tr, r.flags, 'flag');
       if (rowsOf('option_lineups').some((x) => String(x.option) === String(r.option))) {
         const c = tr.insertCell();
@@ -1345,7 +1360,22 @@
   dash.draw('xi-out', xiField('transfers_out'));
   dash.draw('xi-delta', xiField('delta_vs_roll', signed));
   dash.draw('xi-next', xiField('next_gw_xpts', n1));
-  const XI_DRAWS = ['xi-title', 'xi-in', 'xi-out', 'xi-delta', 'xi-next', 'xi-diff', 'xi-shape', 'xi-pitch', 'xi-bench'];
+  const xiPair = (lo, hi) => (el) => {
+    const r = window.hbXiOpt == null ? null : decRow(window.hbXiOpt);
+    if (!r || r[lo] == null) { el.textContent = '—'; el.removeAttribute('data-where'); return; }
+    el.dataset.where = 'option=' + r.option;
+    el.textContent = `${d3.format('.0f')(r[lo])}–${d3.format('.0f')(r[hi])}`;
+  };
+  dash.draw('xi-range', xiPair('p10', 'p90'));
+  dash.draw('xi-range-ind', xiPair('p10_independent', 'p90_independent'));
+  dash.draw('xi-vs', xiField('vs_top10k', signed));
+  dash.draw('xi-beat', xiField('p_beat_top10k', p0));
+  dash.draw('xi-pairs', (el) => {
+    const r = window.hbXiOpt == null ? null : decRow(window.hbXiOpt);
+    if (r) el.dataset.where = 'option=' + r.option; else el.removeAttribute('data-where');
+    el.textContent = r && r.pairings ? r.pairings + '. A shared match moves these players together: it changes the range, not the expected points.' : 'No two players in this line-up share a match.';
+  });
+  const XI_DRAWS = ['xi-title', 'xi-in', 'xi-out', 'xi-delta', 'xi-next', 'xi-range', 'xi-range-ind', 'xi-vs', 'xi-beat', 'xi-pairs', 'xi-diff', 'xi-shape', 'xi-pitch', 'xi-bench'];
   let xiTrigger = null;
   const openXi = (n, trigger) => {
     window.hbXiOpt = n;

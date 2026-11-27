@@ -9,7 +9,14 @@
   "next_gw_xpts": 50.05,
   "horizon_xpts": 325.9,
   "recommended": "",
-  "flags": ""
+  "flags": "",
+  "p10": 37.5,
+  "p90": 68.5,
+  "p10_independent": 37.0,
+  "p90_independent": 68.0,
+  "vs_top10k": 6.11,
+  "p_beat_top10k": 0.716,
+  "pairings": "Facing each other: Raya, Gabriel v Haaland; Van Hecke v E.Le Fée. Sharing a clean sheet: Raya + Gabriel"
  },
  {
   "option": 2,
@@ -21,7 +28,14 @@
   "next_gw_xpts": 51.67,
   "horizon_xpts": 328.9,
   "recommended": "Yes",
-  "flags": "Differential in: Lammens · Selling a top-10k template player: Raya"
+  "flags": "Differential in: Lammens · Selling a top-10k template player: Raya",
+  "p10": 37.5,
+  "p90": 68.5,
+  "p10_independent": 37.0,
+  "p90_independent": 68.0,
+  "vs_top10k": 6.11,
+  "p_beat_top10k": 0.716,
+  "pairings": "Facing each other: Raya, Gabriel v Haaland; Van Hecke v E.Le Fée. Sharing a clean sheet: Raya + Gabriel"
  },
  {
   "option": 3,
@@ -33,7 +47,14 @@
   "next_gw_xpts": 51.05,
   "horizon_xpts": 326.9,
   "recommended": "",
-  "flags": "Selling a top-10k template player: N.Jackson · Template move (top-10k EO ≥ 50%): Barry"
+  "flags": "Selling a top-10k template player: N.Jackson · Template move (top-10k EO ≥ 50%): Barry",
+  "p10": 37.7,
+  "p90": 68.7,
+  "p10_independent": 38.2,
+  "p90_independent": 68.2,
+  "vs_top10k": 7.06,
+  "p_beat_top10k": 0.738,
+  "pairings": "Facing each other: Gabriel v Haaland; Van Hecke v E.Le Fée"
  },
  {
   "option": 4,
@@ -45,7 +66,14 @@
   "next_gw_xpts": 48.67,
   "horizon_xpts": 325.9,
   "recommended": "",
-  "flags": "Differential in: Lammens · Selling a top-10k template player: Raya, N.Jackson · Template move (top-10k EO ≥ 50%): Barry"
+  "flags": "Differential in: Lammens · Selling a top-10k template player: Raya, N.Jackson · Template move (top-10k EO ≥ 50%): Barry",
+  "p10": 37.5,
+  "p90": 68.5,
+  "p10_independent": 37.0,
+  "p90_independent": 68.0,
+  "vs_top10k": 6.11,
+  "p_beat_top10k": 0.716,
+  "pairings": "Facing each other: Raya, Gabriel v Haaland; Van Hecke v E.Le Fée. Sharing a clean sheet: Raya + Gabriel"
  },
  {
   "option": 5,
@@ -57,6 +85,13 @@
   "next_gw_xpts": 48.53,
   "horizon_xpts": 325.6,
   "recommended": "",
-  "flags": "Differential in: A.Becker · Selling a top-10k template player: Raya, N.Jackson · Template move (top-10k EO ≥ 50%): Barry"
+  "flags": "Differential in: A.Becker · Selling a top-10k template player: Raya, N.Jackson · Template move (top-10k EO ≥ 50%): Barry",
+  "p10": 37.5,
+  "p90": 68.5,
+  "p10_independent": 37.0,
+  "p90_independent": 68.0,
+  "vs_top10k": 6.11,
+  "p_beat_top10k": 0.716,
+  "pairings": "Facing each other: Raya, Gabriel v Haaland; Van Hecke v E.Le Fée. Sharing a clean sheet: Raya + Gabriel"
  }
 ]

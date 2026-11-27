@@ -137,6 +137,13 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
   - step 8 now only reports a missing booking or a pending review.
 - **Next:** book GW20+ before 5 Jan 2027.
 
+### Same-match correlation (2026-11-27)
+- **Prompted by the user:** do the xPts account for players facing each other (Van Hecke v Le Fée, Gabriel v Haaland)?
+- **Answer:** expected points add up whatever the correlation, so picks are unaffected; correlation only changes the spread.
+- **Built:** `simulate_joint` (one score per match), `engine.team_risk` (range and top-10k gain per option), a backtest in `model_health`, popup lines and wide-screen columns. Details: CLAUDE.md, Engine design, "Same-match correlation".
+- **Result:** the shared score covers team totals slightly better (0.72 vs 0.70, target 0.80) but scores slightly worse on CRPS (7.11 vs 7.02), so the near-tie note stays off.
+- **Next:** both ranges are too narrow. Simulating bonus (BPS ranks within a match), saves and cards should widen them; re-run the gate after.
+
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**
    - Current-season backtest, 2026-27 GW4–9, with code-default params (365, 0.5, 20), via `scripts/research/current_season_backtest.py`:

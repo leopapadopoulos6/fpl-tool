@@ -17,13 +17,22 @@ import pandas as pd
 
 from fpl.api.models import Bootstrap, Fixture
 from fpl.backtest import minutes as bt_min
+from fpl.backtest import team_risk as bt_risk
 from fpl.backtest import team_strength as bt_team
 from fpl.backtest import xpts as bt_xpts
 from fpl.chips.joint import CHIP_DECAY, plan_joint
 from fpl.chips.planner import CHIP_LABEL
 from fpl.data.features import build_player_features
 from fpl.data.priors import team_prior
-from fpl.engine import CAPTAIN_HURDLE, HIT_HURDLE, EngineResult, apply_captain_hurdle, run
+from fpl.engine import (
+    CAPTAIN_HURDLE,
+    HIT_HURDLE,
+    EngineResult,
+    apply_captain_hurdle,
+    risk_note,
+    run,
+    team_risk,
+)
 from fpl.models.team_strength import TeamStrengthParams
 from fpl.optimize.milp import OptInput, OptSettings, candidate_pool
 from fpl.pipeline import MODEL_VERSION, forecast, xpts_matrix
@@ -40,6 +49,7 @@ DIFFERENTIAL_EO = 10.0  # below this: a differential
 class Gate:
     passed: bool
     reasons: list[str]
+    risk_ok: bool = False  # shared-score team ranges beat independent ones (tie-break note)
 
 
 def model_health(features: pd.DataFrame, tm: pd.DataFrame, rules: GameRules,
@@ -90,7 +100,26 @@ def model_health(features: pd.DataFrame, tm: pd.DataFrame, rules: GameRules,
             int(len(mp)) if r["model"] == "Minutes" else int(len(tp)))
         r["test_rounds"] = f"GW{min(test)}–{max(test)}" if r["model"] != "Team strength" \
             else f"GW{min(late)}–{max(late)}"
-    return rows, calib, Gate(not reasons, reasons)
+    risk = bt_risk.coverage(xp, rules)
+    rows += team_range_rows(risk)
+    return rows, calib, Gate(not reasons, reasons, risk_ok=risk["joint_better"])
+
+
+def team_range_rows(risk: dict) -> list[dict]:
+    """Model-health rows for the team points range: one shared score per match (model)
+    against independent players (baseline). Coverage is better the closer it is to 80%."""
+    cj, ci = risk["coverage_joint"], risk["coverage_independent"]
+    t = bt_risk.TARGET
+    close = abs(abs(cj - t) - abs(ci - t)) < 0.005
+    cov = {"model": "Team range", "metric": "Team totals inside the 10–90% range (target 0.8)",
+           "value": round(cj, 3), "baseline": round(ci, 3),
+           "verdict": "About equal" if close else (
+               "Better than baseline" if abs(cj - t) < abs(ci - t) else "Worse than baseline")}
+    crps = _h("Team range", "Team total forecast loss (CRPS)", risk["crps_joint"],
+              risk["crps_independent"], True)
+    for r in (cov, crps):
+        r["sample"], r["test_rounds"] = risk["teams"], risk["rounds"]
+    return [cov, crps]
 
 
 def _h(model, metric, value, baseline, lower_better) -> dict:
@@ -142,7 +171,17 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     if cap_note:
         out["assumptions"][0]["captain_note"] = cap_note
     own_map = eo.set_index("element")["owned_pct"].to_dict() if eo is not None else {}
-    out.update(_decisions(res, names, eo_map))
+    risk = team_risk(res.forecast, [o.plan.gws[0] for o in res.options], eo_map, rules, names)
+    if not eo_map:
+        for r in risk:
+            r["vs_top10k"] = r["p_beat_top10k"] = None
+    note = risk_note(res.options, risk, res.best) if gate.risk_ok and eo_map else None
+    out["assumptions"][0]["team_range"] = (
+        "one shared score per match" + ("; near-tie note on" if gate.risk_ok else
+                                        "; near-tie note off (backtest not better)"))
+    if note:
+        out["assumptions"][0]["risk_note"] = note
+    out.update(_decisions(res, names, eo_map, risk))
     ratings = fixture_ratings(res.forecast.by_fixture)
     out.update(_lineup(res, names, eo_map, own_map, b, fixtures, ratings))
     out["option_lineups"] = _option_lineups(res, names, eo_map, own_map, b, fixtures, ratings)
@@ -164,7 +203,8 @@ def _fmt(ids, names) -> str:
     return ", ".join(names[i] for i in ids) if ids else ""
 
 
-def _decisions(res: EngineResult, names: dict, eo: dict) -> dict:
+def _decisions(res: EngineResult, names: dict, eo: dict,
+               risk: list[dict] | None = None) -> dict:
     rows = []
     for i, o in enumerate(res.options):
         ins, outs = o.transfers_in, o.transfers_out
@@ -188,6 +228,17 @@ def _decisions(res: EngineResult, names: dict, eo: dict) -> dict:
             "recommended": "Yes" if o.plan is res.best else "",
             "flags": " · ".join(flags),
         })
+        if risk:
+            k = risk[i]
+            rows[-1].update({
+                "p10": round(k["p10"], 1), "p90": round(k["p90"], 1),
+                "p10_independent": round(k["p10_independent"], 1),
+                "p90_independent": round(k["p90_independent"], 1),
+                "vs_top10k": None if k["vs_top10k"] is None else round(k["vs_top10k"], 2),
+                "p_beat_top10k": (None if k["p_beat_top10k"] is None
+                                  else round(k["p_beat_top10k"], 3)),
+                "pairings": k["pairings"],
+            })
     return {"decision": rows}
 
 

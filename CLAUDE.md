@@ -91,19 +91,22 @@ src/fpl/
   data/ownership.py    top-10k effective ownership (league 314 + sampled picks)
   models/team_strength.py  Poisson on team xG + home adv, ridge toward last-season prior
   models/minutes.py    logistic P(start); shrunk P(60|start), P(sub); live flag adjustment
-  models/xpts.py       component xPts + Monte Carlo; fit_rates(train, prior=None) accepts the
-                       history prior (xg90/xa90/k90 by element)
+  models/xpts.py       component xPts + Monte Carlo (simulate: independent players;
+                       simulate_joint: one score per match shared by everyone in it);
+                       fit_rates(train, prior=None) accepts the history prior (xg90/xa90/k90)
   pipeline.py          forecast(): per-fixture and per-GW xPts over the horizon
   optimize/milp.py     HiGHS: squad/XI/captain/transfers, selling prices, bank, FT banking,
                        hits, 3/club, formation, WC/FH/BB/TC (fixed `chips` dict or exact joint
                        `chip_search`), alternatives(), Plan.gap
   engine.py            run(): options with Δ vs roll; HIT_HURDLE=1.0; CAPTAIN_HURDLE=1.0
                        (apply_captain_hurdle keeps the top-10k majority captain unless beaten
-                       by 1 xPt); captaincy() simulation
+                       by 1 xPt); captaincy() simulation; team_risk() (each option's points
+                       range and gain on the top-10k average), pairings(), risk_note()
   chips/planner.py     single-chip scan (superseded on the dashboard)
   chips/joint.py       plan_joint(): WC/BB/TC timed together by coordinate search over fixed-chip
                        solves, horizon GW19+4; marginal gain per chip per GW
   backtest/            team_strength.py, minutes.py, xpts.py (predictions(..., rate_prior_fn)),
+                       team_risk.py (team-total range coverage + CRPS, shared score vs independent),
                        past_season.py (rebuild a finished season in engine format for full-season
                        backtests: season_tables(), team_prior_for())
   report/build.py      backtest gate + all dashboard datasets; saves the ledger entry
@@ -215,6 +218,12 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - **Chip-aware horizon:** `report/build` runs the joint chip plan first and fixes its Bench Boost and Triple Captain weeks (within `PLAN_CHIP_WINDOW` = 8 GWs) into every option's solve, stretching the horizon to reach them. `assumptions.chips_in_plan` and `horizon_gws` record it. The Wildcard is not fixed; it stays the planner's "play now" signal.
 - **Chips:** `chips/joint.py` takes about 6–8 minutes per run on real data, with every solve gap < 0.1%. Chip timing uses **no weekly discount** (`CHIP_DECAY = 1.0`): the 0.9 decay is for transfer decisions, and on a chip that can be held it biased every chip toward the current GW (it called a GW11 Triple Captain that was no better than GW15 and worse than GW16). Chip gains are undiscounted expected points; `assumptions.chip_decay` records it. The exact joint MILP (`OptInput.chip_search`) is correct on toys but has a 13% gap after 300 s at real size, so it isn't used.
 - **Gate** (`report/build.model_health`): xPts must beat both baselines on MAE and Spearman, and P(start) must beat its baselines. On failure the manifest `remove` list takes model datasets off the dashboard.
+- **Same-match correlation (team range):** xPts, the MILP and every recommendation use **expected** points, which add up whatever the correlation, so starting players on both sides of a match (a hedge) or a keeper and defender of one team (a stack) costs nothing on average. Correlation only changes the spread.
+  - `models/xpts.simulate_joint` draws one score per match: each player's goals as in `simulate`, the team's other goals ~ Poisson(max(λ_for − Σ player rates, 0)), assists thinned from team goals, clean sheet = 60+ minutes and the opponent scored 0, goals conceded from the opponent's draw. Each player's mean matches `simulate` (test), and opposite sides come out negatively correlated (GKP v opposing FWD about −0.6, DEF about −0.4).
+  - `engine.team_risk` gives every option's first-GW plan (captain and chip included, no auto-subs) its 10–90% range (`p10`, `p90`, plus `p10_independent`/`p90_independent`), `vs_top10k` (expected gain on the top-10k average, Σ EO%/100 × points over players with EO ≥ 1%) and `p_beat_top10k`. All options share the same draws.
+  - **Backtest** (`backtest/team_risk.coverage`, in `model_health` as "Team range"): 300 xPts-weighted XIs per round, no outcomes used. GW4–11, 2,400 teams: coverage 0.72 shared score vs 0.70 independent (target 0.80), CRPS 7.11 vs 7.02. Both ranges are too narrow (bonus, saves and cards enter at their means), and the shared score is not clearly better, so `Gate.risk_ok` is false.
+  - **Near-tie note** (`engine.risk_note`, `assumptions.risk_note`): only when `risk_ok`. Among options within `HIT_HURDLE` of the recommendation, it names one with a better chance of beating the top-10k average this week. It never changes the recommendation. Currently off (`assumptions.team_range` says so).
+  - On the GW12 squad the pairings (Raya and Gabriel v Haaland, Van Hecke v Le Fée, Raya + Gabriel) nearly cancel: range 38–69 vs 37–68 independent.
 
 ## Dashboard, refresh, ledger
 - **Dashboard:** https://claude.ai/artifact/JU1PKMicRTv6Hbn9yng1PP ("HaramBall FPL", private), built on the claude.ai Dashboard type.
@@ -223,7 +232,7 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - After writing the page, read the `data/users/me` `check` document.
 - **Sections and stable anchors** (deep link: `<dashboard url>#<anchor>`; the page reads `location.hash` and calls `dash.setLink` as the reader moves):
   - a **sticky section nav** (`.hb-nav`): one row of pills that scrolls sideways on phones; the active pill follows the scroll, and pills for hidden sections hide;
-  - **model sections** (`data-model-section`, hidden if `decision` is missing): `#transfers` (This gameweek: options, each with a **Line-up** button that opens the `#option-xi` popup — a `<dialog>` via `showModal()`, a bottom sheet on phones, in-place fallback — showing that option's XI, captain, vice and bench on the same pitch cards as the Squad view, plus changes from your team; `#captaincy`, `#lineup`), `#planner`, `#chips` (first-half chip plan), `#players`, `#fixtures`;
+  - **model sections** (`data-model-section`, hidden if `decision` is missing): `#transfers` (This gameweek: options, each with a **Line-up** button that opens the `#option-xi` popup — a `<dialog>` via `showModal()`, a bottom sheet on phones, in-place fallback — showing that option's XI, captain, vice and bench on the same pitch cards as the Squad view, plus changes from your team, the coming GW's points range, the top-10k line and the same-match pairings; wide screens add "Next GW range" and "Beats top 10k" columns; a `data-risk-note` paragraph shows `assumptions.risk_note` when present; `#captaincy`, `#lineup`), `#planner`, `#chips` (first-half chip plan), `#players`, `#fixtures`;
   - `#model-health`; `#track-record` (`data-review-section`);
   - `#team` (Your team now + key figures), `#price-watch`, `#squad`, `#chip-status` (chips table), `#ft-history` (free transfers by GW), `#about`;
   - old ids still work as aliases: `#this-gw`, `#chip-gain`, `#team-now`; `#squad-list` opens the squad's list view.
@@ -239,6 +248,7 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - **`squad` state fields:** slot, role, `is_new` (a transfer already made takes the sold player's slot), `armband` (from `ManagerState.captain`/`vice`), `team_color(2)`, `next_opp`, prices, availability, news, price status, `next_fixtures`.
   - **`squad` model fields** (merged in by `report/build.build(squad_rows=…)` only when the gate passes): `xpts_next`, `p_start`, `eo_top10k`, `next_diff`, `next5_diff`, `rec_role` (Captain / Vice-captain / Starting / Bench n / Sell) and `rec_swap`.
   - **`lineup`** also carries the card fields plus `is_new` and `replaces`.
+  - **`decision`** also carries `p10`, `p90`, `p10_independent`, `p90_independent`, `vs_top10k`, `p_beat_top10k` (null without EO) and `pairings` (text: who faces whom, who shares a clean sheet).
   - **`option_lineups`**: the same rows for **every** option in `decision` (key `option,element`; `option` matches `decision.option`, plus `option_label`, `recommended`), built by `report/build._xi_rows` from each `Option.plan.gws[0]`. The recommended option's rows equal `lineup`. `engine.apply_captain_hurdle` applies the captain hurdle to every option's first GW.
   - **Fixture rating** (`report/build.fixture_ratings`): 1 easiest to 5 hardest, quintiles across all team fixtures in the horizon of team xG for (`attack_rating`, MID/FWD) or clean-sheet chance (`defence_rating`, GKP/DEF). `fixtures_strength` carries both.
 - **Local preview and browser tests:**
@@ -301,7 +311,7 @@ uv run fpl history report             # print COVERAGE.md
 
 ## How to test
 ```bash
-uv run pytest            # offline suite (88 tests); live: uv run pytest -m live
+uv run pytest            # offline suite (100 tests); live: uv run pytest -m live
 FPL_D3=path/to/d3.min.js uv run pytest -m ui   # dashboard page in Chromium (Node playwright + d3@7.9.0)
 uv run ruff check .
 ```

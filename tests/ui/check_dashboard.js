@@ -178,6 +178,11 @@ async function checkLayout(page, label) {
                    capWant: (rows.find((r) => r.armband === 'Captain') || {}).player,
                    newTags: dlg.querySelectorAll('.hb-pc-tag').length, newWant: rows.filter((r) => r.is_new === 'Yes').length,
                    title: document.querySelector('[data-draw=xi-title]').textContent,
+                   range: document.querySelector('[data-draw=xi-range]').textContent,
+                   rangeWant: (() => { const d = window.__dash.data.decision.find((r) => r.option === opt); return `${Math.round(d.p10)}–${Math.round(d.p90)}`; })(),
+                   beat: document.querySelector('[data-draw=xi-beat]').textContent,
+                   pairs: document.querySelector('[data-draw=xi-pairs]').textContent,
+                   pairsWant: window.__dash.data.decision.find((r) => r.option === opt).pairings,
                    fits: box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1,
                    inner: dlg.scrollWidth <= dlg.clientWidth + 1, side: document.documentElement.scrollWidth <= innerWidth + 1 };
         }, opt);
@@ -187,6 +192,9 @@ async function checkLayout(page, label) {
         assert.strictEqual(x.capName, x.capWant, `${tag}: option ${opt} captain badge`);
         assert.ok(x.newTags >= x.newWant, `${tag}: option ${opt} new players tagged`);
         assert.ok(x.fits && x.inner && x.side, `${tag}: option ${opt} popup fits ${JSON.stringify(x)}`);
+        assert.strictEqual(x.range, x.rangeWant, `${tag}: option ${opt} points range`);
+        assert.ok(/^\d+%$/.test(x.beat), `${tag}: option ${opt} chance of beating the top 10k`);
+        assert.ok(x.pairs.startsWith(x.pairsWant), `${tag}: option ${opt} same-match pairings`);
         if (SHOTS && theme === 'light') {
           const rec = await page.evaluate(() => window.__dash.data.decision.find((r) => r.recommended === 'Yes').option);
           if (opt === rec) await page.screenshot({ path: `${SHOTS}/${label}-option-xi.png` });
@@ -197,6 +205,18 @@ async function checkLayout(page, label) {
           focus: document.activeElement === document.querySelector(btn) }), btn);
         assert.ok(!after.open && after.focus, `${tag}: option ${opt} closes and returns focus`);
       }
+      const risk = await page.evaluate(() => {
+        const note = document.querySelector('[data-risk-note]');
+        const t = document.querySelector('#transfers table[data-source=decision]');
+        const cols = [...t.querySelectorAll('thead th[data-risk-col]')];
+        const first = t.querySelector('tbody tr');
+        return { note: !note.hidden && note.textContent.includes('Near-tie'),
+                 cols: cols.length === 2 && cols.every((c) => !c.hidden),
+                 colsShown: cols.map((c) => getComputedStyle(c).display !== 'none'),
+                 cells: first.cells.length, heads: t.querySelectorAll('thead th').length };
+      });
+      assert.ok(risk.note && risk.cols, `${tag}: near-tie note and range columns ${JSON.stringify(risk)}`);
+      assert.strictEqual(risk.cells, risk.heads, `${tag}: options table cells line up with headers`);
       // the lede button opens the recommended option, which is the Squad section's Engine's pick
       await page.click('#transfers [data-option-xi="rec"]');
       await page.waitForTimeout(150);

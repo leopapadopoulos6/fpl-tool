@@ -215,7 +215,10 @@ DATASET_META = {
                    "hit points per gameweek, replayed from your history."),
     "decision": ("Transfer options", "Each transfer option for the next gameweek with its "
                  "expected-points difference against rolling the transfer, over the planning "
-                 "horizon, with ownership flags."),
+                 "horizon, with ownership flags, and the coming gameweek's points range "
+                 "(10th-90th percentile, one shared score per match), expected gain on the "
+                 "top-10k average and chance of beating it, and the line-up's same-match "
+                 "pairings."),
     "captaincy": ("Captaincy simulation", "Simulated points this gameweek for the leading "
                   "captain options: average, 10th and 90th percentiles, chance of 10+, and "
                   "top-10k effective ownership."),

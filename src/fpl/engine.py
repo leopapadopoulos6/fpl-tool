@@ -140,6 +140,94 @@ def p_start_matrix(fc: Forecast) -> pd.DataFrame:
     return fc.by_gw.pivot(index="element", columns="event", values="p_start").fillna(0.0)
 
 
+RISK_SIMS = 4000
+RISK_EO_MIN = 1.0  # top-10k EO (%) below which a player is left out of their average score
+
+
+def _multipliers(g) -> dict[int, float]:
+    m = {p: 1.0 for p in g.lineup}
+    if g.chip == "bboost":
+        m.update({p: 1.0 for p in g.bench})
+    m[g.captain] = 3.0 if g.chip == "3xc" else 2.0
+    return m
+
+
+def pairings(rows: pd.DataFrame, players: list[int], names: dict[int, str]) -> str:
+    """Plain-language list of the line-up's same-match links: players facing each other
+    (a hedge: one side's returns cost the other's clean sheet) and goalkeeper/defender pairs
+    sharing a clean sheet (a stack)."""
+    r = rows[rows["element"].isin(players)].drop_duplicates(["element", "fixture"])
+    face, stack = [], []
+    for _, fx in r.groupby("fixture", sort=False):
+        sides = [[names.get(e, str(e)) for e in d["element"]] for _, d in fx.groupby("team")]
+        if len(sides) == 2:
+            face.append(" v ".join(", ".join(s) for s in sides))
+        for _, d in fx[fx["position"].isin(["GKP", "DEF"])].groupby("team"):
+            if len(d) >= 2:
+                stack.append(" + ".join(names.get(e, str(e)) for e in d["element"]))
+    parts = []
+    if face:
+        parts.append("Facing each other: " + "; ".join(face))
+    if stack:
+        parts.append("Sharing a clean sheet: " + "; ".join(stack))
+    return ". ".join(parts)
+
+
+def team_risk(fc: Forecast, plans: list, eo: dict[int, float], rules: GameRules,
+              names: dict[int, str] | None = None, n: int = RISK_SIMS,
+              seed: int = 0) -> list[dict]:
+    """Distribution of each first-gameweek plan's points (captain and chip included, no
+    auto-subs) with one simulated score per match, and of its points minus the top-10k
+    average (sum over players of EO% / 100 x points). All plans share the same draws
+    (common random numbers), so differences between options are not simulation noise.
+    ``p10_independent``/``p90_independent`` show the range if players were independent."""
+    from fpl.models.xpts import simulate_joint
+
+    gw = plans[0].gw
+    field = {p: v / 100 for p, v in eo.items() if v >= RISK_EO_MIN}
+    mults = [_multipliers(g) for g in plans]
+    els = set(field).union(*mults)
+    rows = fc.by_fixture[(fc.by_fixture["event"] == gw)
+                         & fc.by_fixture["element"].isin(els)].reset_index(drop=True)
+    joint = simulate_joint(rows, rules, n=n, seed=seed)
+    ind = simulate(rows, rules, n=n, seed=seed)
+    w_field = rows["element"].map(field).fillna(0.0).to_numpy()
+    field_pts = joint @ w_field
+    out = []
+    for m in mults:
+        w =rows["element"].map(m).fillna(0.0).to_numpy()
+        yours, yours_ind = joint @ w, ind @ w
+        rel = yours - field_pts
+        out.append({
+            "mean": float(yours.mean()), "p10": float(np.percentile(yours, 10)),
+            "p90": float(np.percentile(yours, 90)),
+            "p10_independent": float(np.percentile(yours_ind, 10)),
+            "p90_independent": float(np.percentile(yours_ind, 90)),
+            "vs_top10k": float(rel.mean()), "p_beat_top10k": float((rel > 0).mean()),
+            "pairings": pairings(rows, list(m), names or {}),
+        })
+    return out
+
+
+def risk_note(options: list[Option], risk: list[dict], best: Plan,
+              hit_hurdle: float = HIT_HURDLE) -> str | None:
+    """Tie-break note: among options within ``hit_hurdle`` of the recommendation (after the
+    hit charge), name one with a better chance of beating the top-10k average this week."""
+    score = lambda o: o.delta_vs_roll - hit_hurdle * o.hits  # noqa: E731
+    rec_i = next(i for i, o in enumerate(options) if o.plan is best)
+    close = [i for i, o in enumerate(options)
+             if i != rec_i and score(options[rec_i]) - score(o) < hit_hurdle]
+    alt = max(close, key=lambda i: risk[i]["p_beat_top10k"], default=None)
+    if alt is None or risk[alt]["p_beat_top10k"] <= risk[rec_i]["p_beat_top10k"] + 0.01:
+        return None
+    gap = score(options[rec_i]) - score(options[alt])
+    return (f"Near-tie: '{options[alt].label}' is {gap:.2f} expected points behind over the "
+            f"horizon (after the hit hurdle) but beats the top-10k average this gameweek "
+            f"{risk[alt]['p_beat_top10k']:.0%} of the time, against "
+            f"{risk[rec_i]['p_beat_top10k']:.0%} for the recommendation. Worth weighing if "
+            f"you are chasing rank this week.")
+
+
 def captaincy(fc: Forecast, lineup: list[int], rules: GameRules, n: int = 6000) -> pd.DataFrame:
     """Simulated GW points for each starter (DGWs summed): mean and spread for captaincy."""
     g = fc.gws[0]
