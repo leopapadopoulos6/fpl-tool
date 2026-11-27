@@ -127,7 +127,15 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     if not gate.passed:
         return out
 
-    res = run(b, fixtures, pm, tm, state, rules, data_dir, horizon=horizon, settings=settings)
+    chip_out = _chips(b, fixtures, pm, tm, state, rules, prior, settings) if chips else {}
+    fixed = planned_chips(chip_out, state.next_gw)
+    plan_horizon = max([horizon] + [g - state.next_gw + 1 for g in fixed])
+    out["assumptions"][0].update({
+        "horizon_gws": plan_horizon,
+        "chips_in_plan": ", ".join(f"{CHIP_LABEL.get(c, c)} GW{g}"
+                                   for g, c in sorted(fixed.items())) or "none"})
+    res = run(b, fixtures, pm, tm, state, rules, data_dir, horizon=plan_horizon,
+              settings=settings, chips=fixed)
     names = res.players["name"].to_dict()
     eo_map = eo.set_index("element")["eo_pct"].to_dict() if eo is not None else {}
     cap_note = apply_captain_hurdle(res, eo_map)
@@ -139,14 +147,13 @@ def build(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFr
     out.update(_lineup(res, names, eo_map, own_map, b, fixtures, ratings))
     out["option_lineups"] = _option_lineups(res, names, eo_map, own_map, b, fixtures, ratings)
     out["plan"] = _plan(res, names)
-    out["players"] = _players(res, state, eo_map, b)
+    out["players"] = _players(res, state, eo_map, b, horizon)
     out["fixtures_strength"] = _fixtures(res, b, ratings)
     if squad_rows is not None:
         model = squad_model(res, state, eo_map, names, ratings)
         for row in squad_rows:
             row.update(model.get(row["element"], {}))
-    if chips:
-        out.update(_chips(b, fixtures, pm, tm, state, rules, prior, settings))
+    out.update(chip_out)
     now = [{"chip": r["chip"], "gw": r["best_gw"], "gain": r["gain"]}
            for r in out.get("chip_plan", []) if r.get("now") == "Yes"]
     ledger.save(ledger.make_entry(res, eo_map, names, chips_now=now), data_dir / "ledger")
@@ -313,9 +320,10 @@ def _plan(res: EngineResult, names: dict) -> list[dict]:
              "bank_m": round(g.bank_after / 10, 1)} for g in res.best.gws]
 
 
-def _players(res: EngineResult, state: ManagerState, eo: dict, b: Bootstrap) -> list[dict]:
-    xp = xpts_matrix(res.forecast)
-    gws = res.gws
+def _players(res: EngineResult, state: ManagerState, eo: dict, b: Bootstrap,
+             horizon: int = 6) -> list[dict]:
+    gws = res.gws[:horizon]  # the dashboard shows the next `horizon` GWs ("Next 6")
+    xp = xpts_matrix(res.forecast)[gws]
     pl = res.players
     short = {t.id: t.short_name for t in b.teams}
     max_sell = {ps: max((p.selling_price for p in state.squad if p.position == ps), default=0)
@@ -355,6 +363,21 @@ def _fixtures(res: EngineResult, b: Bootstrap, ratings: pd.DataFrame) -> list[di
 
 
 CHIP_TAIL_GWS = 4  # plan this many GWs past the chips' deadline (squad value after it)
+PLAN_CHIP_WINDOW = 8  # Bench Boost / Triple Captain planned within this many GWs are fixed
+#                       into the transfer plan (its horizon stretches to reach them)
+PLANNED_CHIPS = {"Bench Boost": "bboost", "Triple Captain": "3xc"}
+
+
+def planned_chips(chip_out: dict[str, list[dict]], next_gw: int) -> dict[int, str]:
+    """{gw: chip} for the chip plan's Bench Boost and Triple Captain weeks that fall within
+    PLAN_CHIP_WINDOW gameweeks. The Wildcard is not fixed: it stays a separate "play now"
+    signal (a planned Wildcard would change every option's squad)."""
+    out = {}
+    for r in chip_out.get("chip_plan", []):
+        c = PLANNED_CHIPS.get(r["chip"])
+        if c and next_gw <= int(r["best_gw"]) < next_gw + PLAN_CHIP_WINDOW:
+            out[int(r["best_gw"])] = c
+    return out
 
 
 def _chips(b, fixtures, pm, tm, state, rules, prior, settings) -> dict[str, list[dict]]:
@@ -370,9 +393,12 @@ def _chips(b, fixtures, pm, tm, state, rules, prior, settings) -> dict[str, list
     players = players_frame(b, state, rules)
     xp = xpts_matrix(fc)
     pool = candidate_pool(players, xp, {"GKP": 6, "DEF": 20, "MID": 20, "FWD": 12})
-    inp = OptInput(players=players.loc[pool], xp=xp.loc[xp.index.intersection(pool)],
+    from fpl.engine import p_start_matrix
+    keep = xp.index.intersection(pool)
+    inp = OptInput(players=players.loc[pool], xp=xp.loc[keep],
                    gws=fc.gws, bank=state.bank, free_transfers=state.free_transfers,
-                   rules=rules, settings=replace(settings, mip_gap=0.005))
+                   rules=rules, settings=replace(settings, mip_gap=0.005),
+                   p_start=p_start_matrix(fc).reindex(keep))
     res = plan_joint(inp, first_half)
     gain = [{"chip": CHIP_LABEL.get(r["chip"], r["chip"]), "gw": int(r["gw"]),
              "gain": round(float(r["gain"]), 2), "gw_xpts": round(float(r["gw_xpts"]), 1)}

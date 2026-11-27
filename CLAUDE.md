@@ -209,7 +209,10 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   - DefCon = negative-binomial tail (k = 6) of CBIT/CBIRT per 90;
   - bonus = linear regression on components; cards.
 - **xPts backtest, GW4–9:** MAE 1.70 vs 1.89 and Spearman 0.56 vs 0.48 against baselines; calibrated by decile. Weak spot: GKP ranking (0.41 vs 0.45).
-- **MILP:** 6-GW solve about 2 s, decay 0.9, bench weight 0.1, end value 1.5 per banked FT. Options are forced first-GW transfer counts plus no-good cuts.
+- **MILP:** 6-GW solve about 2 s, decay 0.9, outfield bench weight 0.1, end value 1.5 per banked FT.
+  - **Bench goalkeeper = auto-sub cover:** with `OptInput.p_start` (passed by `engine.run` and the chip planner), each (starting GK g, bench GK h) pair adds `(1 − p_start[g]) × xPts[h]` instead of the flat `gk_bench_weight` (0.02). A doubtful starter with a playing backup is valued properly, and a backup who never plays is worth nothing.
+  - **Options:** forced first-GW transfer counts plus no-good cuts on the **moves** (buys and sells, `exclude_first_gw_moves`), so the same purchase for a different sale is its own option (e.g. Dubravka → Lammens vs Raya → Lammens).
+  - **Chip-aware horizon:** `report/build` runs the joint chip plan first and fixes its Bench Boost and Triple Captain weeks (within `PLAN_CHIP_WINDOW` = 8 GWs) into every option's solve, stretching the horizon to reach them. `assumptions.chips_in_plan` and `horizon_gws` record it. The Wildcard is not fixed; it stays the planner's "play now" signal.
 - **Chips:** `chips/joint.py` takes about 6–8 minutes per run on real data, with every solve gap < 0.1%. Chip timing uses **no weekly discount** (`CHIP_DECAY = 1.0`): the 0.9 decay is for transfer decisions, and on a chip that can be held it biased every chip toward the current GW (it called a GW11 Triple Captain that was no better than GW15 and worse than GW16). Chip gains are undiscounted expected points; `assumptions.chip_decay` records it. The exact joint MILP (`OptInput.chip_search`) is correct on toys but has a 13% gap after 300 s at real size, so it isn't used.
 - **Gate** (`report/build.model_health`): xPts must beat both baselines on MAE and Spearman, and P(start) must beat its baselines. On failure the manifest `remove` list takes model datasets off the dashboard.
 

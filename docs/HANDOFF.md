@@ -122,6 +122,14 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
 - **GW11 review (final):** 44 points against an average of 35; best possible 54 (7 of the 10 lost to the captaincy: Haaland 2, Calvert-Lewin 9). Forecast error −0.2, finishing luck −10.5.
 - **Chip planner:** `CHIP_DECAY = 1.0` since 21 Nov (see CLAUDE.md, Engine design, "Chips").
 
+### Goalkeeper cover and chip-aware transfers (2026-11-27)
+- **Prompted by the user:** why sell Raya (doubtful, 50%) rather than Dubravka (TOT backup, 0 minutes all season)?
+- **Three gaps found and fixed:**
+  - a bench GK was worth 2% of his xPts, with no auto-sub cover;
+  - options were de-duplicated by purchases only, which hid "Dubravka → Lammens";
+  - the transfer horizon (6 GWs) stopped before the GW18 Bench Boost.
+- **Fixes:** see CLAUDE.md, Engine design, "MILP". Toy tests in `tests/test_milp.py`.
+
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**
    - Current-season backtest, 2026-27 GW4–9, with code-default params (365, 0.5, 20), via `scripts/research/current_season_backtest.py`:

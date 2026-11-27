@@ -51,6 +51,13 @@ class OptInput:
     banned: set[int] = field(default_factory=set)
     locked: set[int] = field(default_factory=set)
     settings: OptSettings = field(default_factory=OptSettings)
+    # start probability (element x GW). When given, a bench goalkeeper is valued by the
+    # auto-sub cover he gives: (1 - p_start of the starting GK) x his xPts, instead of the
+    # flat gk_bench_weight.
+    p_start: pd.DataFrame | None = None
+    # no-good cuts on first-GW moves: each (buys, sells) pair may not be repeated exactly
+    exclude_first_gw_moves: list[tuple[frozenset[int], frozenset[int]]] = field(
+        default_factory=list)
 
 
 @dataclass
@@ -87,6 +94,8 @@ def solve(inp: OptInput) -> Plan:
     T = inp.gws
     pl = inp.players
     xp = inp.xp.reindex(index=P, columns=T).fillna(0.0)
+    pst = (inp.p_start.reindex(index=P, columns=T).fillna(0.0)
+           if inp.p_start is not None else None)
     h = highspy.Highs()
     h.silent()
     h.setOptionValue("time_limit", s.time_limit)
@@ -198,6 +207,22 @@ def solve(inp: OptInput) -> Plan:
         gw_obj = h.qsum(xpt[p] * lu[p] for p in P) + cap_mult * h.qsum(xpt[p] * cp[p] for p in P)
         if chip == "bboost":
             gw_obj = gw_obj + h.qsum(xpt[p] * (sqd[p] - lu[p]) for p in P)
+        elif pst is not None and ("bboost", t) not in u:
+            # outfield bench: flat weight; bench GK: auto-sub cover for the starting GK
+            gw_obj = gw_obj + h.qsum(xpt[p] * s.bench_weight * (sqd[p] - lu[p])
+                                     for p in P if pos[p] != "GKP")
+            # One GK starts and one sits on the bench, so z[g,k] (g starts, k benched) is an
+            # assignment between them: its rows sum to "g starts" and its columns to "k is
+            # the bench GK". With binary marginals that is exact even with z continuous, and
+            # far tighter than z <= y, z <= bench pairs (which stalled at real size).
+            ps = pst[t].to_dict()
+            gks = [p for p in P if pos[p] == "GKP"]
+            z = {(g, k): h.addVariable(lb=0, ub=1, name=f"cover_{g}_{k}_{t}")
+                 for g in gks for k in gks if g != k}
+            for g in gks:
+                h.addConstr(h.qsum(z[g, k] for k in gks if k != g) == lu[g])
+                h.addConstr(h.qsum(z[k, g] for k in gks if k != g) == sqd[g] - lu[g])
+            gw_obj = gw_obj + h.qsum((1.0 - ps[g]) * xpt[k] * v for (g, k), v in z.items())
         else:
             gw_obj = gw_obj + h.qsum(
                 xpt[p] * (s.gk_bench_weight if pos[p] == "GKP" else s.bench_weight)
@@ -222,6 +247,13 @@ def solve(inp: OptInput) -> Plan:
     first = T[0]
     for excl in inp.exclude_first_gw_buys:
         h.addConstr(h.qsum(buy[p, first] for p in excl if p in P) <= len(excl) - 1)
+    for ins, outs in inp.exclude_first_gw_moves:
+        if not ins and not outs:
+            h.addConstr(h.qsum(buy[p, first] for p in P) >= 1)  # "roll" already listed
+            continue
+        h.addConstr(h.qsum(buy[p, first] for p in ins if p in P)
+                    + h.qsum(sell[p, first] for p in outs if p in P)
+                    <= len(ins) + len(outs) - 1)
     obj = obj + s.ft_value * ft[len(T)]
     h.maximize(obj)
     status = str(h.getModelStatus()).split(".")[-1]
@@ -281,17 +313,19 @@ def candidate_pool(players: pd.DataFrame, xp: pd.DataFrame,
 def alternatives(inp: OptInput, max_first_gw_transfers: int = 2,
                  per_count: int = 2) -> list[tuple[int, Plan]]:
     """Best plan for each forced first-GW transfer count (roll, 1, 2...), plus the
-    next-best distinct transfer sets for each count (no-good cuts)."""
+    next-best distinct moves (buys and sells) for each count (no-good cuts)."""
     out = []
     for n in range(max_first_gw_transfers + 1):
-        excl: list[frozenset[int]] = []
+        excl: list[tuple[frozenset[int], frozenset[int]]] = []
         for _ in range(per_count if n > 0 else 1):
             sub = OptInput(**{**inp.__dict__, "first_gw_transfers": n,
-                              "exclude_first_gw_buys": list(excl)})
+                              "exclude_first_gw_moves": list(excl)})
             plan = solve(sub)
             if not plan.gws:
                 break
             out.append((n, plan))
-            excl.append(frozenset(plan.gws[0].buys))
+            # distinct on the moves (buys and sells): same buy for a different sale is a
+            # different option, e.g. Dubravka -> Lammens vs Raya -> Lammens
+            excl.append((frozenset(plan.gws[0].buys), frozenset(plan.gws[0].sells)))
     return out
 

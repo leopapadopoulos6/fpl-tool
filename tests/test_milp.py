@@ -189,3 +189,53 @@ def test_chip_timing_is_not_biased_toward_early_gameweeks(R):
     gains = {r["gw"]: r["gain"] for r in res.by_gw}
     assert gains[3] == pytest.approx(10.5, abs=1e-6)  # gain in undiscounted points
     assert gains[1] == pytest.approx(10.0, abs=1e-6)
+
+
+def _gk_case(gws=(1,), gk1=(2.0, 0.5), new_gk=(3.5, 0.95)):
+    """GK1 (element 1) doubtful, GK2 (element 2) never plays, a cheap playing GK (100) to buy."""
+    # outfielders at 4.0 so the captain is never a goalkeeper
+    pl, xp = toy([cand(100, ps="GKP", xp=new_gk[0], team=9)], gws=gws, base_xp=4.0)
+    for g in gws:
+        xp.loc[1, g], xp.loc[2, g] = gk1[0], 0.0
+    ps = pd.DataFrame({g: 0.9 for g in gws}, index=xp.index)
+    ps.loc[1], ps.loc[2], ps.loc[100] = gk1[1], 0.0, new_gk[1]
+    return pl, xp, ps
+
+
+def test_doubtful_keeper_keeps_cover_and_sells_the_non_playing_backup(R):
+    pl, xp, ps = _gk_case()
+    g = run(pl, xp, rules=R, p_start=ps).gws[0]
+    # start GK1 (2.0) with GK100 covering half the time (0.5 * 3.5) = 3.75 beats starting
+    # GK100 (3.5 + 0.05 * 2.0 = 3.6): keep the doubtful starter, sell the backup who never plays
+    assert g.buys == [100] and g.sells == [2]
+    assert 1 in g.lineup and g.bench[0] == 100
+
+
+def test_no_cover_value_when_the_starter_always_plays(R):
+    pl, xp, ps = _gk_case(gk1=(3.0, 1.0), new_gk=(3.0, 1.0))
+    keep = run(pl, xp, rules=R, p_start=ps, first_gw_transfers=0)
+    swap = run(pl, xp, rules=R, p_start=ps, first_gw_transfers=1, banned=set(range(3, 16)))
+    assert swap.objective == pytest.approx(keep.objective, abs=1e-6)
+
+
+def test_options_differ_by_sale_not_just_purchase(R):
+    from fpl.optimize.milp import alternatives
+
+    pl, xp, ps = _gk_case()
+    inp = OptInput(players=pl, xp=xp, gws=[1], bank=0, free_transfers=1, rules=R,
+                   settings=OptSettings(ft_value=0.0, decay=1.0), p_start=ps)
+    moves = {(tuple(p.gws[0].buys), tuple(p.gws[0].sells))
+             for n, p in alternatives(inp, max_first_gw_transfers=1) if n == 1}
+    assert ((100,), (2,)) in moves and ((100,), (1,)) in moves
+
+
+def test_bench_boost_week_wants_a_playing_second_keeper(R):
+    pl, xp, ps = _gk_case(gws=(1, 2), gk1=(3.0, 1.0), new_gk=(3.0, 1.0))
+    outfield = set(range(3, 16))
+    bb = run(pl, xp, gws=(1, 2), rules=R, p_start=ps, chips={2: "bboost"}, banned=outfield)
+    no_gk = run(pl, xp, gws=(1, 2), rules=R, p_start=ps, chips={2: "bboost"},
+                banned=outfield | {100})
+    assert 100 in {i for g in bb.gws for i in g.buys}
+    assert 2 in {o for g in bb.gws for o in g.sells}
+    # the playing second keeper is worth his full 3.0 in the Bench Boost week
+    assert bb.objective - no_gk.objective == pytest.approx(3.0, abs=1e-6)

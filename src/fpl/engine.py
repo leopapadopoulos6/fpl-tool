@@ -105,16 +105,21 @@ def players_frame(b: Bootstrap, state: ManagerState, rules: GameRules) -> pd.Dat
 def run(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFrame,
         state: ManagerState, rules: GameRules, data_dir: Path, horizon: int = 6,
         settings: OptSettings | None = None, max_first_gw_transfers: int = 2,
-        hit_hurdle: float = HIT_HURDLE) -> EngineResult:
+        hit_hurdle: float = HIT_HURDLE, chips: dict[int, str] | None = None) -> EngineResult:
+    """``chips``: {gw: chip} already planned (Bench Boost, Triple Captain) and fixed into
+    every option's solve, so transfers are planned around them (e.g. a playing second
+    goalkeeper for the Bench Boost week)."""
     settings = settings or OptSettings()
     fc = forecast(b, fixtures, pm, tm, rules, team_prior(b, data_dir), horizon=horizon,
                   start_gw=state.next_gw)
     players = players_frame(b, state, rules)
     xp = xpts_matrix(fc)
     pool = candidate_pool(players, xp)
-    inp = OptInput(players=players.loc[pool], xp=xp.loc[xp.index.intersection(pool)],
+    keep = xp.index.intersection(pool)
+    inp = OptInput(players=players.loc[pool], xp=xp.loc[keep],
                    gws=fc.gws, bank=state.bank, free_transfers=state.free_transfers,
-                   rules=rules, settings=settings)
+                   rules=rules, settings=settings, p_start=p_start_matrix(fc).reindex(keep),
+                   chips={g: c for g, c in (chips or {}).items() if g in fc.gws})
     alts = alternatives(inp, max_first_gw_transfers=max_first_gw_transfers)
     roll = next(p for n, p in alts if n == 0)
     options = []
@@ -128,6 +133,11 @@ def run(b: Bootstrap, fixtures: list[Fixture], pm: pd.DataFrame, tm: pd.DataFram
     best = rec.plan
     cap = captaincy(fc, best.gws[0].lineup, rules)
     return EngineResult(fc, players, options, best, cap, settings, fc.gws)
+
+
+def p_start_matrix(fc: Forecast) -> pd.DataFrame:
+    """element x GW start probability (0 in a blank gameweek)."""
+    return fc.by_gw.pivot(index="element", columns="event", values="p_start").fillna(0.0)
 
 
 def captaincy(fc: Forecast, lineup: list[int], rules: GameRules, n: int = 6000) -> pd.DataFrame:
