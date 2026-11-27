@@ -252,8 +252,9 @@ Python ≥ 3.12 with uv. httpx, pydantic v2, pandas + pyarrow, numpy, scipy, sci
   4. uploads each manifest file, updates or creates `datasets/<id>`, and deletes the old assets;
   5. processes `remove`;
   6. saves `ledger/gwNN`;
-  7. schedules a one-shot pre-deadline run 3 h before a deadline that is 3–27 h away, and a one-shot "FPL post-gameweek review GW<n>" at 10:00 UK when `manifest.review_pending`;
+  7. checks follow-up runs: **routine sessions have no `create_trigger` tool**, so they can't book runs. The summary says when no pre-deadline run is booked for a deadline within 27 h, or when a review is pending (`manifest.review_pending`);
   8. leads its push summary with a newly graded (or newly final) gameweek review, then the coming gameweek's decision.
+- **Pre-deadline refreshes are booked in advance from an interactive session** (one-shot routines "FPL pre-deadline refresh GW<n>", deadline − 3 h, the routine prompt plus "This run is a pre-deadline refresh."). GW12–GW19 were booked on 27 Nov 2026. **Book GW20 onwards** once those deadlines are published and within reach.
 
   It prefers `main` once `main` contains `src/fpl/report/ledger.py`.
 - **Ledger:**

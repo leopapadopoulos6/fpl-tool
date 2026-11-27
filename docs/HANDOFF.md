@@ -130,6 +130,13 @@ uv run fpl history build      # rebuild data/history/*.parquet (~1 min) if code 
   - the transfer horizon (6 GWs) stopped before the GW18 Bench Boost.
 - **Fixes:** see CLAUDE.md, Engine design, "MILP". Toy tests in `tests/test_milp.py`.
 
+### Routine follow-ups (2026-11-27)
+- **Finding:** routine sessions have no `create_trigger` tool. Step 8 of the daily refresh (booking the pre-deadline run and the post-GW review fallback) never worked from a routine.
+- **Fix:**
+  - pre-deadline one-shots for GW12–GW19 booked from this session (GW12 at 27 Nov 15:30 UTC … GW19 at 1 Jan 15:30 UTC);
+  - step 8 now only reports a missing booking or a pending review.
+- **Next:** book GW20+ before 5 Jan 2027.
+
 ## 4. In progress: exactly where it stopped
 1. **History-prior adoption gate.**
    - Current-season backtest, 2026-27 GW4–9, with code-default params (365, 0.5, 20), via `scripts/research/current_season_backtest.py`:
